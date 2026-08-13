@@ -28,7 +28,7 @@ from utils.plot_lib import *
 from utils.regress_lib import *
 from utils.rf_lib import filter_nearlabeled
 
-from detection.plot_neural_activity_lib import *
+from utils.plot_neural_activity_lib import *
 savedir = os.path.join(get_local_drive(),'OneDrive\\PostDoc\\Figures\\Detection\\Decoding\\')
 
 

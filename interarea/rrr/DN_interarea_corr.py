@@ -23,7 +23,7 @@ from loaddata.get_data_folder import get_local_drive
 from utils.plot_lib import * #get all the fixed color schemes
 from utils.behaviorlib import * # get support functions for beh analysis 
 from utils.psth import *
-from detection.plot_neural_activity_lib import *
+from utils.plot_neural_activity_lib import *
 from utils.plot_lib import * # get support functions for plotting
 from utils.regress_lib import * # get support functions for regression
 from utils.dimreduc_lib import * # get support functions for dimensionality reduction

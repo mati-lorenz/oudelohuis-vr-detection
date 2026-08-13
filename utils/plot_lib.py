@@ -17,9 +17,49 @@ from scipy.stats import pearsonr,ttest_rel,ttest_ind
 import copy
 from statannotations.Annotator import Annotator
 
-desired_width = 600
-pd.set_option('display.width', desired_width)
-pd.set_option("display.max_columns", 14)
+cm = 1/2.54 #cm in inches
+plt.rcParams.update({'font.size': 6, 
+                    'font.family': 'sans-serif', 
+                    'font.sans-serif': 'Arial',
+                    
+                    'xtick.labelsize': 5,
+                    'ytick.labelsize': 5, 
+                    'ytick.major.pad': 0.8, 
+                    'xtick.major.pad': 0.8,
+                    'ytick.direction': 'out',     # direction: {in, out, inout}
+                    'xtick.direction': 'out',     # direction: {in, out, inout}
+                    'xtick.major.width': 0.8,
+                    'ytick.major.width': 0.8,
+                    'xtick.major.size': 1.5,       # major tick size in points
+                    'ytick.major.size': 1.5,
+
+                    'axes.titlesize': 7,
+                    'axes.titlepad': 3, 
+                    'axes.labelsize': 6,
+                    'axes.labelpad': 0.8, 
+                    'axes.linewidth': 0.8,     # edge line width
+                    
+                    'lines.linewidth': 1,
+                    'lines.linestyle': '-', 
+                    
+                    'legend.frameon': False,     # if True, draw the legend on a background patch
+                    'legend.fontsize': 5,        # legend.fontsize
+                    
+                    'figure.dpi': 600,       # figure dots per inch
+                    'figure.autolayout': True,
+                    'image.aspect': 'auto',
+                    #axes.facecolor:     white   # axes background color
+                    #axes.edgecolor:     black   # axes edge color
+                    #axes.grid:          False   # display grid or not
+                    #axes.grid.axis:     both    # which axis the grid should apply to
+                    #axes.grid.which:    major   # grid lines at {major, minor, both} ticks
+                    #axes.titlelocation: center  # alignment of the title: {left, right, center}
+                    #axes.titlesize:     large   # font size of the axes title
+                    #axes.titleweight:   normal  # font weight of title
+                    #axes.titlecolor:    auto    # color of the axes title, auto falls back to
+                                                # text.color as default value
+                    })
+
 
 def my_savefig(fig,savedir,filename,formats=['png','pdf']):
     for fmt in formats:

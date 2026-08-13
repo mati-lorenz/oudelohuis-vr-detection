@@ -21,7 +21,7 @@ from utils.psth import *
 from utils.plot_lib import * #get all the fixed color schemes
 from utils.plot_lib import *
 from utils.regress_lib import *
-from detection.plot_neural_activity_lib import *
+from utils.plot_neural_activity_lib import *
 
 from utils.rf_lib import filter_nearlabeled
 from sklearn.preprocessing import LabelEncoder

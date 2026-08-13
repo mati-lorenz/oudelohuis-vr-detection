@@ -18,7 +18,6 @@ from utils.pair_lib import compute_pairwise_anatomical_distance
 from utils.psth import compute_respmat
 from utils.plot_lib import * #get all the fixed color schemes
 
-
 def plot_respmat(orientations, datasets, labels, prefori):
     data = datasets[0]
     poprate = np.nanmean(data,axis=0)

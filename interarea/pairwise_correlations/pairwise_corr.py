@@ -23,8 +23,8 @@ import matplotlib.pyplot as plt
 from utils.psth import *
 from utils.plot_lib import * #get all the fixed color schemes
 from utils.behaviorlib import * # get support functions for beh analysis 
-from detection.plot_neural_activity_lib import *
-from detection.example_cells import get_example_cells
+from utils.plot_neural_activity_lib import *
+from utils.example_cells import get_example_cells
 
 from preprocessing.preprocesslib import assign_layer
 from utils.plot_lib import shaded_error,my_ceil,my_floor

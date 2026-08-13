@@ -84,5 +84,6 @@ plt.xlabel('Area')
 plt.ylabel('#Cells')
 plt.title('#Cells per area')
 plt.tight_layout()
+sns.despine(fig=fig,top=True,right=True,offset=2)
 fig.savefig(os.path.join(savedir,'CellCountsPerArea_%dsessions_' %nsessions + '.png'), format = 'png')
 

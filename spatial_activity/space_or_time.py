@@ -175,7 +175,7 @@ def plot_neuron_spacetime_alignment(ses,cell_id,sbins,tbins):
 #%%
 ises = 0
 
-from detection.example_cells import get_example_cells
+from utils.example_cells import get_example_cells
 
 example_cell_ids = get_example_cells(sessions[ises].sessiondata['session_id'][0])
 

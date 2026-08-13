@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 from utils.plot_lib import * #get all the fixed color schemes
 from utils.plot_lib import * #get all the support functions for plotting
 from utils.behaviorlib import * # get support functions for beh analysis 
-from detection.plot_neural_activity_lib import *
+from utils.plot_neural_activity_lib import *
 from loaddata.get_data_folder import get_local_drive
 
 savedir = os.path.join(get_local_drive(),'OneDrive\\PostDoc\\Figures\\Detection\\dPCA\\')
