@@ -42,7 +42,7 @@ for ises,ses in enumerate(sessions):
     [sessions[ises].runPSTH,bincenters] = calc_runPSTH(sessions[ises],binsize=5)
     fig = plot_run_corridor_outcome(sessions[ises].trialdata,sessions[ises].runPSTH,bincenters,
                                     plot_mean=True,plot_trials=True)
-    fig.savefig(os.path.join(savedir,'Spatial','ExampleSessions','RunSpeed_Outcome_%s' % sessions[ises].sessiondata['session_id'][0] + '.png'), format = 'png')
+    # fig.savefig(os.path.join(savedir,'Spatial','ExampleSessions','RunSpeed_Outcome_%s' % sessions[ises].sessiondata['session_id'][0] + '.png'), format = 'png')
     
 #%% #################### Spatial lick rate plots ####################################
 for ises,ses in enumerate(sessions):
@@ -51,17 +51,6 @@ for ises,ses in enumerate(sessions):
     # fig = plot_lick_corridor_outcome(sessions[ises].trialdata,sessions[ises].runPSTH,bincenters,
     fig = plot_lick_corridor_outcome(sessions[ises].trialdata,sessions[ises].lickPSTH,bincenters)
     # fig.savefig(os.path.join(savedir,'Spatial','ExampleSessions','LickRate_Outcome_%s' % sessions[ises].sessiondata['session_id'][0] + '.png'), format = 'png')
-
-# # Behavior as a function of distance within the corridor:
-# sesidx = 0
-# print(sessions[sesidx].sessiondata['session_id'])
-# ### licking across the trial:
-# [sessions[sesidx].lickPSTH,bincenters] = calc_lickPSTH(sessions[sesidx],binsize=5)
-
-
-
-
-
 
 
 
@@ -101,7 +90,6 @@ for ises,ses in tqdm(enumerate(sessions),total=nSessions,desc='Computing spatial
     [sessions[ises].videomePSTH,bincenters]     = calc_videomePSTH(sessions[ises],binsize=sbinsize)
     [sessions[ises].lickPSTH,bincenters]        = calc_lickPSTH(sessions[ises],binsize=sbinsize)
     sessions[ises].trialdata['lickrate_stim']   = np.mean(sessions[ises].lickPSTH[:,(bincenters>=s_min) & (bincenters<=s_max)],axis=1)
-
 
 #%% Get super average of licking rate and running speed:
 trialdata   = pd.concat([ses.trialdata for ses in sessions]).reset_index(drop=True)
