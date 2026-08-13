@@ -9,7 +9,7 @@ In particular pairwise correlations between neurons
 
 #%% Import packages
 import os
-os.chdir('e:\\Python\\molanalysis\\')
+os.chdir('e:\\Python\\oudelohuis-vr-detection\\')
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -32,7 +32,7 @@ from utils.corr_lib import *
 from utils.rf_lib import filter_nearlabeled
 from utils.shuffle_lib import my_shuffle, corr_shuffle
 
-plt.rcParams['svg.fonttype'] = 'none'
+
 
 #%% ###############################################################
 

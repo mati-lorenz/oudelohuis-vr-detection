@@ -26,7 +26,7 @@ from utils.plot_lib import *
 from utils.behaviorlib import * # get support functions for beh analysis 
 from utils.regress_lib import * # get support functions for decoding
 
-plt.rcParams['svg.fonttype'] = 'none'
+
 
 #%% ###############################################################
 

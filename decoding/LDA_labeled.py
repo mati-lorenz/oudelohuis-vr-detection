@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-os.chdir('e:\\Python\\molanalysis\\')
+os.chdir('e:\\Python\\oudelohuis-vr-detection\\')
 from loaddata.get_data_folder import get_local_drive
 from loaddata.session_info import *
 from utils.psth import *

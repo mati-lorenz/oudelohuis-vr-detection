@@ -8,7 +8,7 @@ This script contains a series of functions that analyze activity in visual VR de
 
 #%% Import packages
 import os
-os.chdir('e:\\Python\\molanalysis\\')
+os.chdir('e:\\Python\\oudelohuis-vr-detection\\')
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -32,7 +32,7 @@ from utils.plot_neural_activity_lib import *
 from utils.example_cells import get_example_cells
 from utils.regress_lib import *
 
-plt.rcParams['svg.fonttype'] = 'none'
+
 
 #%% ###############################################################
 

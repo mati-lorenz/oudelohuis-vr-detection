@@ -8,7 +8,7 @@ This script contains a series of functions that analyze activity in visual VR de
 
 #%% Import packages
 import os
-os.chdir('e:\\Python\\molanalysis\\')
+os.chdir('e:\\Python\\oudelohuis-vr-detection\\')
 import numpy as np
 import pandas as pd
 from tqdm import tqdm

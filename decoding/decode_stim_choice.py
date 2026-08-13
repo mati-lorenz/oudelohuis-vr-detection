@@ -9,7 +9,7 @@ Matthijs Oude Lohuis, 2023, Champalimaud Center
 import math
 import pandas as pd
 import os
-os.chdir('e:\\Python\\molanalysis\\')
+os.chdir('e:\\Python\\oudelohuis-vr-detection\\')
 
 import seaborn as sns
 import numpy as np

@@ -6,7 +6,7 @@ Matthijs Oude Lohuis, 2023, Champalimaud Foundation
 #%% Import packages
 import os
 import numpy as np
-os.chdir('e:\\Python\\molanalysis\\')
+os.chdir('e:\\Python\\oudelohuis-vr-detection\\')
 
 import matplotlib.pyplot as plt
 from ScanImageTiffReader import ScanImageTiffReader as imread

@@ -8,7 +8,7 @@ This script contains a series of functions that analyze activity in visual VR de
 
 #%% Import packages
 import os
-os.chdir('e:\\Python\\molanalysis\\')
+os.chdir('e:\\Python\\oudelohuis-vr-detection\\')
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -23,7 +23,7 @@ from loaddata.get_data_folder import get_local_drive
 from utils.psth import compute_tensor,compute_respmat,compute_tensor_space,compute_respmat_space
 from utils.plot_lib import * #get all the fixed color schemes
 from utils.plot_lib import * # get support functions for plotting
-plt.rcParams['svg.fonttype'] = 'none'
+
 
 savedir = os.path.join(get_local_drive(),'OneDrive\\PostDoc\\Figures\\Detection\\BackgroundCorridor\\')
 

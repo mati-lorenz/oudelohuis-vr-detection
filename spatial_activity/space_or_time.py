@@ -9,7 +9,7 @@ activity captures the relevant feature encoding better.
 
 #%% Import packages
 import os
-os.chdir('e:\\Python\\molanalysis\\')
+os.chdir('e:\\Python\\oudelohuis-vr-detection\\')
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -26,7 +26,7 @@ from utils.plot_lib import *
 from utils.behaviorlib import * # get support functions for beh analysis 
 from utils.regress_lib import * # get support functions for decoding
 
-plt.rcParams['svg.fonttype'] = 'none'
+
 
 #%% ###############################################################
 

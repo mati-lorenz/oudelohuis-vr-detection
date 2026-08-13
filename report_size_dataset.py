@@ -12,7 +12,7 @@ import os
 import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
-os.chdir('e:\\Python\\molanalysis\\')
+os.chdir('e:\\Python\\oudelohuis-vr-detection\\')
 from scipy.signal import medfilt
 
 from loaddata.get_data_folder import get_local_drive

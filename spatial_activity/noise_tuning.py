@@ -31,7 +31,7 @@ from utils.plot_neural_activity_lib import *
 from utils.example_cells import get_example_cells
 from utils.regress_lib import *
 
-plt.rcParams['svg.fonttype'] = 'none'
+
 
 savedir = os.path.join(get_local_drive(),'OneDrive\\PostDoc\\Figures\\Detection\\Encoding\\')
 

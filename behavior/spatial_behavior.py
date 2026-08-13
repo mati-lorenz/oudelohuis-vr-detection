@@ -16,7 +16,7 @@ from tqdm import tqdm
 from scipy.signal import medfilt
 from scipy.stats import zscore
 
-os.chdir('e:\\Python\\molanalysis\\')
+os.chdir('e:\\Python\\oudelohuis-vr-detection\\')
 from loaddata.get_data_folder import get_local_drive
 from loaddata.session_info import filter_sessions,load_sessions,report_sessions
 from utils.psth import compute_tensor_space,compute_respmat_space
