@@ -60,7 +60,7 @@ Each top-level step below corresponds to one numbered folder in
 that folder. The protocols each sub-step applies to are noted in
 parentheses.
 
-**1 -- Behavioral characterization**
+**1 - Behavioral characterization**
 - `1a_performance` -- raw-data analyses with no exclusions, plus
   engagement level (DM, DP)
 - `1b_psychometric` -- psychometric fit, used to establish standards
@@ -71,7 +71,7 @@ parentheses.
   and any combination of behavioral variables, current or past trial
   (DM, DP, DN)
 
-**2 -- Single-cell characterization** (DN)
+**2 - Single-cell characterization** (DN)
 - `2a_cell_distribution` -- spatial organization of recorded cells across
   sessions
 - `2b_activity_statistics` -- statistics of single-cell spiking activity
@@ -84,11 +84,11 @@ parentheses.
   linearly-explained mutual information for a given relationship,
   introduce nonlinear fits to describe it better
 
-**3 -- Pairwise-correlations characterization** (DN)
+**3 - Pairwise-correlations characterization** (DN)
 
-**4 -- Single-area analysis** (DN)
+**4 - Single-area analysis** (DN)
 
-**5 -- Multi-area analysis** (DN)
+**5 - Multi-area analysis** (DN)
 
 ## Shared code: `1_scripts/libs/`
 
