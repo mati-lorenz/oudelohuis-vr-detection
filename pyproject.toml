@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infotheory"
+version = "0.1.0"
+description = "Shared analysis library for multi_area_detection_task_ff_fb"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "scikit-learn>=1.3",
+    "matplotlib>=3.7",
+    "joblib>=1.3",
+    "tabulate>=0.9",
+    "dataframe_image>=0.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pytest-cov>=4.1", "ruff>=0.4", "ipython>=8.0"]
+
+# package root now lives INSIDE 1_scripts/ (utils/), not a separate
+# top-level src/b_src folder -- matches the "utils and tools live with
+# the scripts that use them" request.
+[tool.setuptools.packages.find]
+where = ["1_scripts/utils"]

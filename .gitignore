@@ -24,4 +24,5 @@ var/
 *.egg
 
 # Data
-data/
+0_data/
+2_pipeline/
