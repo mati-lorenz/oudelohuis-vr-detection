@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infotheory"
+version = "0.1.0"
+description = "Shared analysis library for multi_area_detection_task_ff_fb"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "matplotlib",
+    "seaborn",
+    "tabulate",
+]
+
+[tool.setuptools]
+packages = ["infotheory"]
