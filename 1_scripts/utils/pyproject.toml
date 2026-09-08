@@ -13,7 +13,7 @@ dependencies = [
     "scipy",
     "matplotlib",
     "seaborn",
-    "tabulate",
+    "joblib",
 ]
 
 [tool.setuptools]

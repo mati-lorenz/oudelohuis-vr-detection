@@ -34,12 +34,17 @@ Outputs
                                        protocols): fit params, r2,
                                        inclusion + reason
             excluded_sessions.csv     the excluded subset, reasons only
-            figures/*.png             fit figures, plus the 1a overview
-                                       plots redone on the clean subset,
-                                       one subplot/figure per protocol
-                                       where relevant (section 6)
+            window_timing.csv         per-trial stim/reward window timing
+                                       (see section 7)
+            figures/*.png             fit figures, the 1a overview plots
+                                       redone on the clean subset (section
+                                       6), and the stim/reward window
+                                       timing figure (section 7)
     store/  engaged_trialdata.pkl     cached engaged-trial data for all
                                        3 protocols, reused unless
+                                       --recompute is passed
+            window_timing.pkl         cached per-trial window timing
+                                       (section 7), reused unless
                                        --recompute is passed
 """
 from __future__ import annotations
@@ -55,11 +60,15 @@ from infotheory.pipeline import get_pipeline_paths
 from infotheory.session import load_sessions, PROTOCOLS
 from infotheory.psychometric import fit_psychometric, psychometric_function
 from infotheory.behavior import add_trial_outcome
+from infotheory.psth import derive_onset_time
 from infotheory.plotting import set_style, save_fig, clear_figures, OUTCOME_COLORS, PROTOCOL_COLORS
 from infotheory.criteria import MIN_DPRIME, MAX_FA_RATE, MIN_FRAC_ENGAGED
 
 MAX_PANELS_PER_FIG = 24      # per-session grid: paginate if more sessions than this
 GRID_NCOLS = 4
+STIM_WIDTH_CM = 20.0         # width of the stimulus zone in cm -- trialdata only stores stimStart
+                              # (the zone's start position), not an end position, so this needs to be
+                              # supplied; keep in sync with 1c_behavior.py's MI_WINDOWS stim=(0, 20)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--recompute", action="store_true",
@@ -200,7 +209,7 @@ if (~fits_df["included"]).any():
 # --------------------------------------------------------------------- #
 included_lookup = fits_df.set_index("session_id")["included"]
 
-for protocol in PROTOCOLS[1:]:
+for protocol in PROTOCOLS:
     protocol_sessions = fits_df.loc[fits_df["protocol"] == protocol, "session_id"].to_numpy()
     if len(protocol_sessions) == 0:
         continue
@@ -365,6 +374,120 @@ else:
     fig.suptitle("Trials per signal level, per session (clean)", y=1.03)
     fig.tight_layout()
     save_fig(fig, figdir, "6_signal_level_balance_clean")
+
+# --------------------------------------------------------------------- #
+# 7. Stim/reward windows are fixed in SPACE (stimStart/rewardZoneStart/
+#    rewardZoneEnd are positions -- see psth.py's module docstring) --
+#    how are they distributed in TIME? For each included/engaged trial,
+#    derives the wall-clock time the animal's position crosses into and
+#    out of each window (psth.derive_onset_time on the window's start
+#    and end positions), then looks at: how long the animal spends in
+#    each window (duration), when the window falls relative to the
+#    trial's own start, and whether one trial's window ever overlaps in
+#    TIME with the next trial's same window (gap < 0) -- which would be
+#    a problem for any purely trial-locked, non-overlapping-window
+#    analysis (like 1c_behavior.py's MI_WINDOWS).
+# --------------------------------------------------------------------- #
+timing_cache = paths.store / "window_timing.pkl"
+
+if len(included_ids) == 0:
+    print("No included sessions -- skipping the stim/reward timing figure.")
+else:
+    if not args.recompute and timing_cache.exists():
+        print(f"Reusing cached window timing from {paths.store} (pass --recompute to reload 0_data/)")
+        timing = pd.read_pickle(timing_cache)
+    else:
+        sessions_bd = load_sessions(protocols=PROTOCOLS, load_behaviordata=True, load_videodata=False,
+                                     only_session_ids=included_ids)
+        timing_rows = []
+        for ses in sessions_bd:
+            if ses.trialdata is None or ses.behaviordata is None:
+                continue
+            trial = (ses.trialdata[ses.trialdata["engaged"] == 1].copy()
+                      if "engaged" in ses.trialdata.columns else ses.trialdata.copy())
+            if trial.empty:
+                continue
+            trial["_stim_end_pos"] = trial["stimStart"] + STIM_WIDTH_CM
+
+            continuous = ses.behaviordata.sort_values("ts")
+            trial = derive_onset_time(trial, continuous, position_value_col="stimStart", out_col="stim_start_time")
+            trial = derive_onset_time(trial, continuous, position_value_col="_stim_end_pos", out_col="stim_end_time")
+            trial = derive_onset_time(trial, continuous, position_value_col="rewardZoneStart", out_col="reward_start_time")
+            trial = derive_onset_time(trial, continuous, position_value_col="rewardZoneEnd", out_col="reward_end_time")
+
+            trial["stim_duration"] = trial["stim_end_time"] - trial["stim_start_time"]
+            trial["reward_duration"] = trial["reward_end_time"] - trial["reward_start_time"]
+            trial["stim_start_rel_tStart"] = trial["stim_start_time"] - trial["tStart"]
+            trial["reward_start_rel_tStart"] = trial["reward_start_time"] - trial["tStart"]
+
+            # Gap (s) between this trial's window ending and the NEXT
+            # trial's same window starting -- negative means overlap.
+            # Requires trials sorted by number (== chronological order).
+            trial = trial.sort_values("trialNumber")
+            trial["stim_gap_to_next"] = trial["stim_start_time"].shift(-1) - trial["stim_end_time"]
+            trial["reward_gap_to_next"] = trial["reward_start_time"].shift(-1) - trial["reward_end_time"]
+
+            trial["session_id"] = ses.session_id
+            trial["protocol"] = ses.protocol
+            timing_rows.append(trial[[
+                "session_id", "protocol", "trialNumber",
+                "stim_start_time", "stim_end_time", "stim_duration",
+                "stim_start_rel_tStart", "stim_gap_to_next",
+                "reward_start_time", "reward_end_time", "reward_duration",
+                "reward_start_rel_tStart", "reward_gap_to_next",
+            ]])
+        timing = pd.concat(timing_rows, ignore_index=True) if timing_rows else pd.DataFrame()
+        timing.to_pickle(timing_cache)
+
+    if len(timing):
+        timing.to_csv(paths.out / "window_timing.csv", index=False)
+
+        n_stim_checked = timing["stim_gap_to_next"].notna().sum()
+        n_stim_overlap = (timing["stim_gap_to_next"] < 0).sum()
+        n_reward_checked = timing["reward_gap_to_next"].notna().sum()
+        n_reward_overlap = (timing["reward_gap_to_next"] < 0).sum()
+        print(f"\nStim-window time overlaps with the next trial: {n_stim_overlap}/{n_stim_checked} "
+              f"({n_stim_overlap / max(n_stim_checked, 1):.1%})")
+        print(f"Reward-window time overlaps with the next trial: {n_reward_overlap}/{n_reward_checked} "
+              f"({n_reward_overlap / max(n_reward_checked, 1):.1%})")
+
+        fig, axes = plt.subplots(2, 3, figsize=(13, 7))
+        for row, (window_name, dur_col, start_col, gap_col) in enumerate([
+            ("stim", "stim_duration", "stim_start_rel_tStart", "stim_gap_to_next"),
+            ("reward", "reward_duration", "reward_start_rel_tStart", "reward_gap_to_next"),
+        ]):
+            ax = axes[row][0]
+            sns.histplot(data=timing, x=dur_col, hue="protocol", palette=PROTOCOL_COLORS, ax=ax,
+                         element="step", stat="density", common_norm=False, legend=(row == 0))
+            ax.set_xlabel(f"{window_name} window duration (s)")
+            ax.set_title(f"{window_name.capitalize()} duration")
+            ax.set_xscale('log')
+            ax.set_yscale('log')
+
+            ax = axes[row][1]
+            sns.histplot(data=timing, x=start_col, hue="protocol", palette=PROTOCOL_COLORS, ax=ax,
+                         element="step", stat="density", common_norm=False, legend=False)
+            ax.set_xlabel(f"{window_name} start, time since trial start (s)")
+            ax.set_title(f"{window_name.capitalize()} start time (rel. trial start)")
+            ax.set_xscale('log')
+            ax.set_yscale('log')
+
+            ax = axes[row][2]
+            gap_vals = timing[gap_col].dropna()
+            n_overlap = int((gap_vals < 0).sum())
+            sns.histplot(gap_vals, ax=ax, color="grey", element="step")
+            ax.axvline(0, color="firebrick", linestyle="--", linewidth=1.5)
+            ax.set_xlabel(f"gap to next trial's {window_name} window (s)")
+            ax.set_title(f"{window_name.capitalize()} overlap check "
+                         f"({n_overlap}/{len(gap_vals)} overlap)")
+            ax.set_xscale('log')
+            ax.set_yscale('log')
+            
+        fig.suptitle("Stim/reward window timing -- windows are fixed in position; "
+                     "when do they actually occur in time?", y=1.02)
+        fig.tight_layout()
+        save_fig(fig, figdir, "7_window_timing")
+
 
 print(f"\nWrote tables to {paths.out}, figures to {figdir}")
 print("Run `python b_progress/make_progress_md.py 1b_psychometric` to build a markdown summary.")

@@ -11,14 +11,15 @@ identified by (protocol, animal_id, sessiondate) and stored under
         behaviordata.csv    continuous position/running-speed trace
         videodata.csv       continuous pupil/motion-energy trace
         celldata.csv        one row per cell (DN only)
-        <calciumversion>data.csv, Ftsdata.csv, Fchan2data.csv (DN only)
+        deconvdata.csv       T frames x N cells, deconvolved activity (DN only)
+        Ftsdata.csv          real per-frame imaging timestamps, T rows (DN only)
+        Fchan2data.csv       session-wide red-channel (structural marker) signal,
+                              T rows -- a motion/z-drift ARTIFACT proxy, not a
+                              per-cell trace (see 2b_activity_statistics.py)
 
-This module only discovers sessions and does the shallow/behavioral load
-(sessiondata, trialdata, behaviordata, videodata). Calcium-trace loading
-for the single-cell/multi-area steps is intentionally left out of this
-version -- add a `load_calciumdata` flag here (mirroring the old
-`session.py`'s `load_data`) once step 2 needs it, rather than guessing
-its shape now.
+This module discovers sessions and loads whichever data streams are
+requested (sessiondata/trialdata always; behaviordata/videodata/
+celldata/calciumdata opt-in via `load_sessions`'s flags).
 
 Trimmed down and reorganized from Matthijs Oude Lohuis' original loader
 (Champalimaud, 2023).
@@ -30,6 +31,7 @@ from pathlib import Path
 from typing import Sequence
 
 import pandas as pd
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +64,9 @@ class Session:
         self.behaviordata: pd.DataFrame | None = None
         self.videodata: pd.DataFrame | None = None
         self.celldata: pd.DataFrame | None = None
+        self.calciumdata: pd.DataFrame | None = None
+        self.ts_F: np.ndarray | None = None
+        self.fchan2: np.ndarray | None = None
 
     def __repr__(self):
         return f"Session({self.session_id}, protocol={self.protocol})"
@@ -73,7 +78,7 @@ class Session:
         return pd.read_csv(path, sep=",", index_col=0)
 
     def load(self, load_behaviordata: bool = True, load_videodata: bool = False,
-              load_celldata: bool = False) -> "Session":
+              load_celldata: bool = False, load_calciumdata: bool = False) -> "Session":
         self.sessiondata = self._read_csv("sessiondata.csv")
         if self.sessiondata is None:
             raise FileNotFoundError(f"No sessiondata.csv in {self.data_folder}")
@@ -92,6 +97,36 @@ class Session:
 
         if load_celldata:
             self.celldata = self._read_csv("celldata.csv")
+
+        if load_calciumdata:
+            self.calciumdata = self._read_csv("deconvdata.csv")
+            if self.calciumdata is None:
+                logger.warning("No deconvdata.csv for %s", self.session_id)
+            elif self.celldata is not None and self.calciumdata.shape[1] != len(self.celldata):
+                raise ValueError(
+                    f"{self.session_id}: deconvdata.csv has {self.calciumdata.shape[1]} cells "
+                    f"but celldata.csv has {len(self.celldata)} rows -- these must be aligned "
+                    f"1:1 by column order (deconvdata's columns are cell_id, in the same order "
+                    f"as celldata's rows).")
+
+            # Real per-frame imaging timestamps and the session-wide
+            # red-channel (structural marker) motion-artifact signal --
+            # both optional (older/synthetic data may not have them; see
+            # spike_stats.get_frame_rate's fallback and 2b_activity_
+            # statistics.py's approximate-timestamp fallback for what
+            # happens when they're missing).
+            ts_df = self._read_csv("Ftsdata.csv")
+            if ts_df is not None:
+                self.ts_F = ts_df["ts"].to_numpy()
+                if self.calciumdata is not None and len(self.ts_F) != len(self.calciumdata):
+                    raise ValueError(
+                        f"{self.session_id}: Ftsdata.csv has {len(self.ts_F)} rows but "
+                        f"deconvdata.csv has {len(self.calciumdata)} -- these must be the same "
+                        f"length (one timestamp per imaging frame).")
+
+            fchan2_df = self._read_csv("Fchan2data.csv")
+            if fchan2_df is not None:
+                self.fchan2 = fchan2_df["Fchan2"].to_numpy()
 
         return self
 
@@ -115,7 +150,8 @@ def discover_sessions(protocols: Sequence[str] = PROTOCOLS) -> list[tuple[str, s
 
 def load_sessions(protocols: Sequence[str] = PROTOCOLS, min_trials: int = 0,
                    load_behaviordata: bool = True, load_videodata: bool = False,
-                   load_celldata: bool = False, require_pupil: bool = False,
+                   load_celldata: bool = False, load_calciumdata: bool = False,
+                   require_pupil: bool = False,
                    only_session_ids: Sequence[str] | None = None,
                    verbose: bool = True) -> list[Session]:
     """Discover and load every session for the given protocol(s). No
@@ -137,7 +173,7 @@ def load_sessions(protocols: Sequence[str] = PROTOCOLS, min_trials: int = 0,
         ses = Session(protocol, animal_id, sessiondate)
         try:
             ses.load(load_behaviordata=load_behaviordata, load_videodata=load_videodata,
-                     load_celldata=load_celldata)
+                     load_celldata=load_celldata, load_calciumdata=load_calciumdata)
         except Exception as exc:
             logger.warning("Skipping %s: %s", ses.session_id, exc)
             n_skipped += 1
