@@ -57,28 +57,39 @@ def merge_behavior_video(behaviordata: pd.DataFrame, videodata: pd.DataFrame | N
                           direction="nearest", tolerance=tolerance)
 
 
-def build_calcium_continuous(calciumdata: pd.DataFrame, ts_F, behaviordata: pd.DataFrame) -> pd.DataFrame:
+def build_calcium_continuous(calciumdata: pd.DataFrame, ts_F, behaviordata: pd.DataFrame,
+                              extra_columns: list[str] | None = None) -> pd.DataFrame:
     """Build a continuous DataFrame on the CALCIUM imaging clock (ts_F,
-    typically ~5-30Hz), with 'zpos' interpolated from behaviordata's own
-    much finer clock (~50-100Hz) via exact linear interpolation
-    (np.interp) rather than a nearest-timestamp merge_asof -- cheap and
-    exact regardless of how many cell columns `calciumdata` has (unlike
-    merge_behavior_video's merge_asof, which would need to carry
-    potentially thousands of cell columns through the join).
+    typically ~5-30Hz), with 'zpos' (and optionally other behaviordata
+    columns, e.g. 'runspeed'/'pupil_area') interpolated from
+    behaviordata's own much finer clock (~50-100Hz) via exact linear
+    interpolation (np.interp) rather than a nearest-timestamp
+    merge_asof -- cheap and exact regardless of how many cell columns
+    `calciumdata` has (unlike merge_behavior_video's merge_asof, which
+    would need to carry potentially thousands of cell columns through
+    the join).
 
-    The result has 'ts', 'zpos', plus every column of `calciumdata`
-    (cell_id names) unchanged -- directly usable with
-    `compute_trial_position_window_means`/`bin_by_position`, exactly
-    like the behavior/video continuous traces elsewhere in this
-    package, since those only ever need 'ts'/'zpos' plus arbitrary
-    value columns.
+    `extra_columns`: additional behaviordata columns (beyond 'zpos') to
+    interpolate onto ts_F -- e.g. for a lag-search that needs behavior
+    aligned to the SAME clock as the neural data before it can be
+    time-shifted (see 2f_lag_information.py).
+
+    The result has 'ts', 'zpos', any requested extra_columns, plus
+    every column of `calciumdata` (cell_id names) unchanged -- directly
+    usable with `compute_trial_position_window_means`/`bin_by_position`/
+    `compute_position_binned_information`, exactly like the behavior/
+    video continuous traces elsewhere in this package, since those only
+    ever need 'ts'/'zpos' plus arbitrary value columns.
     """
     ts_bhv = behaviordata["ts"].to_numpy()
-    zpos_bhv = behaviordata["zpos"].to_numpy()
-    zpos_F = np.interp(np.asarray(ts_F, dtype=float), ts_bhv, zpos_bhv)
+    ts_F = np.asarray(ts_F, dtype=float)
     out = calciumdata.copy()
+    for col in reversed((extra_columns or [])):
+        if col in behaviordata.columns:
+            out.insert(0, col, np.interp(ts_F, ts_bhv, behaviordata[col].to_numpy()))
+    zpos_F = np.interp(ts_F, ts_bhv, behaviordata["zpos"].to_numpy())
     out.insert(0, "zpos", zpos_F)
-    out.insert(0, "ts", np.asarray(ts_F, dtype=float))
+    out.insert(0, "ts", ts_F)
     return out
 
 

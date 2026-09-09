@@ -66,7 +66,10 @@ from .continuous import (
     compute_trial_position_window_means,
     bin_by_position,
 )
-from .psth import align_trials_time, align_trials_position, derive_onset_time
+from .psth import (
+    align_trials_time, align_trials_position, derive_onset_time,
+    compute_position_binned_information, compute_position_bin_indices, mi_from_position_bins,
+)
 from .celldata_utils import (
     get_area_label as get_cell_area_label,
     ordered_groups as cell_ordered_groups,
@@ -128,6 +131,9 @@ __all__ = [
     "align_trials_time",
     "align_trials_position",
     "derive_onset_time",
+    "compute_position_binned_information",
+    "compute_position_bin_indices",
+    "mi_from_position_bins",
     "get_cell_area_label",
     "cell_ordered_groups",
     "cell_bar_by_group",

@@ -136,3 +136,163 @@ def align_trials_position(trialdata: pd.DataFrame, continuous: pd.DataFrame, col
             rows.extend({"trialNumber": trial.get("trialNumber", np.nan), "s_rel": c,
                          "variable": col, "value": v} for c, v in zip(bincenters, stat))
     return pd.DataFrame(rows)
+
+
+def compute_position_bin_indices(trialdata: pd.DataFrame, continuous: pd.DataFrame,
+                                  s_pre: float, s_post: float, binsize: float,
+                                  position_onset_col: str = "stimStart",
+                                  position_col: str = "zpos") -> tuple:
+    """Precompute, ONCE per session, which `continuous` row-indices
+    (frames) fall in each position bin, pooled across ALL trials --
+    i.e. everything `compute_position_binned_information` needs EXCEPT
+    which columns to pull values from. Exists because that function
+    was originally called once per (cell, predictor) pair, redoing this
+    identical trial-windowing loop every single time even though it
+    doesn't depend on which cell/predictor is being analyzed -- with
+    hundreds of cells x several predictors, that redundant looping
+    dominated the runtime. Call this once per session, then
+    `mi_from_position_bins` per (cell, predictor) pair, reusing the
+    same bin_frame_indices -- the actual fix used by
+    2f_lag_information.py.
+
+    Returns
+    -------
+    bincenters : 1D array
+    bin_frame_indices : list of 1D int arrays, one per bin -- pooled
+        `continuous` row-positions (i.e. .iloc-style integer indices,
+        not the DataFrame's .loc index) falling in that bin, across
+        every trial
+    """
+    binedges = np.arange(s_pre, s_post + binsize, binsize)
+    bincenters = (binedges[:-1] + binedges[1:]) / 2
+    pos = continuous[position_col].to_numpy()
+
+    pooled_idx = [[] for _ in bincenters]
+    for _, trial in trialdata.iterrows():
+        z0 = trial[position_onset_col]
+        lo, hi = np.searchsorted(pos, [z0 + s_pre, z0 + s_post])
+        if hi <= lo:
+            continue
+        rel_pos = pos[lo:hi] - z0
+        bin_idx = np.digitize(rel_pos, binedges) - 1
+        valid = (bin_idx >= 0) & (bin_idx < len(bincenters))
+        frame_idx = np.arange(lo, hi)[valid]
+        for b in np.unique(bin_idx[valid]):
+            pooled_idx[b].append(frame_idx[bin_idx[valid] == b])
+
+    bin_frame_indices = [np.concatenate(chunks) if chunks else np.array([], dtype=int)
+                          for chunks in pooled_idx]
+    return bincenters, bin_frame_indices
+
+
+def mi_from_position_bins(activity: np.ndarray, reference: np.ndarray, bincenters, bin_frame_indices,
+                           mi_bins: int = 12, n_shuffles: int = 0, min_samples_per_bin: int = 30,
+                           rng=None) -> pd.DataFrame:
+    """The per-(cell, predictor) half of `compute_position_binned_information`,
+    given the session's bin_frame_indices already computed once by
+    `compute_position_bin_indices` -- just slices and computes MI per
+    bin, no trial looping. Same return format (s_rel, n_samples, mi_bits)."""
+    from .info_theory import mutual_information_hist, mutual_information_shuffle
+
+    rows = []
+    for s_rel, idx in zip(bincenters, bin_frame_indices):
+        if len(idx) == 0:
+            continue
+        a, r = activity[idx], reference[idx]
+        valid = np.isfinite(a) & np.isfinite(r)
+        a, r = a[valid], r[valid]
+        if len(a) < min_samples_per_bin:
+            continue
+        if n_shuffles > 0:
+            mi = mutual_information_shuffle(r, a, bins=mi_bins, n_shuffles=n_shuffles, rng=rng)
+            mi_bits = mi.bits_corrected
+        else:
+            mi_bits = mutual_information_hist(r, a, bins=mi_bins)
+        rows.append({"s_rel": s_rel, "n_samples": len(a), "mi_bits": mi_bits})
+    return pd.DataFrame(rows)
+
+
+def compute_position_binned_information(trialdata: pd.DataFrame, continuous: pd.DataFrame,
+                                          activity_col: str, reference_col: str,
+                                          s_pre: float, s_post: float, binsize: float,
+                                          position_onset_col: str = "stimStart", position_col: str = "zpos",
+                                          mi_bins: int = 12, n_shuffles: int = 0,
+                                          min_samples_per_bin: int = 30, rng=None) -> pd.DataFrame:
+    """The information-theoretic analogue of `align_trials_position`:
+    instead of averaging a variable within each position bin,
+    pools every RAW SAMPLE (every individual frame, from every trial)
+    that falls in a given position bin and computes mutual information
+    between `activity_col` and `reference_col` from that pooled sample
+    set -- i.e. a position-resolved MI curve, not a position-resolved
+    mean. `reference_col` should already be whatever lag-shifted version
+    of a variable the caller wants tested (this function does no
+    shifting itself -- shift the continuous DataFrame's column BEFORE
+    calling, e.g. via `continuous[col].shift(lag_frames)`).
+
+    PERFORMANCE NOTE: if calling this for MANY (activity_col,
+    reference_col) pairs against the SAME trialdata/continuous (e.g.
+    many cells x several predictors), this redoes an expensive
+    per-trial windowing loop every single call even though that
+    windowing doesn't depend on which columns are being compared --
+    use `compute_position_bin_indices` (once per session) +
+    `mi_from_position_bins` (once per pair) instead; see
+    2f_lag_information.py, which hit exactly this cost with hundreds of
+    cells.
+
+    `n_shuffles=0` (default): plain histogram MI, no bias-correction
+    shuffle test -- fast, appropriate for lag-SEARCH use (relative
+    ordering across lags is what matters, not calibrated bits). Pass
+    n_shuffles>0 for the final, reported version (shuffle-corrected
+    bits, matching this project's convention elsewhere).
+
+    `min_samples_per_bin`: a position bin with fewer pooled samples than
+    this is skipped (returns no row for it) rather than computing MI on
+    too few points to be meaningful.
+
+    Returns
+    -------
+    DataFrame: one row per position bin with enough pooled samples --
+    s_rel (bin center), n_samples, mi_bits (mi_bits_corrected if
+    n_shuffles>0, else the raw/uncorrected estimate)
+    """
+    from .info_theory import mutual_information_hist, mutual_information_shuffle
+
+    binedges = np.arange(s_pre, s_post + binsize, binsize)
+    bincenters = (binedges[:-1] + binedges[1:]) / 2
+    pos = continuous[position_col].to_numpy()
+    activity = continuous[activity_col].to_numpy()
+    reference = continuous[reference_col].to_numpy()
+
+    pooled_activity = [[] for _ in bincenters]
+    pooled_reference = [[] for _ in bincenters]
+
+    for _, trial in trialdata.iterrows():
+        z0 = trial[position_onset_col]
+        lo, hi = np.searchsorted(pos, [z0 + s_pre, z0 + s_post])
+        if hi <= lo:
+            continue
+        rel_pos = pos[lo:hi] - z0
+        bin_idx = np.digitize(rel_pos, binedges) - 1
+        act_window = activity[lo:hi]
+        ref_window = reference[lo:hi]
+        valid = np.isfinite(act_window) & np.isfinite(ref_window) & (bin_idx >= 0) & (bin_idx < len(bincenters))
+        for b in np.unique(bin_idx[valid]):
+            mask = valid & (bin_idx == b)
+            pooled_activity[b].append(act_window[mask])
+            pooled_reference[b].append(ref_window[mask])
+
+    rows = []
+    for b, s_rel in enumerate(bincenters):
+        if not pooled_activity[b]:
+            continue
+        a = np.concatenate(pooled_activity[b])
+        r = np.concatenate(pooled_reference[b])
+        if len(a) < min_samples_per_bin:
+            continue
+        if n_shuffles > 0:
+            mi = mutual_information_shuffle(r, a, bins=mi_bins, n_shuffles=n_shuffles, rng=rng)
+            mi_bits = mi.bits_corrected
+        else:
+            mi_bits = mutual_information_hist(r, a, bins=mi_bins)
+        rows.append({"s_rel": s_rel, "n_samples": len(a), "mi_bits": mi_bits})
+    return pd.DataFrame(rows)
