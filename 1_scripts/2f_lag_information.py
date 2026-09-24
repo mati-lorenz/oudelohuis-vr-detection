@@ -2,24 +2,49 @@
 """
 2f_lag_information
 =====================
-Two questions, in order:
+Three steps, in order:
 
-1. Is a cell's activity more informative about a behavioral variable at
-   some TEMPORAL LAG (the variable measured before or after the neural
-   sample) than at zero lag? For each (predictor, area) -- lag chosen
-   PER AREA, not globally or per cell, since a single cell's estimate
-   would be too noisy but different areas may genuinely have different
-   lags -- searches a range of lags and picks the one that maximizes
-   mutual information, averaged across that area's cells.
+1. LINEAR lag search: is a cell's activity more strongly related to a
+   behavioral variable at some TEMPORAL LAG than at zero lag? For each
+   (predictor, area) -- lag chosen PER AREA (a single cell's estimate
+   would be too noisy but different areas may genuinely differ) --
+   searches a range of lags and picks the one that maximizes linear r^2
+   between activity and the lag-shifted predictor, averaged across that
+   area's cells. Deliberately linear, not information-theoretic (that
+   was this script's first version -- see git history / prior output):
+   a plain linear cross-correlation is the standard, interpretable tool
+   for "which lag" questions and is much cheaper than MI at this scale.
 
-2. Using each (predictor, area)'s optimal lag, build a POSITION-resolved
-   information PSTH: mutual information between a cell's activity and
-   the (lag-shifted) behavioral variable, as a function of trial-aligned
-   POSITION (same convention as 1c_behavior.py's position-domain PSTH --
-   x axis is position, the lag applied to get there is purely temporal).
+2. GRANGER CAUSALITY at each (predictor, area)'s selected lag: does the
+   lag-shifted predictor improve prediction of a cell's activity BEYOND
+   what the cell's own recent activity history already predicts about
+   itself? An F-test comparing an autoregressive model of the cell's
+   own past against the same model plus the lagged predictor. This is a
+   stronger claim than the lag search's plain r^2 -- two autocorrelated
+   signals can show a strong lagged correlation with no real link at
+   all if both simply vary slowly; Granger causality specifically
+   conditions that out. Reported as the fraction of cells per
+   (predictor, area) with a significant (p<0.05) improvement.
+
+3. Using each (predictor, area)'s optimal lag: a POSITION-resolved
+   INFORMATION PSTH (same convention as 1c_behavior.py's position-domain
+   PSTH -- x axis is position, the lag applied to get there is purely
+   temporal), computed TWO ways per position bin:
+     a) mutual information between activity and the lag-shifted
+        predictor (as in this script's first version)
+     b) TRANSFER ENTROPY from the lag-shifted predictor to activity --
+        i.e. does the predictor's past add information about a cell's
+        activity BEYOND the cell's own immediately preceding activity,
+        the position-resolved analogue of step 2's Granger test but in
+        an information-theoretic (not linear) form. TE is computed on a
+        SUBSET of cells per area (MAX_CELLS_FOR_TE) -- it needs a 3-way
+        joint histogram per position bin per cell, several times more
+        expensive than the plain MI panel, so full-population TE at
+        this resolution isn't tractable; the plain MI panel still uses
+        every included cell.
 
 Per the person's explicit instruction: NO trial-window averaging
-anywhere in this script -- every MI computation pools raw, individual
+anywhere in this script -- every computation pools raw, individual
 CALCIUM FRAMES (not per-trial means) as its sample set. This is
 different from 2c/2d/2e_*.py, which use trial-window means; this script
 exists specifically because averaging within windows could hide a
@@ -37,27 +62,26 @@ Outputs
 -------
 2_pipeline/2f_lag_information/
     out/    lag_search_per_cell.csv     one row per (session, cell,
-                                         predictor, lag): raw MI (no
-                                         shuffle correction -- see below)
+                                         predictor, lag): linear r^2
             optimal_lags.csv            one row per (predictor, area):
                                          chosen lag + the area-averaged
-                                         MI-vs-lag curve
+                                         r^2-vs-lag curve
+            granger_causality.csv       one row per (session, cell,
+                                         predictor): r2_restricted,
+                                         r2_unrestricted, p_value, at
+                                         that (predictor, area)'s
+                                         optimal lag
             position_information.csv    one row per (predictor, area,
                                          position bin): shuffle-corrected
                                          MI, averaged across that area's
                                          cells, using that (predictor,
                                          area)'s optimal lag
+            position_transfer_entropy.csv  same, but shuffle-corrected
+                                         transfer entropy on a cell
+                                         subsample (MAX_CELLS_FOR_TE)
             figures/*.png
-    store/  lag_search.pkl, position_information.pkl   cached (reused
-                                         unless --recompute)
-
-Compute-budget notes (same spirit as 2c_information.py): the LAG SEARCH
-(part 1) uses plain, uncorrected histogram MI (n_shuffles=0) -- only the
-relative ordering across lags matters for picking an argmax, not
-calibrated bits, and this step already means (n_cells x n_predictors x
-n_lags) histogram-MI calls over full-session-length frame series. The
-final POSITION-resolved information (part 2, the actual reported
-figure) uses the normal shuffle-corrected MI.
+    store/  lag_search.pkl, granger.pkl, position_information.pkl,
+            position_te.pkl              cached (reused unless --recompute)
 """
 from __future__ import annotations
 
@@ -73,7 +97,7 @@ from infotheory.session import load_sessions
 from infotheory.neural_encoding import load_cell_inclusion, BEHAVIOR_PREDICTORS
 from infotheory.continuous import build_calcium_continuous, merge_behavior_video, restrict_to_engaged, remove_pupil_outliers
 from infotheory.psth import derive_onset_time, compute_position_binned_information
-from infotheory.info_theory import mutual_information_hist
+from infotheory.info_theory import linear_fit, granger_causality_test, transfer_entropy_shuffle
 from infotheory.celldata_utils import AREA_COLORS, DEFAULT_AREA_ORDER
 from infotheory.plotting import set_style, save_fig, clear_figures
 
@@ -82,7 +106,15 @@ PREDICTORS = BEHAVIOR_PREDICTORS  # continuous only -- see module docstring
 
 LAG_RANGE_S = (-2.0, 2.0)
 LAG_STEP_S = 0.25
-MI_BINS_LAG_SEARCH = 10   # uncorrected, fast -- see module docstring
+AR_ORDER_GRANGER = 3  # frames of a cell's own activity history used in the Granger causality test
+
+MAX_CELLS_FOR_TE = 40  # per (session, area) -- transfer entropy needs a 3-way joint histogram
+                        # per position bin per cell (several times the cost of plain MI), so it's
+                        # computed on a representative subsample rather than every included cell
+TE_BINS = 6             # coarser than MI_BINS_PSTH -- a 3-way histogram (source x target_past x
+                        # target_future) has bins^3 cells instead of bins^2, so it needs fewer
+                        # bins per dimension to stay reasonably populated at the same sample size
+N_SHUFFLES_TE = 8       # reduced from N_SHUFFLES_PSTH for the same reason
 
 POSITION_WINDOW = (-80.0, 60.0, 8.0)  # s_pre, s_post, binsize (cm) -- coarser than 1c_behavior.py's
                                         # 5cm PSTH bins on purpose: this figure pools activity
@@ -124,7 +156,7 @@ MIN_SAMPLES_PER_BIN = 400  # raised again after the first fix (200) still left t
                             # drops only the single thinnest edge bin.
 
 RANDOM_STATE = 0
-N_JOBS_SESSIONS = -1
+N_JOBS_SESSIONS = 12
 JOBLIB_VERBOSE = 5
 
 parser = argparse.ArgumentParser()
@@ -220,15 +252,15 @@ def build_frame_table(ses):
 
 
 # --------------------------------------------------------------------- #
-# 2. Lag search: for each cell, each predictor, each lag -- raw MI over
-#    ALL pooled frames (no trial windows).
+# 2. Lag search: for each cell, each predictor, each lag -- linear r^2
+#    over ALL pooled frames (no trial windows).
 # --------------------------------------------------------------------- #
 lag_search_cache = paths.store / "lag_search.pkl"
 lag_search_table = None
 if not args.recompute and lag_search_cache.exists():
     try:
         lag_search_table = pd.read_pickle(lag_search_cache)
-        if not {"session_id", "cell_id", "predictor", "lag_s", "mi_bits"}.issubset(lag_search_table.columns):
+        if not {"session_id", "cell_id", "predictor", "lag_s", "r2"}.issubset(lag_search_table.columns):
             lag_search_table = None
     except Exception:
         lag_search_table = None
@@ -262,11 +294,10 @@ if lag_search_table is None:
                     finite = np.isfinite(activity) & np.isfinite(ref_shifted)
                     if finite.sum() < 50:
                         continue
-                    mi_bits = mutual_information_hist(ref_shifted[finite], activity[finite],
-                                                        bins=MI_BINS_LAG_SEARCH)
+                    lin = linear_fit(ref_shifted[finite], activity[finite])
                     records.append({"session_id": ses.session_id, "cell_id": cell_id,
                                      "roi_name": area_lookup.get(cell_id), "predictor": predictor,
-                                     "lag_s": lag_s, "mi_bits": mi_bits})
+                                     "lag_s": lag_s, "r2": lin.r2})
         print(f"  [{ses.session_id}] lag search done ({len(cell_cols)} cells x "
               f"{len(available_predictors)} predictors x {len(lags)} lags)")
         return records
@@ -280,17 +311,17 @@ if lag_search_table is None:
     lag_search_table.to_pickle(lag_search_cache)
 
 lag_search_table.to_csv(paths.out / "lag_search_per_cell.csv", index=False)
-print(f"\n{len(lag_search_table)} (cell, predictor, lag) MI values computed")
+print(f"\n{len(lag_search_table)} (cell, predictor, lag) linear r\u00b2 values computed")
 
 
 # --------------------------------------------------------------------- #
-# 3. Optimal lag per (predictor, area): average the per-cell MI-vs-lag
+# 3. Optimal lag per (predictor, area): average the per-cell r^2-vs-lag
 #    curves within each area, then take the argmax.
 # --------------------------------------------------------------------- #
-area_curve = (lag_search_table.groupby(["predictor", "roi_name", "lag_s"])["mi_bits"]
+area_curve = (lag_search_table.groupby(["predictor", "roi_name", "lag_s"])["r2"]
               .mean().reset_index())
-optimal_lags = (area_curve.loc[area_curve.groupby(["predictor", "roi_name"])["mi_bits"].idxmax()]
-                 .rename(columns={"lag_s": "optimal_lag_s", "mi_bits": "mi_bits_at_optimum"})
+optimal_lags = (area_curve.loc[area_curve.groupby(["predictor", "roi_name"])["r2"].idxmax()]
+                 .rename(columns={"lag_s": "optimal_lag_s", "r2": "r2_at_optimum"})
                  .reset_index(drop=True))
 optimal_lags.to_csv(paths.out / "optimal_lags.csv", index=False)
 area_curve.to_csv(paths.out / "lag_curve_by_area.csv", index=False)
@@ -298,27 +329,130 @@ area_curve.to_csv(paths.out / "lag_curve_by_area.csv", index=False)
 print("\nOptimal lag per (predictor, area) -- positive = behavior BEFORE activity "
       "(behavior leads, activity's response is delayed), negative = behavior AFTER activity "
       "(activity leads, e.g. an efference-copy/motor-preparation signal preceding the movement):")
-print(optimal_lags[["predictor", "roi_name", "optimal_lag_s", "mi_bits_at_optimum"]].to_string(index=False))
+print(optimal_lags[["predictor", "roi_name", "optimal_lag_s", "r2_at_optimum"]].to_string(index=False))
 
-# Figure: MI-vs-lag curve, one panel per predictor, one line per area
+# Figure: r^2-vs-lag curve, one panel per predictor, one line per area
 fig, axes = plt.subplots(1, len(PREDICTORS), figsize=(4.5 * len(PREDICTORS), 4), squeeze=False)
 for ax, predictor in zip(axes[0], PREDICTORS):
     sub = area_curve[area_curve["predictor"] == predictor]
     for area in [a for a in DEFAULT_AREA_ORDER if a in sub["roi_name"].unique()]:
         asub = sub[sub["roi_name"] == area].sort_values("lag_s")
-        ax.plot(asub["lag_s"], asub["mi_bits"], color=AREA_COLORS.get(area, "gray"), label=area)
+        ax.plot(asub["lag_s"], asub["r2"], color=AREA_COLORS.get(area, "gray"), label=area)
         best = optimal_lags[(optimal_lags["predictor"] == predictor) & (optimal_lags["roi_name"] == area)]
         if len(best):
             ax.axvline(best["optimal_lag_s"].iloc[0], color=AREA_COLORS.get(area, "gray"),
                        linestyle=":", linewidth=1, alpha=0.7)
     ax.axvline(0, color="black", linewidth=0.7)
     ax.set_xlabel("lag (s) [+ = behavior before activity (behavior leads)]")
-    ax.set_ylabel("MI (bits, uncorrected)")
+    ax.set_ylabel("linear r\u00b2")
     ax.set_title(predictor)
 axes[0][0].legend(fontsize=8, frameon=False)
-fig.suptitle(f"Optimal lag search -- {PROTOCOL}", y=1.03)
+fig.suptitle(f"Optimal lag search (linear) -- {PROTOCOL}", y=1.03)
 fig.tight_layout()
 save_fig(fig, figdir, "1_lag_search")
+
+
+# --------------------------------------------------------------------- #
+# 3b. Granger causality at each (predictor, area)'s optimal lag: does
+#    the lag-shifted predictor improve prediction of a cell's activity
+#    BEYOND the cell's own recent history? Per cell, then reported as
+#    the fraction of cells per (predictor, area) with a significant
+#    (p<0.05) improvement.
+# --------------------------------------------------------------------- #
+granger_cache = paths.store / "granger.pkl"
+granger_table = None
+if not args.recompute and granger_cache.exists():
+    try:
+        granger_table = pd.read_pickle(granger_cache)
+        if not {"session_id", "cell_id", "predictor", "p_value"}.issubset(granger_table.columns):
+            granger_table = None
+    except Exception:
+        granger_table = None
+    if granger_table is not None:
+        print(f"Reusing cached Granger causality from {paths.store}")
+
+if granger_table is None:
+    sessions = load_sessions(protocols=[PROTOCOL], load_behaviordata=True, load_videodata=True,
+                              load_celldata=True, load_calciumdata=True, only_session_ids=included_ids)
+    optimal_lag_lookup = optimal_lags.set_index(["predictor", "roi_name"])["optimal_lag_s"].to_dict()
+
+    def granger_one_session(ses):
+        from infotheory.spike_stats import get_frame_rate
+        frame_table, _ = build_frame_table(ses)
+        if frame_table is None:
+            return []
+        fs = get_frame_rate(ses, fallback=8.0)
+        cell_cols = [c for c in ses.celldata["cell_id"] if c in frame_table.columns]
+        available_predictors = [p for p in PREDICTORS if p in frame_table.columns]
+        area_lookup = ses.celldata.set_index("cell_id")["roi_name"].to_dict()
+
+        records = []
+        for predictor in available_predictors:
+            ref = frame_table[predictor].to_numpy()
+            for cell_id in cell_cols:
+                area = area_lookup.get(cell_id)
+                lag_s = optimal_lag_lookup.get((predictor, area))
+                if lag_s is None:
+                    continue
+                lag_frames = int(round(lag_s * fs))
+                ref_shifted = shift_with_nan(ref, lag_frames)
+                activity = frame_table[cell_id].to_numpy()
+                r2r, r2u, p = granger_causality_test(activity, ref_shifted, ar_order=AR_ORDER_GRANGER)
+                if np.isnan(p):
+                    continue
+                records.append({"session_id": ses.session_id, "cell_id": cell_id, "roi_name": area,
+                                 "predictor": predictor, "lag_s": lag_s, "r2_restricted": r2r,
+                                 "r2_unrestricted": r2u, "p_value": p})
+        print(f"  [{ses.session_id}] Granger causality done")
+        return records
+
+    print(f"\nGranger causality at each optimal lag, over {len(sessions)} sessions "
+          f"(n_jobs={N_JOBS_SESSIONS}) ...")
+    nested = Parallel(n_jobs=N_JOBS_SESSIONS, backend="loky", verbose=JOBLIB_VERBOSE)(
+        delayed(granger_one_session)(ses) for ses in sessions
+    )
+    granger_table = pd.DataFrame([rec for group in nested for rec in group])
+    granger_table.to_pickle(granger_cache)
+
+granger_table.to_csv(paths.out / "granger_causality.csv", index=False)
+if len(granger_table):
+    granger_table["r2_improvement"] = granger_table["r2_unrestricted"] - granger_table["r2_restricted"]
+    frac_sig = (granger_table.assign(sig=granger_table["p_value"] < 0.05)
+                .groupby(["predictor", "roi_name"])
+                .agg(frac_significant=("sig", "mean"), median_r2_improvement=("r2_improvement", "median"),
+                     n_cells=("cell_id", "nunique")).reset_index())
+    frac_sig.to_csv(paths.out / "granger_causality_summary.csv", index=False)
+    print(f"\n{len(granger_table)} Granger causality tests run. Fraction of cells with a "
+          f"significant (p<0.05) improvement, by (predictor, area):")
+    print("CAVEAT: the lag tested for each cell was CHOSEN because it maximized that "
+          "(predictor, area)'s r\u00b2 in step 1 -- testing Granger causality at that same, "
+          "already-optimized lag is post-selection inference / double dipping, which inflates "
+          "the apparent significant fraction above the true 5% null rate even with no real "
+          "effect (confirmed on this project's synthetic data, which has no genuine link: "
+          "every combination still came out ABOVE, not scattered around, 5%). Read these as "
+          "upper bounds, not calibrated hit rates.")
+    print(frac_sig.sort_values("frac_significant", ascending=False).to_string(index=False))
+
+    fig, ax = plt.subplots(figsize=(max(7, 1.2 * len(PREDICTORS)), 5))
+    pred_order = [p for p in PREDICTORS if p in frac_sig["predictor"].unique()]
+    area_order = [a for a in DEFAULT_AREA_ORDER if a in frac_sig["roi_name"].unique()]
+    x = np.arange(len(pred_order))
+    width = 0.8 / max(len(area_order), 1)
+    for i, area in enumerate(area_order):
+        vals = [frac_sig.loc[(frac_sig["predictor"] == p) & (frac_sig["roi_name"] == area),
+                              "frac_significant"].pipe(lambda s: s.iloc[0] if len(s) else np.nan)
+                for p in pred_order]
+        ax.bar(x + (i - (len(area_order) - 1) / 2) * width, vals, width=width,
+               color=AREA_COLORS.get(area, "gray"), label=area, edgecolor="black", linewidth=0.3)
+    ax.axhline(0.05, color="grey", linestyle="--", linewidth=1, label="chance (\u03b1=0.05)")
+    ax.set_xticks(x)
+    ax.set_xticklabels(pred_order)
+    ax.set_ylabel("fraction of cells with p<0.05")
+    ax.set_title(f"Granger causality: does behavior improve prediction beyond a cell's own "
+                 f"history? -- {PROTOCOL}")
+    ax.legend(fontsize=8, frameon=False)
+    fig.tight_layout()
+    save_fig(fig, figdir, "1b_granger_causality")
 
 
 # --------------------------------------------------------------------- #
@@ -418,6 +552,92 @@ print(f"\nCAVEAT: positions outside {TRUSTED_POSITION_RANGE} cm show an elevated
 
 
 # --------------------------------------------------------------------- #
+# 4b. Position-resolved TRANSFER ENTROPY: TE(lag-shifted predictor ->
+#    activity) per position bin, on a cell subsample (MAX_CELLS_FOR_TE
+#    per session/area) -- see module docstring for why this is
+#    subsampled while the MI panel above isn't.
+# --------------------------------------------------------------------- #
+te_cache = paths.store / "position_te.pkl"
+te_table = None
+if not args.recompute and te_cache.exists():
+    try:
+        te_table = pd.read_pickle(te_cache)
+        if not {"predictor", "roi_name", "s_rel", "te_bits"}.issubset(te_table.columns):
+            te_table = None
+    except Exception:
+        te_table = None
+    if te_table is not None:
+        print(f"\nReusing cached position-resolved transfer entropy from {paths.store}")
+
+if te_table is None:
+    sessions = load_sessions(protocols=[PROTOCOL], load_behaviordata=True, load_videodata=True,
+                              load_celldata=True, load_calciumdata=True, only_session_ids=included_ids)
+    optimal_lag_lookup = optimal_lags.set_index(["predictor", "roi_name"])["optimal_lag_s"].to_dict()
+
+    def te_one_session(ses, seed):
+        from infotheory.spike_stats import get_frame_rate
+        from infotheory.psth import compute_position_bin_indices, te_from_position_bins
+        rng_local = np.random.default_rng(seed)
+        frame_table, engaged_trials = build_frame_table(ses)
+        if frame_table is None or engaged_trials is None or engaged_trials.empty:
+            return []
+        fs = get_frame_rate(ses, fallback=8.0)
+        cell_cols = [c for c in ses.celldata["cell_id"] if c in frame_table.columns]
+        available_predictors = [p for p in PREDICTORS if p in frame_table.columns]
+        area_lookup = ses.celldata.set_index("cell_id")["roi_name"].to_dict()
+        s_pre, s_post, binsize = POSITION_WINDOW
+
+        bincenters, bin_frame_indices = compute_position_bin_indices(
+            engaged_trials, frame_table, s_pre=s_pre, s_post=s_post, binsize=binsize)
+
+        cells_by_area = {}
+        for cell_id in cell_cols:
+            cells_by_area.setdefault(area_lookup.get(cell_id), []).append(cell_id)
+        # Subsample cells per area for tractability (see module docstring)
+        for area in cells_by_area:
+            if len(cells_by_area[area]) > MAX_CELLS_FOR_TE:
+                cells_by_area[area] = list(rng_local.choice(cells_by_area[area], size=MAX_CELLS_FOR_TE,
+                                                              replace=False))
+
+        records = []
+        for predictor in available_predictors:
+            predictor_raw = frame_table[predictor].to_numpy()
+            for area, area_cell_ids in cells_by_area.items():
+                lag_s = optimal_lag_lookup.get((predictor, area))
+                if lag_s is None:
+                    continue
+                lag_frames = int(round(lag_s * fs))
+                ref_shifted = shift_with_nan(predictor_raw, lag_frames)
+
+                for cell_id in area_cell_ids:
+                    activity = frame_table[cell_id].to_numpy()
+                    result = te_from_position_bins(
+                        activity, ref_shifted, bincenters, bin_frame_indices,
+                        target_horizon_frames=1, te_bins=TE_BINS, n_shuffles=N_SHUFFLES_TE,
+                        min_samples_per_bin=MIN_SAMPLES_PER_BIN, rng=rng_local)
+                    for _, row in result.iterrows():
+                        records.append({"session_id": ses.session_id, "cell_id": cell_id, "roi_name": area,
+                                         "predictor": predictor, "s_rel": row["s_rel"],
+                                         "n_samples": row["n_samples"], "te_bits": row["te_bits"]})
+        print(f"  [{ses.session_id}] position-resolved transfer entropy done")
+        return records
+
+    print(f"\nComputing position-resolved transfer entropy for {len(sessions)} sessions "
+          f"(n_jobs={N_JOBS_SESSIONS}, up to {MAX_CELLS_FOR_TE} cells/area) ...")
+    nested = Parallel(n_jobs=N_JOBS_SESSIONS, backend="loky", verbose=JOBLIB_VERBOSE)(
+        delayed(te_one_session)(ses, RANDOM_STATE + 500 + i) for i, ses in enumerate(sessions)
+    )
+    per_cell_te = pd.DataFrame([rec for group in nested for rec in group])
+    te_table = (per_cell_te.groupby(["predictor", "roi_name", "s_rel"])
+                .agg(te_bits=("te_bits", "mean"), n_cells=("cell_id", "nunique")).reset_index())
+    te_table.to_pickle(te_cache)
+    per_cell_te.to_csv(paths.out / "position_te_per_cell.csv", index=False)
+
+te_table.to_csv(paths.out / "position_transfer_entropy.csv", index=False)
+print(f"\n{len(te_table)} (predictor, area, position bin) transfer entropy values computed "
+      f"(subsampled to {MAX_CELLS_FOR_TE} cells/area/session)")
+
+# --------------------------------------------------------------------- #
 # 5. Figure: information PSTH -- x=position, y=MI, one panel per
 #    predictor, one line per area, using that (predictor, area)'s
 #    optimal lag.
@@ -445,6 +665,43 @@ fig.suptitle(f"Lagged information PSTH -- {PROTOCOL} (behavior shifted by each a
              y=1.05)
 fig.tight_layout()
 save_fig(fig, figdir, "2_lagged_information_psth")
+
+
+# --------------------------------------------------------------------- #
+# 6. Figure: transfer entropy PSTH -- same layout as the MI figure, but
+#    TE(behavior -> activity) instead of plain MI. A position where TE
+#    is elevated but the plain MI panel above ISN'T (or vice versa) is
+#    itself informative: TE conditions out each cell's own
+#    predictability, so it can be smaller than plain MI even at a
+#    position with a real relationship (if that relationship is largely
+#    redundant with the cell's own recent activity), or -- less
+#    intuitively -- it usually won't be LARGER than the plain MI, since
+#    conditioning on more information can only remove, not add,
+#    dependency on the source.
+# --------------------------------------------------------------------- #
+fig, axes = plt.subplots(1, len(PREDICTORS), figsize=(4.5 * len(PREDICTORS), 4.5), squeeze=False)
+for ax, predictor in zip(axes[0], PREDICTORS):
+    sub = te_table[te_table["predictor"] == predictor]
+    for area in [a for a in DEFAULT_AREA_ORDER if a in sub["roi_name"].unique()]:
+        asub = sub[sub["roi_name"] == area].sort_values("s_rel")
+        if asub.empty:
+            continue
+        lag_row = optimal_lags[(optimal_lags["predictor"] == predictor) & (optimal_lags["roi_name"] == area)]
+        lag_label = f" (lag={lag_row['optimal_lag_s'].iloc[0]:+.2f}s)" if len(lag_row) else ""
+        ax.plot(asub["s_rel"], asub["te_bits"], color=AREA_COLORS.get(area, "gray"),
+                 label=f"{area}{lag_label}")
+    ax.axvline(0, color="black", linestyle=":", linewidth=1)
+    ax.axvspan(POSITION_WINDOW[0], TRUSTED_POSITION_RANGE[0], color="grey", alpha=0.15, zorder=0)
+    ax.axvspan(TRUSTED_POSITION_RANGE[1], POSITION_WINDOW[1], color="grey", alpha=0.15, zorder=0)
+    ax.set_xlabel("position rel. to stimulus onset (cm)")
+    ax.set_ylabel("transfer entropy (bits, shuffle-corrected)")
+    ax.set_title(predictor)
+    ax.legend(fontsize=7, frameon=False)
+fig.suptitle(f"Transfer entropy PSTH -- {PROTOCOL} (behavior -> activity, at each area's optimal lag, "
+             f"{MAX_CELLS_FOR_TE} cells/area/session)\nshaded region: same known artifact as figure 2",
+             y=1.05)
+fig.tight_layout()
+save_fig(fig, figdir, "3_transfer_entropy_psth")
 
 print(f"\nWrote tables to {paths.out}, figures to {figdir}")
 print("Run `python b_progress/make_progress_md.py 2f_lag_information` to build a markdown summary.")

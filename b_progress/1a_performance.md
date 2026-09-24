@@ -1,6 +1,6 @@
 # 1a_performance
 
-*Auto-generated from `2_pipeline/1a_performance/out/` on 2026-09-08 14:03. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/1a_performance/out/` on 2026-09-14 16:47. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 

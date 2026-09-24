@@ -1,6 +1,6 @@
 # 2a_cell_distribution
 
-*Auto-generated from `2_pipeline/2a_cell_distribution/out/` on 2026-09-08 15:15. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/2a_cell_distribution/out/` on 2026-09-21 13:25. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 
@@ -9,37 +9,37 @@
 | animal_id | session_id | roi_name | n_cells |
 | --- | --- | --- | --- |
 | LPE10884 | LPE10884_2024_01_12 | AL | 320 |
-| LPE10884 | LPE10884_2024_01_12 | PM | 408 |
 | LPE10884 | LPE10884_2024_01_12 | RSP | 63 |
-| LPE10884 | LPE10884_2024_01_12 | V1 | 302 |
 | LPE10884 | LPE10884_2024_01_17 | AL | 417 |
-| LPE10884 | LPE10884_2024_01_17 | PM | 562 |
 | LPE10884 | LPE10884_2024_01_17 | RSP | 159 |
-| LPE10884 | LPE10884_2024_01_17 | V1 | 427 |
 | LPE10884 | LPE10884_2024_01_18 | AL | 164 |
-| LPE10884 | LPE10884_2024_01_18 | PM | 365 |
 | LPE10884 | LPE10884_2024_01_18 | RSP | 101 |
-| LPE10884 | LPE10884_2024_01_18 | V1 | 308 |
-| LPE11622 | LPE11622_2024_02_20 | PM | 1019 |
-| LPE11622 | LPE11622_2024_02_20 | V1 | 811 |
+| LPE11622 | LPE11622_2024_02_20 | PM | 960 |
+| LPE11622 | LPE11622_2024_02_20 | V1 | 594 |
 | LPE11622 | LPE11622_2024_02_21 | AL | 179 |
-| LPE11622 | LPE11622_2024_02_21 | PM | 566 |
+| LPE11622 | LPE11622_2024_02_21 | PM | 404 |
 | LPE11622 | LPE11622_2024_02_21 | RSP | 386 |
-| LPE11622 | LPE11622_2024_02_21 | V1 | 768 |
+| LPE11622 | LPE11622_2024_02_21 | V1 | 505 |
 | LPE11622 | LPE11622_2024_02_22 | AL | 105 |
-| LPE11622 | LPE11622_2024_02_22 | PM | 785 |
+| LPE11622 | LPE11622_2024_02_22 | PM | 702 |
 | LPE11622 | LPE11622_2024_02_22 | RSP | 554 |
-| LPE11622 | LPE11622_2024_02_22 | V1 | 741 |
+| LPE11622 | LPE11622_2024_02_22 | V1 | 351 |
 | LPE11622 | LPE11622_2024_02_23 | AL | 264 |
-| LPE11622 | LPE11622_2024_02_23 | PM | 639 |
+| LPE11622 | LPE11622_2024_02_23 | PM | 533 |
 | LPE11622 | LPE11622_2024_02_23 | RSP | 394 |
-| LPE11622 | LPE11622_2024_02_23 | V1 | 846 |
+| LPE11622 | LPE11622_2024_02_23 | V1 | 450 |
 | LPE11622 | LPE11622_2024_02_26 | AL | 139 |
-| LPE11622 | LPE11622_2024_02_26 | PM | 1104 |
+| LPE11622 | LPE11622_2024_02_26 | PM | 866 |
 | LPE11622 | LPE11622_2024_02_26 | RSP | 575 |
-| LPE11622 | LPE11622_2024_02_26 | V1 | 1149 |
+| LPE11622 | LPE11622_2024_02_26 | V1 | 597 |
+| LPE11622 | LPE11622_2024_02_27 | AL | 86 |
+| LPE11622 | LPE11622_2024_02_27 | PM | 492 |
+| LPE11622 | LPE11622_2024_02_27 | RSP | 355 |
+| LPE11622 | LPE11622_2024_02_27 | V1 | 305 |
+| LPE11997 | LPE11997_2024_04_10 | AL | 151 |
+| LPE11997 | LPE11997_2024_04_10 | PM | 842 |
 
-*(showing first 30 of 126 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 114 rows -- see the linked CSV for the rest)*
 
 [cell_counts_summary.csv](../2_pipeline/2a_cell_distribution/out/cell_counts_summary.csv)
 

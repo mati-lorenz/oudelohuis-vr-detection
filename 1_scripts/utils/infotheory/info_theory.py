@@ -138,6 +138,179 @@ def mutual_information_shuffle(x, y, bins: int = 20, n_shuffles: int = 50,
                      bits_shuffle_std=std_s, bits_corrected=corrected, p_value=p_value)
 
 
+def conditional_mutual_information_hist(x, y, z, bins: int = 10) -> float:
+    """I(X;Y|Z) via histogram binning and the entropy decomposition
+    I(X;Y|Z) = H(X,Z) + H(Y,Z) - H(X,Y,Z) - H(Z) (bits).
+
+    Each variable is independently quantile-binned (`quantile_bin_edges`,
+    robust to low-cardinality/discrete inputs, same as the rest of this
+    module), then joint/marginal entropies are computed from the
+    resulting multi-way histogram. This is the building block
+    `transfer_entropy_hist` below uses (transfer entropy IS a
+    conditional MI, just with a specific choice of X/Y/Z -- a target's
+    own future given its own past, conditioned on a source's past).
+
+    Non-negative by construction; floored at 0 to absorb floating-point
+    noise from the entropy subtraction.
+    """
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    z = np.asarray(z, dtype=float)
+    n = len(x)
+    if n < 10:
+        return np.nan
+
+    def digitize(v):
+        edges = quantile_bin_edges(v, bins)
+        return np.clip(np.digitize(v, edges[1:-1]), 0, bins - 1)
+
+    xb, yb, zb = digitize(x), digitize(y), digitize(z)
+
+    def joint_entropy(*binned_arrays):
+        codes = np.zeros(n, dtype=np.int64)
+        mult = 1
+        for arr in binned_arrays:
+            codes += arr.astype(np.int64) * mult
+            mult *= int(arr.max()) + 1
+        _, counts = np.unique(codes, return_counts=True)
+        p = counts / counts.sum()
+        return float(-np.sum(p * np.log2(p)))
+
+    h_xz = joint_entropy(xb, zb)
+    h_yz = joint_entropy(yb, zb)
+    h_xyz = joint_entropy(xb, yb, zb)
+    h_z = joint_entropy(zb)
+    return max(h_xz + h_yz - h_xyz - h_z, 0.0)
+
+
+def transfer_entropy_hist(source, target, bins: int = 10, target_horizon_frames: int = 1) -> float:
+    """Transfer entropy TE(source -> target) = I(target_future ;
+    source_past | target_past), in bits -- how much knowing `source`'s
+    CURRENT value reduces uncertainty about `target`'s value
+    `target_horizon_frames` samples later, BEYOND what `target`'s own
+    current value already predicts about its own future. This is what
+    distinguishes TE from plain lagged mutual information: a lagged MI
+    between source[t] and target[t+h] can be large purely because
+    target is autocorrelated and source happens to be too (no real
+    directed link needed) -- TE conditions that out.
+
+    `source` should already be whatever lag-shifted version of the
+    behavioral variable the caller wants tested (same convention as
+    2f_lag_information.py's shift_with_nan) -- this function only
+    handles the target's own future/past split via `target_horizon_frames`.
+
+    Returns NaN if there's insufficient valid (non-NaN, non-edge) data.
+    """
+    source = np.asarray(source, dtype=float)
+    target = np.asarray(target, dtype=float)
+    T = len(target)
+    h = target_horizon_frames
+    if h <= 0 or h >= T:
+        return np.nan
+    target_future = target[h:]
+    target_past = target[:-h]
+    source_past = source[:-h]
+    valid = np.isfinite(target_future) & np.isfinite(target_past) & np.isfinite(source_past)
+    if valid.sum() < 30:
+        return np.nan
+    return conditional_mutual_information_hist(source_past[valid], target_future[valid],
+                                                 target_past[valid], bins=bins)
+
+
+def transfer_entropy_shuffle(source, target, bins: int = 10, target_horizon_frames: int = 1,
+                              n_shuffles: int = 20, rng: np.random.Generator | None = None) -> MIResult:
+    """Bias-corrected transfer entropy: subtract the mean TE obtained
+    from randomly permuting `source` in time (destroys any real
+    source->target link while leaving target's own (past, future)
+    pairing -- and thus target's own autocorrelation structure --
+    completely intact, so the shuffle null correctly isolates the bias
+    that comes from finite-sample binning rather than from target's own
+    predictability). Same MIResult shape as mutual_information_shuffle,
+    for consistency with the rest of this module and with
+    2f_lag_information.py's existing MI-result handling."""
+    rng = rng or np.random.default_rng()
+    source = np.asarray(source, dtype=float)
+    target = np.asarray(target, dtype=float)
+
+    te_raw = transfer_entropy_hist(source, target, bins=bins, target_horizon_frames=target_horizon_frames)
+    if not np.isfinite(te_raw):
+        return MIResult(n=0, bits_raw=np.nan, bits_shuffle_mean=np.nan, bits_shuffle_std=np.nan,
+                         bits_corrected=np.nan, p_value=np.nan)
+
+    shuffle_tes = []
+    for _ in range(n_shuffles):
+        te_shuf = transfer_entropy_hist(rng.permutation(source), target, bins=bins,
+                                         target_horizon_frames=target_horizon_frames)
+        if np.isfinite(te_shuf):
+            shuffle_tes.append(te_shuf)
+    shuffle_tes = np.array(shuffle_tes) if shuffle_tes else np.array([np.nan])
+
+    mean_s, std_s = float(np.nanmean(shuffle_tes)), float(np.nanstd(shuffle_tes))
+    corrected = max(te_raw - mean_s, 0.0) if np.isfinite(mean_s) else np.nan
+    p_value = float(np.mean(shuffle_tes >= te_raw)) if np.isfinite(mean_s) else np.nan
+    n_valid = int(np.isfinite(source[target_horizon_frames:]) .sum())
+    return MIResult(n=n_valid, bits_raw=te_raw, bits_shuffle_mean=mean_s, bits_shuffle_std=std_s,
+                     bits_corrected=corrected, p_value=p_value)
+
+
+def granger_causality_test(target, source_lagged, ar_order: int = 3):
+    """Granger causality: does `source_lagged` (already whatever
+    lag-shifted version of a candidate driver the caller wants tested)
+    improve prediction of `target[t]` beyond target's OWN autoregressive
+    history? F-test comparing a restricted model (target[t] ~ target's
+    own last `ar_order` samples) against an unrestricted model (same,
+    plus source_lagged[t]).
+
+    This is a STRONGER claim than a plain lagged linear correlation:
+    two variables can be correlated at a lag purely because both are
+    autocorrelated and happen to share a similar timescale, with no
+    real directed link -- Granger causality specifically asks whether
+    the source adds anything BEYOND what the target's own past already
+    explains about itself.
+
+    Returns
+    -------
+    r2_restricted, r2_unrestricted, p_value : floats (p_value from an
+        F-test on the RSS reduction; NaN if too few valid samples)
+    """
+    target = np.asarray(target, dtype=float)
+    source_lagged = np.asarray(source_lagged, dtype=float)
+    T = len(target)
+    if T <= ar_order + 20:
+        return np.nan, np.nan, np.nan
+
+    y = target[ar_order:]
+    own_past = np.column_stack([target[ar_order - k:T - k] for k in range(1, ar_order + 1)])
+    src = source_lagged[ar_order:]
+    valid = np.isfinite(y) & np.all(np.isfinite(own_past), axis=1) & np.isfinite(src)
+    y, own_past, src = y[valid], own_past[valid], src[valid]
+    n = len(y)
+    if n <= ar_order + 20:
+        return np.nan, np.nan, np.nan
+
+    own_names = [f"y_t-{k}" for k in range(1, ar_order + 1)]
+    restricted = multivariate_linear_fit(own_past, y, predictor_names=own_names)
+    unrestricted = multivariate_linear_fit(np.column_stack([own_past, src]), y,
+                                            predictor_names=own_names + ["source"])
+
+    tss = float(np.sum((y - y.mean()) ** 2))
+    if tss <= 0:
+        return restricted.r2, unrestricted.r2, np.nan
+    rss_r = (1 - restricted.r2) * tss
+    rss_u = (1 - unrestricted.r2) * tss
+    q = 1  # one additional predictor (source_lagged) in the unrestricted model
+    k_full = ar_order + 1
+    dof2 = n - k_full - 1
+    if dof2 <= 0 or rss_u <= 0:
+        return restricted.r2, unrestricted.r2, np.nan
+    f_stat = ((rss_r - rss_u) / q) / (rss_u / dof2)
+    if f_stat <= 0:
+        return restricted.r2, unrestricted.r2, 1.0
+    from scipy import stats
+    p_value = float(1 - stats.f.cdf(f_stat, q, dof2))
+    return restricted.r2, unrestricted.r2, p_value
+
+
 def mutual_information_ksg(x, y, k: int = 5) -> float:
     """Kraskov-Stogbauer-Grassberger (2004) k-nearest-neighbor MI
     estimator, in bits.

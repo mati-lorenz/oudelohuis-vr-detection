@@ -85,13 +85,15 @@ RECOMBINASE_FILTER: str | None = None
 PROXIMITY_RADIUS_UM = 50.0       # how close an unlabeled V1/PM cell must be to a labeled
                                   # same-area cell (same session) to pass the proximity filter
 PROXIMITY_AREAS = ("V1", "PM")
-APPLY_PROXIMITY_FILTER = False   # if True, sections 4 onward use ONLY cells that pass the
+APPLY_PROXIMITY_FILTER = True   # if True, sections 4 onward use ONLY cells that pass the
                                   # proximity filter (labeled cells and cells outside
                                   # PROXIMITY_AREAS are never excluded by it either way);
                                   # if False (default), the filter is still computed and
                                   # reported (section 3) but doesn't restrict the other plots
 
-MAX_SESSIONS_PER_GRID_PAGE = 12  # x/y grid figure: paginate if more DN sessions than this
+MAX_SESSIONS_PER_GRID_PAGE = 12  # x/y grid figures: paginate at MAX_SESSIONS_PER_GRID_PAGE x
+                                  # len(areas_present) PANELS per page (now one panel per
+                                  # (session, area), not one per session -- see section 6)
 GRID_NCOLS = 4
 
 # Superficial-to-deep display order + colors for the layer-composition
@@ -332,35 +334,42 @@ if len(depth_by_session) >= 4:
 
 
 # --------------------------------------------------------------------- #
-# 6. x/y spatial distribution -- one panel PER SESSION, never pooled
-#    (xloc/yloc are local to each session's own field of view, and
-#    fields of view are not aligned/registered across different
-#    recording days -- overlaying them would be meaningless).
+# 6. x/y spatial distribution -- one panel PER (SESSION, AREA), never
+#    overlaid or pooled (see module docstring: this project's multi-area
+#    recordings very likely put each area on its own imaging plane even
+#    within one session, so xloc/yloc are local to (session, roi_name),
+#    not just session -- overlaying areas on shared axes, as an earlier
+#    version of this plot did, would mix independently-originated
+#    coordinate systems into one meaningless scatter).
 # --------------------------------------------------------------------- #
-n_pages = int(np.ceil(len(session_order) / MAX_SESSIONS_PER_GRID_PAGE))
+existing_session_areas = set(analysis_celldata.groupby(["session_id", "roi_name"]).groups.keys())
+session_area_order = [(sid, a) for sid in session_order for a in areas_present
+                       if (sid, a) in existing_session_areas]
+MAX_PANELS_PER_GRID_PAGE = MAX_SESSIONS_PER_GRID_PAGE * len(areas_present) if areas_present else MAX_SESSIONS_PER_GRID_PAGE
+n_pages = int(np.ceil(len(session_area_order) / MAX_PANELS_PER_GRID_PAGE))
 for page in range(n_pages):
-    page_sessions = session_order[page * MAX_SESSIONS_PER_GRID_PAGE:(page + 1) * MAX_SESSIONS_PER_GRID_PAGE]
-    ncols = min(GRID_NCOLS, len(page_sessions))
-    nrows = int(np.ceil(len(page_sessions) / ncols))
+    page_panels = session_area_order[page * MAX_PANELS_PER_GRID_PAGE:(page + 1) * MAX_PANELS_PER_GRID_PAGE]
+    ncols = min(GRID_NCOLS, len(page_panels))
+    nrows = int(np.ceil(len(page_panels) / ncols))
     fig, axes = plt.subplots(nrows, ncols, figsize=(3.6 * ncols, 3.6 * nrows), squeeze=False)
     flat_axes = axes.flatten()
 
-    for ax, session_id in zip(flat_axes, page_sessions):
-        sdf = analysis_celldata[analysis_celldata["session_id"] == session_id]
-        for area in areas_present:
-            for label in DEFAULT_LABEL_ORDER:
-                sub = sdf[(sdf["roi_name"] == area) & (sdf["labeled"] == label)]
-                if sub.empty:
-                    continue
-                ax.scatter(sub["xloc"], sub["yloc"], s=10 if label == "unl" else 22,
-                           color=AREA_COLORS.get(area, "gray"), marker=LABEL_MARKERS[label],
-                           alpha=0.6 if label == "unl" else 0.9,
-                           edgecolor="black" if label == "lab" else "none", linewidth=0.4)
-        ax.set_title(session_id, fontsize=8)
+    for ax, (session_id, area) in zip(flat_axes, page_panels):
+        sdf = analysis_celldata[(analysis_celldata["session_id"] == session_id)
+                                 & (analysis_celldata["roi_name"] == area)]
+        for label in DEFAULT_LABEL_ORDER:
+            sub = sdf[sdf["labeled"] == label]
+            if sub.empty:
+                continue
+            ax.scatter(sub["xloc"], sub["yloc"], s=10 if label == "unl" else 22,
+                       color=AREA_COLORS.get(area, "gray"), marker=LABEL_MARKERS[label],
+                       alpha=0.6 if label == "unl" else 0.9,
+                       edgecolor="black" if label == "lab" else "none", linewidth=0.4)
+        ax.set_title(f"{session_id}\n{area}", fontsize=7)
         ax.set_aspect("equal")
         ax.set_xticks([])
         ax.set_yticks([])
-    for ax in flat_axes[len(page_sessions):]:
+    for ax in flat_axes[len(page_panels):]:
         ax.set_visible(False)
 
     handles = [plt.Line2D([0], [0], marker=LABEL_MARKERS[l], linestyle="none", markerfacecolor="gray",
@@ -369,8 +378,8 @@ for page in range(n_pages):
     handles += [plt.Line2D([0], [0], marker="s", linestyle="none", markerfacecolor=AREA_COLORS[a],
                             markersize=8, label=a) for a in areas_present]
     fig.legend(handles=handles, loc="center left", bbox_to_anchor=(1.0, 0.5), fontsize=8, frameon=False)
-    fig.suptitle(f"Cell positions per session (FOV-local coordinates, NOT aligned across sessions) "
-                 f"-- page {page + 1}/{n_pages}", y=1.01)
+    fig.suptitle(f"Cell positions per (session, area) (FOV/plane-local coordinates, NOT aligned "
+                 f"across sessions OR areas) -- page {page + 1}/{n_pages}", y=1.01)
     fig.tight_layout()
     save_fig(fig, figdir, f"3_xy_positions_page{page + 1}")
 
@@ -389,22 +398,21 @@ MIN_CELLS_FOR_KDE = 15  # below this a KDE contour is more noise than signal -- 
                          # to a plain scatter for that area/session instead
 
 for page in range(n_pages):
-    page_sessions = session_order[page * MAX_SESSIONS_PER_GRID_PAGE:(page + 1) * MAX_SESSIONS_PER_GRID_PAGE]
-    ncols = min(GRID_NCOLS, len(page_sessions))
-    nrows = int(np.ceil(len(page_sessions) / ncols))
+    page_panels = session_area_order[page * MAX_PANELS_PER_GRID_PAGE:(page + 1) * MAX_PANELS_PER_GRID_PAGE]
+    ncols = min(GRID_NCOLS, len(page_panels))
+    nrows = int(np.ceil(len(page_panels) / ncols))
     fig, axes = plt.subplots(nrows, ncols, figsize=(3.6 * ncols, 3.6 * nrows), squeeze=False)
     flat_axes = axes.flatten()
 
-    for ax, session_id in zip(flat_axes, page_sessions):
-        sdf = analysis_celldata[analysis_celldata["session_id"] == session_id]
-        for area in areas_present:
-            sub = sdf[sdf["roi_name"] == area]
-            if sub.empty:
-                continue
-            if len(sub) < MIN_CELLS_FOR_KDE or sub["xloc"].std() == 0 or sub["yloc"].std() == 0:
-                ax.scatter(sub["xloc"], sub["yloc"], s=8, color=AREA_COLORS.get(area, "gray"),
-                           alpha=0.5, linewidth=0)
-                continue
+    for ax, (session_id, area) in zip(flat_axes, page_panels):
+        sdf = analysis_celldata[(analysis_celldata["session_id"] == session_id)
+                                 & (analysis_celldata["roi_name"] == area)]
+        if sdf.empty:
+            continue
+        if len(sdf) < MIN_CELLS_FOR_KDE or sdf["xloc"].std() == 0 or sdf["yloc"].std() == 0:
+            ax.scatter(sdf["xloc"], sdf["yloc"], s=8, color=AREA_COLORS.get(area, "gray"),
+                       alpha=0.5, linewidth=0)
+        else:
             try:
                 # cut=0.5 (not seaborn's default 3): a KDE naturally
                 # extends several bandwidths past the data it's fit on,
@@ -412,41 +420,38 @@ for page in range(n_pages):
                 # to make every panel look "zoomed out" relative to
                 # where the cells actually are -- see the explicit
                 # set_xlim/set_ylim below too, which crops each panel
-                # tightly to that session's own real cell coordinates
-                # regardless of how far the fitted contour extends.
-                sns.kdeplot(x=sub["xloc"], y=sub["yloc"], ax=ax, fill=True,
+                # tightly to that (session, area)'s own real cell
+                # coordinates regardless of how far the fitted contour
+                # extends.
+                sns.kdeplot(x=sdf["xloc"], y=sdf["yloc"], ax=ax, fill=True,
                             color=AREA_COLORS.get(area, "gray"), alpha=0.45, levels=5,
                             thresh=0.15, bw_adjust=1.2, cut=0.5)
             except Exception:
-                ax.scatter(sub["xloc"], sub["yloc"], s=8, color=AREA_COLORS.get(area, "gray"),
+                ax.scatter(sdf["xloc"], sdf["yloc"], s=8, color=AREA_COLORS.get(area, "gray"),
                            alpha=0.5, linewidth=0)
 
         lab = sdf[sdf["labeled"] == "lab"]
-        for area in areas_present:
-            sub = lab[lab["roi_name"] == area]
-            if sub.empty:
-                continue
-            ax.scatter(sub["xloc"], sub["yloc"], s=14, color=AREA_COLORS.get(area, "gray"),
+        if not lab.empty:
+            ax.scatter(lab["xloc"], lab["yloc"], s=14, color=AREA_COLORS.get(area, "gray"),
                        marker="^", edgecolor="black", linewidth=0.4, alpha=0.9)
 
-        # Crop to this session's actual cell extent (+5% margin) --
-        # without this, matplotlib auto-scales to the KDE contours'
+        # Crop to this (session, area)'s actual cell extent (+5% margin)
+        # -- without this, matplotlib auto-scales to the KDE contours'
         # extent (which always overshoots the real data due to
         # bandwidth smoothing, even with cut reduced above), making the
         # whole panel look zoomed out relative to where the cells are.
-        if not sdf.empty:
-            x_span = sdf["xloc"].max() - sdf["xloc"].min()
-            y_span = sdf["yloc"].max() - sdf["yloc"].min()
-            x_pad = max(x_span * 0.05, 1.0)
-            y_pad = max(y_span * 0.05, 1.0)
-            ax.set_xlim(sdf["xloc"].min() - x_pad, sdf["xloc"].max() + x_pad)
-            ax.set_ylim(sdf["yloc"].min() - y_pad, sdf["yloc"].max() + y_pad)
+        x_span = sdf["xloc"].max() - sdf["xloc"].min()
+        y_span = sdf["yloc"].max() - sdf["yloc"].min()
+        x_pad = max(x_span * 0.05, 1.0)
+        y_pad = max(y_span * 0.05, 1.0)
+        ax.set_xlim(sdf["xloc"].min() - x_pad, sdf["xloc"].max() + x_pad)
+        ax.set_ylim(sdf["yloc"].min() - y_pad, sdf["yloc"].max() + y_pad)
 
-        ax.set_title(session_id, fontsize=8)
+        ax.set_title(f"{session_id}\n{area}", fontsize=7)
         ax.set_aspect("equal")
         ax.set_xticks([])
         ax.set_yticks([])
-    for ax in flat_axes[len(page_sessions):]:
+    for ax in flat_axes[len(page_panels):]:
         ax.set_visible(False)
 
     handles = [plt.Line2D([0], [0], marker="o", linestyle="none", markerfacecolor=AREA_COLORS[a],
@@ -454,7 +459,7 @@ for page in range(n_pages):
     handles += [plt.Line2D([0], [0], marker="^", linestyle="none", markerfacecolor="gray",
                             markeredgecolor="black", markersize=7, label="labeled cell")]
     fig.legend(handles=handles, loc="center left", bbox_to_anchor=(1.0, 0.5), fontsize=8, frameon=False)
-    fig.suptitle(f"Cell density per session, synthesized (2D KDE per area; labeled cells still shown "
+    fig.suptitle(f"Cell density per (session, area), synthesized (2D KDE; labeled cells still shown "
                  f"individually on top) -- page {page + 1}/{n_pages}", y=1.01)
     fig.tight_layout()
     save_fig(fig, figdir, f"3b_xy_density_page{page + 1}")

@@ -138,6 +138,44 @@ def align_trials_position(trialdata: pd.DataFrame, continuous: pd.DataFrame, col
     return pd.DataFrame(rows)
 
 
+def build_position_binned_trial_tensor(trialdata: pd.DataFrame, continuous: pd.DataFrame,
+                                        cell_cols: list, s_pre: float, s_post: float, binsize: float,
+                                        position_onset_col: str = "stimStart") -> pd.DataFrame:
+    """The position-resolved analogue of a (K trials, N cells, T bins)
+    tensor -- one row per (trialNumber, s_rel), one column per cell --
+    built by reusing `align_trials_position` (already validated via
+    1c_behavior.py's position PSTHs) for ALL requested cells at once
+    rather than duplicating its per-trial position-windowing logic.
+    Matches the real project's own `compute_tensor_space`("binmean")
+    convention: each (trial, bin) entry is that trial's OWN mean
+    activity in that narrow position bin -- not raw pooled frames (see
+    3d/3e/3f_pair_*_temporal.py's module docstrings for why that
+    distinction matters here, unlike 2f_lag_information.py's frame-
+    pooling approach)."""
+
+    continuous_z = continuous.copy()
+
+    for col in cell_cols:
+        x = continuous_z[col].to_numpy(dtype=float)
+
+        mean = np.nanmean(x)
+        std = np.nanstd(x, ddof=0)
+
+        if np.isfinite(std) and std > 0:
+            continuous_z[col] = (x - mean) / std
+        else:
+            # Constant / invalid cell: leave as NaN so it can be
+            # removed downstream rather than introducing artificial
+            # values.
+            continuous_z[col] = np.nan
+            
+    long_df = align_trials_position(trialdata, continuous, columns=cell_cols,
+                                     s_pre=s_pre, s_post=s_post, binsize=binsize,
+                                     position_onset_col=position_onset_col)
+    return long_df.pivot_table(index=["trialNumber", "s_rel"], columns="variable",
+                                values="value").reset_index()
+
+
 def compute_position_bin_indices(trialdata: pd.DataFrame, continuous: pd.DataFrame,
                                   s_pre: float, s_post: float, binsize: float,
                                   position_onset_col: str = "stimStart",
@@ -209,6 +247,63 @@ def mi_from_position_bins(activity: np.ndarray, reference: np.ndarray, bincenter
         else:
             mi_bits = mutual_information_hist(r, a, bins=mi_bins)
         rows.append({"s_rel": s_rel, "n_samples": len(a), "mi_bits": mi_bits})
+    return pd.DataFrame(rows)
+
+
+def te_from_position_bins(activity: np.ndarray, source_lagged: np.ndarray, bincenters, bin_frame_indices,
+                           target_horizon_frames: int = 1, te_bins: int = 8, n_shuffles: int = 0,
+                           min_samples_per_bin: int = 100, rng=None) -> pd.DataFrame:
+    """Transfer entropy TE(source_lagged -> activity) per position bin
+    -- the TE analogue of `mi_from_position_bins`, using the same
+    precomputed `bin_frame_indices` (from `compute_position_bin_indices`).
+
+    Builds the (activity_past, activity_future, source_past) triplets
+    the underlying conditional-MI computation needs (activity_future =
+    activity shifted `target_horizon_frames` ahead of activity_past),
+    then pools triplets by which position bin the PAST-side frame falls
+    in (matching the "does behavior right now, at this position, help
+    predict the very next moment of activity" framing -- the bin
+    describes where in the trial we're asking the question, not where
+    the answer lands)."""
+    from .info_theory import conditional_mutual_information_hist
+
+    activity = np.asarray(activity, dtype=float)
+    source_lagged = np.asarray(source_lagged, dtype=float)
+    T = len(activity)
+    h = target_horizon_frames
+    if h <= 0 or h >= T:
+        return pd.DataFrame()
+
+    frame_to_bin = np.full(T, -1, dtype=int)
+    for b, idx in enumerate(bin_frame_indices):
+        frame_to_bin[idx] = b
+
+    activity_future = activity[h:]
+    activity_past = activity[:-h]
+    source_past = source_lagged[:-h]
+    bin_of_past = frame_to_bin[:-h]
+
+    rows = []
+    for b, s_rel in enumerate(bincenters):
+        mask = bin_of_past == b
+        if mask.sum() < min_samples_per_bin:
+            continue
+        af, ap, sp = activity_future[mask], activity_past[mask], source_past[mask]
+        valid = np.isfinite(af) & np.isfinite(ap) & np.isfinite(sp)
+        af, ap, sp = af[valid], ap[valid], sp[valid]
+        if len(af) < min_samples_per_bin:
+            continue
+
+        te_raw = conditional_mutual_information_hist(sp, af, ap, bins=te_bins)
+        if n_shuffles > 0 and np.isfinite(te_raw):
+            rng_local = rng or np.random.default_rng()
+            shuffle_tes = [conditional_mutual_information_hist(rng_local.permutation(sp), af, ap, bins=te_bins)
+                           for _ in range(n_shuffles)]
+            shuffle_tes = [v for v in shuffle_tes if np.isfinite(v)]
+            te_bits = max(te_raw - np.mean(shuffle_tes), 0.0) if shuffle_tes else te_raw
+        else:
+            te_bits = te_raw
+        rows.append({"s_rel": s_rel, "n_samples": len(af), "te_bits": te_bits})
     return pd.DataFrame(rows)
 
 

@@ -33,6 +33,32 @@ AREA_COLORS = {
 LABEL_LINESTYLES = {"unl": "-", "lab": "--"}
 LABEL_MARKERS = {"unl": "o", "lab": "^"}
 
+#: The canonical SIX groups this project's population-level plots should
+#: always show -- V1 and PM split into lab/unl (real, deliberately-labeled
+#: subpopulations, see LABEL_SPLIT_AREAS below), AL and RSP shown as one
+#: group each (their labeled cells are pooled into "unl" by
+#: get_area_label(..., label_split_areas=LABEL_SPLIT_AREAS), since any
+#: labeling there is incidental/stray rather than a real subpopulation
+#: worth its own panel -- see LABEL_SPLIT_AREAS's own comment).
+#: Every population-level figure should iterate SIX_GROUP_ORDER directly
+#: (not just DEFAULT_AREA_ORDER) so V1/PM's two subpopulations are never
+#: silently collapsed to whichever one happens to come first in a
+#: group-by -- always 6 lines/panels, never 4 with two of them secretly
+#: representing only half their data.
+SIX_GROUP_ORDER = [("V1", "lab"), ("V1", "unl"), ("PM", "lab"), ("PM", "unl"),
+                    ("AL", "unl"), ("RSP", "unl")]
+SIX_GROUP_LABELS = {g: (f"{a}-{l}" if a in ("V1", "PM") else a) for g, (a, l) in
+                     zip(SIX_GROUP_ORDER, SIX_GROUP_ORDER)}
+#: distinct color per group -- same hue per area (matching AREA_COLORS)
+#: with lab/unl distinguished by shade, so V1-lab and V1-unl read as
+#: "the same area, two subpopulations" rather than unrelated colors
+SIX_GROUP_COLORS = {
+    ("V1", "lab"): "#0d3d61", ("V1", "unl"): "#6baed6",
+    ("PM", "lab"): "#a33f00", ("PM", "unl"): "#fdae6b",
+    ("AL", "unl"): "#2ca02c",
+    ("RSP", "unl"): "#d62728",
+}
+
 #: areas where deliberate labeling actually happens by this project's
 #: design (see make_fake_data.py's recombinase-by-area convention) --
 #: pass to get_area_label's label_split_areas to pool AL/RSP's (typically

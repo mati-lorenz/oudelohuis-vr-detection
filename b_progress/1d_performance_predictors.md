@@ -1,6 +1,6 @@
 # 1d_performance_predictors
 
-*Auto-generated from `2_pipeline/1d_performance_predictors/out/` on 2026-09-07 16:45. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/1d_performance_predictors/out/` on 2026-09-14 16:47. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 

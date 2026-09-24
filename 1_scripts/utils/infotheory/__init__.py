@@ -38,11 +38,32 @@ from . import criteria
 from . import spike_stats
 from . import qc_lib
 from . import neural_encoding
+from . import shuffling
+from . import cache
+from .cache import cache_path, load_or_compute, load_all_matching
+from . import pid
+from . import pair_information
+from .pair_information import compute_pair_breakdown, digitize_quantile, joint_code
+from . import population
+from .population import (
+    zscore_population, build_standard_condition_specs, run_across_shuffle_conditions,
+    plot_shuffle_condition_comparison, plot_metric_vs_population_size, build_population_group,
+    iterate_population_groups,
+)
+from .shuffling import (
+    make_shuffle_groups, shuffle_within_groups, conditioned_shuffle_test,
+    ShuffleTestResult, SHUFFLE_MODES,
+    make_shuffle_groups_from_conditions, shuffle_population_within_groups,
+)
 from .info_theory import (
     mutual_information_hist,
     quantile_bin_edges,
     robust_qcut,
     mutual_information_shuffle,
+    conditional_mutual_information_hist,
+    transfer_entropy_hist,
+    transfer_entropy_shuffle,
+    granger_causality_test,
     mutual_information_ksg,
     mutual_information_shuffle_ksg,
     mi_from_r2,
@@ -69,6 +90,7 @@ from .continuous import (
 from .psth import (
     align_trials_time, align_trials_position, derive_onset_time,
     compute_position_binned_information, compute_position_bin_indices, mi_from_position_bins,
+    te_from_position_bins, build_position_binned_trial_tensor,
 )
 from .celldata_utils import (
     get_area_label as get_cell_area_label,
@@ -85,6 +107,9 @@ from .celldata_utils import (
     DEFAULT_AREA_ORDER as CELL_DEFAULT_AREA_ORDER,
     DEFAULT_LABEL_ORDER as CELL_DEFAULT_LABEL_ORDER,
     LABEL_SPLIT_AREAS,
+    SIX_GROUP_ORDER,
+    SIX_GROUP_LABELS,
+    SIX_GROUP_COLORS,
 )
 
 __all__ = [
@@ -108,6 +133,30 @@ __all__ = [
     "quantile_bin_edges",
     "robust_qcut",
     "mutual_information_shuffle",
+    "conditional_mutual_information_hist",
+    "transfer_entropy_hist",
+    "transfer_entropy_shuffle",
+    "granger_causality_test",
+    "make_shuffle_groups",
+    "shuffle_within_groups",
+    "conditioned_shuffle_test",
+    "ShuffleTestResult",
+    "SHUFFLE_MODES",
+    "make_shuffle_groups_from_conditions",
+    "shuffle_population_within_groups",
+    "cache_path",
+    "load_or_compute",
+    "load_all_matching",
+    "zscore_population",
+    "build_standard_condition_specs",
+    "run_across_shuffle_conditions",
+    "plot_shuffle_condition_comparison",
+    "plot_metric_vs_population_size",
+    "build_population_group",
+    "compute_pair_breakdown",
+    "digitize_quantile",
+    "joint_code",
+    "iterate_population_groups",
     "mutual_information_ksg",
     "mutual_information_shuffle_ksg",
     "mi_from_r2",
@@ -134,6 +183,8 @@ __all__ = [
     "compute_position_binned_information",
     "compute_position_bin_indices",
     "mi_from_position_bins",
+    "te_from_position_bins",
+    "build_position_binned_trial_tensor",
     "get_cell_area_label",
     "cell_ordered_groups",
     "cell_bar_by_group",
@@ -148,4 +199,7 @@ __all__ = [
     "CELL_DEFAULT_AREA_ORDER",
     "CELL_DEFAULT_LABEL_ORDER",
     "LABEL_SPLIT_AREAS",
+    "SIX_GROUP_ORDER",
+    "SIX_GROUP_LABELS",
+    "SIX_GROUP_COLORS",
 ]

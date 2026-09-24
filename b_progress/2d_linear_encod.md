@@ -1,6 +1,6 @@
 # 2d_linear_encod
 
-*Auto-generated from `2_pipeline/2d_linear_encod/out/` on 2026-09-08 16:47. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/2d_linear_encod/out/` on 2026-09-14 16:47. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 
