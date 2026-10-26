@@ -1,0 +1,41 @@
+scope: all sessions; aggregate by session; n_jobs=12
+Targets (stimulus binning strategies + choice):
+  zero_to80_above80: curve_pct, zero_separate=True, edges=[0.8] -> bins ['0', '<=80%', '>80%']
+  pct_0-20_20-80_80-100: curve_pct, zero_separate=False, edges=[0.2, 0.8] -> bins ['0-20%', '20-80%', '80-100%']
+  zero_vs_nonzero: contrast, zero_separate=False, edges=[0.0] -> bins ['0', '>0']
+  choice: lick vs no-lick
+WARNING: no pairs in 3a's list for ['LPE11495_2024_02_22', 'LPE11623_2024_04_02', 'LPE11997_2024_04_09', 'LPE11997_2024_04_19'] (rerun 3a on the full dataset); skipped
+22 sessions, 964 pairs (3a's list, pair_rank < 8)
+0/22 sessions cached; computing 22 (n_jobs=12, one session in RAM per worker)
+[Parallel(n_jobs=12)]: Using backend LokyBackend with 12 concurrent workers.
+  [LPE10884_2024_01_17] 448 (bin, target, pair) rows
+  [LPE11998_2024_04_24] 1344 (bin, target, pair) rows
+  [LPE10884_2024_01_12] 448 (bin, target, pair) rows
+  [LPE11998_2024_04_25] 1344 (bin, target, pair) rows
+[Parallel(n_jobs=12)]: Done   4 out of  22 | elapsed:   25.3s remaining:  1.9min
+  [LPE11997_2024_04_18] 1148 (bin, target, pair) rows
+  [LPE11622_2024_02_23] 1344 (bin, target, pair) rows
+  [LPE11622_2024_02_20] 896 (bin, target, pair) rows
+  [LPE11998_2024_05_01] 1344 (bin, target, pair) rows
+  [LPE11998_2024_04_29] 1204 (bin, target, pair) rows
+[Parallel(n_jobs=12)]: Done   9 out of  22 | elapsed:   40.1s remaining:   58.0s
+  [LPE11997_2024_04_16] 1344 (bin, target, pair) rows
+  [LPE11997_2024_04_10] 1344 (bin, target, pair) rows
+  [LPE11622_2024_02_22] 1344 (bin, target, pair) rows
+  [LPE11622_2024_02_26] 1344 (bin, target, pair) rows
+  [LPE12013_2024_04_26] 1344 (bin, target, pair) rows
+[Parallel(n_jobs=12)]: Done  14 out of  22 | elapsed:   47.1s remaining:   26.9s
+  [LPE11997_2024_04_17] 1344 (bin, target, pair) rows
+  [LPE12013_2024_04_25] 1344 (bin, target, pair) rows
+  [LPE12013_2024_04_29] 1344 (bin, target, pair) rows
+  [LPE12385_2024_06_15] 1344 (bin, target, pair) rows
+  [LPE12385_2024_06_27] 1344 (bin, target, pair) rows
+[Parallel(n_jobs=12)]: Done  19 out of  22 | elapsed:  1.0min remaining:    9.5s
+  [LPE12013_2024_04_30] 1344 (bin, target, pair) rows
+  [LPE12385_2024_06_16] 1344 (bin, target, pair) rows
+  [LPE12385_2024_06_17] 1344 (bin, target, pair) rows
+[Parallel(n_jobs=12)]: Done  22 out of  22 | elapsed:  1.2min finished
+
+26992 (session, target, pair, position bin) rows
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/3f_pair_information_pid_temporal/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/3f_pair_information_pid_temporal/out/figures

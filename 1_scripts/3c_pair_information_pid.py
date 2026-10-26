@@ -1,272 +1,254 @@
 # -*- coding: utf-8 -*-
 """
 3c_pair_information_pid
-==========================
-Partial Information Decomposition (PID, Williams & Beer 2010) for
-pairs of simultaneously recorded cells: splits the pair's joint
-information about the stimulus into REDUNDANT (both cells carry it),
-UNIQUE to each cell, and SYNERGISTIC (only available from the pair
-jointly) components. See infotheory/pid.py's module docstring for the
-underlying linear system and the redundancy measure this reduces to
-computing.
+=======================
+Partial information decomposition (Williams & Beer 2010) of each pair's information about the target into redundancy,
+unique information of each cell and synergy, with the I_min redundancy measure (REDUNDANCY_MEASURE; others are listed in
+infotheory.pid.REDUNDANCY_MEASURES).
+    I1, I2, I12 : plug-in MI of cell 1, cell 2 and the joint (r1, r2) with the target (NOT bias-corrected)
+    redundancy  : I_min redundancy, bias-corrected by subtracting the mean over PID_SHUFFLES target-shuffled realisations
+    unique1/2   : I1/I2 - redundancy
+    synergy     : I12 - redundancy - unique1 - unique2
+    redundancy_p_value : fraction of shuffles with redundancy >= observed (sig_redundancy = p < ALPHA)
+Because I1/I2/I12 are plug-in and only the redundancy is corrected, the components carry the plug-in bias of I12; compare
+across groups, not as absolute bits. 3b's RSI (I_total - I_1 - I_2) and 3c's synergy - redundancy are related but not equal.
 
-REDUNDANCY MEASURE: I_min (Williams & Beer 2010) by design -- the
-simplest PID redundancy measure, with a known tendency to sometimes
-overstate redundancy relative to more recent measures. Set
-REDUNDANCY_MEASURE below to switch; `infotheory.pid.REDUNDANCY_MEASURES`
-is a registry precisely so a more robust measure (BROJA-2PID --
-Bertschinger, Rauh, Olbrich, Jost & Ay 2014, robustly estimated by
-Makkeh, Theis & Vicente 2018's cone-programming solver) can be dropped
-in later as a one-line change once that package is installed -- see
-infotheory/pid.py's `redundancy_broja_STUB` for the integration sketch
-(not wired in yet: the package isn't on PyPI and needs the ECOS cone
-solver). NOTHING else in this script needs to change to switch measures.
-
-Validated against the two textbook PID cases (a fully-redundant "copy"
-distribution and an XOR synergy gate) before being used here -- see
-infotheory/pid.py's module docstring for the exact expected values and
-confirmation this implementation reproduces them.
-
-Dataset, pairs, response binning: identical to 3a/3b (same session/
-trial/cell filters, same sample_pairs_within_groups call, same R_BINS
-quantile-binning convention -- see 3b_pair_information_breakdown.py's
-module docstring for why R_BINS=2-3 is the right choice for calcium
-data specifically).
+Project-wide rules (infotheory/project_config.py) -- what applies here
+    * selection : --animals / --sessions restrict the sessions; a restricted run writes to out/selection/<tag>/.
+    * aggregate : --aggregate pooled|session|mouse (pooled = all pairs of a group; session / mouse = mean over the unit's
+                  pairs first, units with < MIN_PAIRS_PER_UNIT pairs left out, bar = mean +- SEM, dots = units by mouse).
+    * memory    : one session in RAM per worker (--n-jobs), cached per session in store/.
+    * binning   : the SAME pairs as 3a / 3b (3a's out/pair_list.csv; --max-pairs keeps the first N per (session, area, label)),
+                  the SAME trials (infotheory.pair_tables.pair_trials) and RESPONSE_BINS as 2c / 3b. Run 3a first.
+    CHANGES vs the previous 3c: pairs come from 3a; shared trial rule and targets (`stim__<strategy>`, choice); scope,
+    aggregate and parallel arguments; group plots follow --aggregate.
 
 Outputs
 -------
 2_pipeline/3c_pair_information_pid/
-    out/    pair_pid.csv    one row per (session, window, area, label,
-                             cell_i, cell_j): I1, I2, I12, redundancy,
-                             unique1, unique2, synergy (+ shuffle-
-                             corrected redundancy and its p-value)
-            figures/*.png
-    store/  pid.pkl         cached (reused unless --recompute)
+    out/    pair_pid.csv                      one row per (session, window, target, pair): n_trials, I1, I2, I12, redundancy,
+                                              unique1, unique2, synergy, redundancy_p_value, sig_redundancy
+            pair_pid_by_group[__<aggregate>].csv
+            figures/<target>/*.png, figures/compare_*.png
+    out/selection/<tag>/...                   the same for a restricted run
+    store/  pid_<hash>.pkl                    per-session caches
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
-from joblib import Parallel, delayed
 
+from infotheory import project_config as cfg
 from infotheory.pipeline import get_pipeline_paths
-from infotheory.session import load_sessions
+from infotheory.session import discover_sessions
 from infotheory.neural_encoding import load_cell_inclusion, build_session_tables
-from infotheory.celldata_utils import (
-    get_area_label, sample_pairs_within_groups, AREA_COLORS, LABEL_SPLIT_AREAS, DEFAULT_AREA_ORDER,
-)
 from infotheory.pid import pid_from_binned_responses, REDUNDANCY_MEASURES
+from infotheory.celldata_utils import SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GROUP_COLORS
+from infotheory.groups import group_key
 from infotheory.plotting import set_style, save_fig, clear_figures
+from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
+from infotheory.session_jobs import run_sessions
+from infotheory.unit_stats import stable_seed
+from infotheory.unit_plots import group_panels, mouse_palette
+from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, CHOICE_TARGET, target_signature,
+                                     target_bin_names, describe_strategies)
+from infotheory import cell_tables as ct
+from infotheory import pair_tables as pt
 
 PROTOCOL = "DN"
 WINDOWS = {"pre_stim": (-30.0, -10.0), "stim": (0.0, 20.0), "reward": (25.0, 45.0)}
 
-REDUNDANCY_MEASURE = "imin"  # see module docstring -- change to "broja" once wired in
-MAX_PAIRS_PER_GROUP = 100
-R_BINS = 3
-PID_SHUFFLES = 30    # bias-correction shuffles for the redundancy estimate (cheap here -- PID
-                      # from an already-binned joint histogram is a handful of array ops, not
-                      # an iterative estimator, so this can afford more than 3b's shuffle counts)
-MIN_TRIALS_PER_STIM_BIN = 3
+MAX_PAIRS_PER_GROUP = 8     # pairs per (session, area, label) taken from 3a's list
+R_BINS = cfg.RESPONSE_BINS  # shared with 2c / 3b
+REDUNDANCY_MEASURE = "imin"
+PID_SHUFFLES = 30           # target shuffles for the redundancy bias correction and p-value
+ALPHA = 0.05
+MIN_PAIRS_PER_UNIT = 3
 RANDOM_STATE = 0
-
-N_JOBS_SESSIONS = 10
+BINNING_STRATEGIES = list(DEFAULT_STRATEGIES)
+INCLUDE_CHOICE_TARGET = True
+SHARE_Y = True              # the window panels of a group figure get the same y range
 JOBLIB_VERBOSE = 5
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--recompute", action="store_true",
-                     help="Reload sessions from 0_data/ instead of reusing the cached "
-                          "store/pid.pkl")
+add_scope_args(parser)
+parser.add_argument("--strategies", nargs="+", default=None, choices=sorted(STIM_BINNING_STRATEGIES))
+parser.add_argument("--max-pairs", type=int, default=MAX_PAIRS_PER_GROUP, help="pairs per (session, area, label), from 3a's list")
+parser.add_argument("--pid-shuffles", type=int, default=PID_SHUFFLES)
+parser.add_argument("--redundancy", default=REDUNDANCY_MEASURE, choices=sorted(REDUNDANCY_MEASURES))
 args = parser.parse_args()
+scope = scope_from_args(args)
+AGG = scope.aggregate
+UNIT = unit_noun(AGG)
+UNITS = "mice" if UNIT == "mouse" else f"{UNIT}s"
+AGG_SUFFIX = "" if AGG == "pooled" else f"__{AGG}"
+STRATEGIES = args.strategies or BINNING_STRATEGIES
+TARGETS = STRATEGIES + ([CHOICE_TARGET] if INCLUDE_CHOICE_TARGET else [])
 
 paths = get_pipeline_paths(__file__)
-figdir = paths.out / "figures"
+table_dir, figdir = scoped_dirs(paths, scope)
 clear_figures(figdir)
+for _sub in figdir.glob("*/"):
+    clear_figures(_sub)
 set_style()
-
-if REDUNDANCY_MEASURE not in REDUNDANCY_MEASURES:
-    raise SystemExit(f"Unknown REDUNDANCY_MEASURE {REDUNDANCY_MEASURE!r}; "
-                      f"must be one of {list(REDUNDANCY_MEASURES)}")
-
+print(scope.describe())
+print("Targets (stimulus binning strategies + choice):\n" + describe_strategies(TARGETS))
 
 # --------------------------------------------------------------------- #
-# 1. Included sessions/cells -- same filters as 3a/3b
+# 1. Inputs (pairs from 3a)
 # --------------------------------------------------------------------- #
 fits_path = paths.out_from("1b_psychometric") / "psychometric_fits.csv"
-fits_df = pd.read_csv(fits_path)
-included = fits_df[fits_df["included"] & (fits_df["protocol"] == PROTOCOL)]
-included_ids = included["session_id"].tolist()
-if not included_ids:
-    raise SystemExit(f"No {PROTOCOL} sessions passed 1b_psychometric's inclusion criteria.")
-mu_sigma_lookup = fits_df.set_index("session_id")[["mu", "sigma"]].to_dict("index")
-
 cell_dist_out = paths.out_from("2a_cell_distribution")
 activity_out = paths.out_from("2b_activity_statistics")
-cell_inclusion = load_cell_inclusion(cell_dist_out, activity_out)
-included_cell_ids_by_session = {
-    sid: set(sub.loc[sub["include"], "cell_id"]) for sid, sub in cell_inclusion.groupby("session_id")
-}
-print(f"Using {len(included_ids)} included {PROTOCOL} sessions, "
-      f"{int(cell_inclusion['include'].sum())}/{len(cell_inclusion)} cells included, "
-      f"redundancy measure = {REDUNDANCY_MEASURE!r}")
+pair_list_path = paths.out_from("3a_pair_activity_statistics") / "pair_list.csv"
+for f, hint in [(fits_path, "1b_psychometric.py"), (cell_dist_out / "celldata_combined.csv", "2a_cell_distribution.py"),
+                (activity_out / "qc_per_cell.csv", "2b_activity_statistics.py"),
+                (pair_list_path, "3a_pair_activity_statistics.py (full dataset)")]:
+    if not f.exists():
+        raise SystemExit(f"Run {hint} first -- expected {f}")
+fits_df = pd.read_csv(fits_path)
+mu_sigma_lookup = fits_df.set_index("session_id")[["mu", "sigma"]].to_dict("index")
+included_all = set(fits_df[fits_df["included"] & (fits_df["protocol"] == PROTOCOL)]["session_id"])
+all_triples = discover_sessions([PROTOCOL])
+selected = {f"{a}_{d}": (p, a, d) for p, a, d in select_sessions(all_triples, scope)}
+session_ids = [s for s in selected if s in included_all]
+mouse_colors = mouse_palette(a for _, a, _ in all_triples)
+pairs_all = pt.load_pair_list(pair_list_path, session_ids, args.max_pairs)
+missing = sorted(set(session_ids) - set(pairs_all["session_id"]))
+if missing:
+    print(f"WARNING: no pairs in 3a's list for {missing} (rerun 3a on the full dataset); skipped")
+session_ids = [s for s in session_ids if s in set(pairs_all["session_id"])]
+if not session_ids:
+    raise SystemExit("No selected session has pairs in 3a's pair_list.csv.")
+pairs_by_session = {sid: sub.reset_index(drop=True) for sid, sub in pairs_all.groupby("session_id")}
+cells_by_session = {sid: sorted(set(sub["cell_i"]) | set(sub["cell_j"])) for sid, sub in pairs_by_session.items()}
+print(f"{len(session_ids)} sessions, {len(pairs_all)} pairs (3a's list, pair_rank < {args.max_pairs})")
+pair_hash = {s: hashlib.sha1(pairs_by_session[s].to_csv(index=False).encode()).hexdigest()[:10] for s in session_ids}
+stamps = {s: f"{data_stamp(*selected[s])}-{pair_hash[s]}" for s in session_ids}
 
 
 # --------------------------------------------------------------------- #
-# 2. Per-session PID -- or reuse the cache
+# 2. Per session
 # --------------------------------------------------------------------- #
-pid_cache = paths.store / "pid.pkl"
-REQUIRED_COLUMNS = ["session_id", "window", "roi_name", "labeled_grouped", "cell_i", "cell_j",
-                    "I1", "I2", "I12", "redundancy", "unique1", "unique2", "synergy"]
-
-pid_table = None
-if not args.recompute and pid_cache.exists():
-    try:
-        candidate = pd.read_pickle(pid_cache)
-        missing = [c for c in REQUIRED_COLUMNS if c not in candidate.columns]
-        if missing or candidate.attrs.get("redundancy_measure") != REDUNDANCY_MEASURE:
-            print(f"Cached PID table is stale (missing columns, or a different redundancy "
-                  f"measure than the current {REDUNDANCY_MEASURE!r}) -- recomputing from 0_data/ "
-                  f"instead of using {pid_cache}.")
-        else:
-            pid_table = candidate
-            print(f"Reusing cached PID table from {paths.store} (pass --recompute to reload 0_data/)")
-    except Exception as e:
-        print(f"Could not load cached PID table ({e}); recomputing from 0_data/ ...")
-
-if pid_table is None:
-    sessions = load_sessions(protocols=[PROTOCOL], load_behaviordata=True, load_videodata=True,
-                              load_celldata=True, load_calciumdata=True, only_session_ids=included_ids)
-
-    def process_session(ses, seed):
-        rng_local = np.random.default_rng(seed)
-        included_cells = included_cell_ids_by_session.get(ses.session_id)
-        if not included_cells:
-            return []
-        celldata = ses.celldata[ses.celldata["cell_id"].isin(included_cells)].reset_index(drop=True)
-        if celldata.empty:
-            return []
-        area, label, _ = get_area_label(celldata, label_split_areas=LABEL_SPLIT_AREAS)
-
-        tables = build_session_tables(ses, mu_sigma_lookup, WINDOWS, included_cell_ids=included_cells)
-        records = []
-        for window_name, table in tables.items():
-            if table.empty or "stim_bin" not in table.columns:
-                continue
-            valid_bins = table["stim_bin"].value_counts()
-            valid_bins = valid_bins[valid_bins >= MIN_TRIALS_PER_STIM_BIN].index
-            table = table[table["stim_bin"].isin(valid_bins)].reset_index(drop=True)
-            if table["stim_bin"].nunique() < 2 or len(table) < 20:
-                continue
-            stim_bin = table["stim_bin"].to_numpy()
-
-            pairs, pair_groups = sample_pairs_within_groups(area, label, max_pairs_per_group=MAX_PAIRS_PER_GROUP,
-                                                              rng=rng_local)
-            for (i, j), (a, l) in zip(pairs, pair_groups):
-                cell_i, cell_j = celldata["cell_id"].iloc[i], celldata["cell_id"].iloc[j]
-                if cell_i not in table.columns or cell_j not in table.columns:
+def process_session(ses, seed):
+    sid = ses.session_id
+    pairs = pairs_by_session.get(sid)
+    if pairs is None or ses.celldata is None:
+        return []
+    rng = np.random.default_rng(seed)
+    tables = build_session_tables(ses, mu_sigma_lookup, WINDOWS, included_cell_ids=set(cells_by_session[sid]))
+    records = []
+    for window, table in tables.items():
+        if table.empty or "signal" not in table.columns:
+            continue
+        table = pt.add_target_columns(table, STRATEGIES)
+        for target in TARGETS:
+            for r in pairs.itertuples(index=False):
+                d = pt.pair_trials(table, target, r.cell_i, r.cell_j)
+                if d is None:
                     continue
-                x1 = table[cell_i].to_numpy()
-                x2 = table[cell_j].to_numpy()
-                valid = np.isfinite(x1) & np.isfinite(x2)
-                if valid.sum() < 20:
-                    continue
-                x1, x2, sb = x1[valid], x2[valid], stim_bin[valid]
-                if len(np.unique(sb)) < 2:
-                    continue
-
-                result = pid_from_binned_responses(x1, x2, sb, bins=R_BINS,
-                                                    redundancy_measure=REDUNDANCY_MEASURE,
-                                                    n_shuffles=PID_SHUFFLES, rng=rng_local)
-                records.append({
-                    "session_id": ses.session_id, "window": window_name, "roi_name": a,
-                    "labeled_grouped": l, "cell_i": cell_i, "cell_j": cell_j, "n_trials": result.n,
-                    "I1": result.I1, "I2": result.I2, "I12": result.I12,
-                    "redundancy": result.redundancy, "unique1": result.unique1,
-                    "unique2": result.unique2, "synergy": result.synergy,
-                    "redundancy_p_value": result.redundancy_p_value,
-                })
-        print(f"  [{ses.session_id}] PID done")
-        return records
-
-    print(f"Computing PID for {len(sessions)} sessions (n_jobs={N_JOBS_SESSIONS}) ...")
-    nested = Parallel(n_jobs=N_JOBS_SESSIONS, backend="loky", verbose=JOBLIB_VERBOSE)(
-        delayed(process_session)(ses, RANDOM_STATE + i) for i, ses in enumerate(sessions)
-    )
-    pid_table = pd.DataFrame([rec for group in nested for rec in group])
-    pid_table.attrs["redundancy_measure"] = REDUNDANCY_MEASURE
-    pd.to_pickle(pid_table, pid_cache)
-
-pid_table.to_csv(paths.out / "pair_pid.csv", index=False)
-print(f"\n{len(pid_table)} pairs analyzed")
+                p = pid_from_binned_responses(d["x1"], d["x2"], d["label"], bins=R_BINS, redundancy_measure=args.redundancy,
+                                              n_shuffles=args.pid_shuffles, rng=rng)
+                res = dict(n_trials=p.n, I1=p.I1, I2=p.I2, I12=p.I12, redundancy=p.redundancy, unique1=p.unique1,
+                           unique2=p.unique2, synergy=p.synergy, redundancy_p_value=p.redundancy_p_value)
+                records.append(dict(session_id=sid, animal_id=ses.animal_id, window=window, target=target,
+                                    roi_name=r.roi_name, labeled_grouped=r.labeled_grouped, cell_i=r.cell_i,
+                                    cell_j=r.cell_j, pair_rank=r.pair_rank, **res))
+    print(f"  [{sid}] {len(records)} (window, target, pair) rows")
+    return records
 
 
-# --------------------------------------------------------------------- #
-# 3. Summary
-# --------------------------------------------------------------------- #
-if len(pid_table):
-    print("\nMean redundancy / unique1 / unique2 / synergy by (window, area):")
-    print(pid_table.groupby(["window", "roi_name"])
-          [["redundancy", "unique1", "unique2", "synergy"]].mean().round(4).to_string())
+records = run_sessions(
+    session_ids, process_session, [PROTOCOL], paths.store, "pid",
+    key_params=dict(windows=WINDOWS, r_bins=R_BINS, pid_shuffles=args.pid_shuffles, redundancy=args.redundancy,
+                    targets=target_signature(TARGETS), min_trials=cfg.MIN_TRIALS_ANALYSIS,
+                    min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3c-v3", fits_mtime=int(fits_path.stat().st_mtime)),
+    load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
+    cells_by_session=cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
+    verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps, flatten=True)
+if not records:
+    raise SystemExit("No pair had enough valid trials.")
+table = pt.finalize_pair_table(pd.DataFrame(records))
+table["sig_redundancy"] = (table["redundancy_p_value"] < ALPHA).astype(float)
+table.to_csv(table_dir / "pair_pid.csv", index=False)
+print(f"\n{len(table)} (session, window, target, pair) rows")
 
-    frac_sig_redundant = (pid_table["redundancy_p_value"] < 0.05).mean()
-    print(f"\n{frac_sig_redundant:.1%} of pairs show significant (p<0.05) redundancy beyond "
-          f"the global-shuffle null.")
+VALUE_COLS = ["I1", "I2", "I12", "redundancy", "unique1", "unique2", "synergy", "sig_redundancy"]
+by_group = ct.unit_group_summary(table, ["window", "target"], AGG, VALUE_COLS).rename(
+    columns={"n_cells": "n_pairs", "sig_redundancy": "frac_sig_redundancy"})
+by_group.to_csv(table_dir / f"pair_pid_by_group{AGG_SUFFIX}.csv", index=False)
+
+agg_note = {"pooled": "all pairs pooled (no error bars)", "session": "bar = mean +- SEM over sessions, dots = sessions",
+            "mouse": "bar = mean +- SEM over mice, dots = mice"}[AGG]
+WIN = list(WINDOWS)
+
+
+def panels(df, name, value, ylabel, title, outdir, **kw):
+    kw.setdefault("sharey", SHARE_Y)
+    group_panels(df, "window", WIN, value, AGG, outdir, name, title, ylabel=ylabel, mouse_colors=mouse_colors,
+                 min_cells_per_unit=MIN_PAIRS_PER_UNIT, ncols=len(WIN), panel_size=(4.6, 3.6), **kw)
 
 
 # --------------------------------------------------------------------- #
-# 4. Figures
+# 3. Reports and figures, one set per target
 # --------------------------------------------------------------------- #
-if len(pid_table):
-    # 4a. Stacked I1/I2-independent decomposition: redundancy, unique1,
-    #    unique2, synergy (sum to I12), per area
-    fig, axes = plt.subplots(1, len(WINDOWS), figsize=(5 * len(WINDOWS), 4.5), squeeze=False)
-    for ax, window_name in zip(axes[0], WINDOWS):
-        sub = pid_table[pid_table["window"] == window_name]
+COMP, COMP_COL = ["redundancy", "unique1", "unique2", "synergy"], ["#8172b2", "#4c72b0", "#64b5cd", "#c44e52"]
+for target in TARGETS:
+    sub_t = table[table["target"] == target]
+    if sub_t.empty:
+        print(f"\n(no pairs for target {target!r})")
+        continue
+    tag = f"{target} [{' | '.join(target_bin_names(target))}]"
+    tdir = figdir / target
+    tdir.mkdir(parents=True, exist_ok=True)
+    print(f"\n======== target: {tag} ========")
+    per = ct.unit_group_summary(sub_t, ["window"], AGG, COMP + ["I12"])
+    print(f"Mean PID components by (window, group){'' if AGG == 'pooled' else f', mean over {UNITS}'}:")
+    print(per.groupby(["window", "group"])[COMP + ["I12"]].mean().round(4).to_string())
+    print(f"\n{int(sub_t['sig_redundancy'].sum())}/{len(sub_t)} pairs have significant redundancy (p<{ALPHA}).")
+
+    for comp in COMP:
+        panels(sub_t, f"1_{comp}_by_group", comp, f"{comp} (bits)", f"PID {comp} -- {tag}; {agg_note}", tdir, hline=0.0)
+
+    fig, axes = plt.subplots(1, len(WIN), figsize=(5 * len(WIN), 4.5), squeeze=False)
+    for ax, w in zip(axes[0], WIN):
+        sub = sub_t[sub_t["window"] == w]
         if sub.empty:
             continue
-        area_order = [a for a in DEFAULT_AREA_ORDER if a in sub["roi_name"].unique()]
-        means = sub.groupby("roi_name")[["redundancy", "unique1", "unique2", "synergy"]].mean().reindex(area_order)
-        bottom = np.zeros(len(means))
-        for comp, color in zip(["redundancy", "unique1", "unique2", "synergy"],
-                                ["#4c72b0", "#dd8452", "#c44e52", "#55a868"]):
-            vals = means[comp].to_numpy()
-            ax.bar(range(len(means)), vals, bottom=bottom, label=comp, color=color,
-                   edgecolor="black", linewidth=0.3)
-            bottom += vals
-        ax.axhline(0, color="grey", linewidth=0.7)
-        ax.set_xticks(range(len(means)))
-        ax.set_xticklabels(means.index)
-        ax.set_ylabel("bits")
-        ax.set_title(window_name)
-        if window_name == list(WINDOWS)[0]:
-            ax.legend(fontsize=7, frameon=False)
-    fig.suptitle(f"PID components (stack to I12) -- {REDUNDANCY_MEASURE}, {PROTOCOL}", y=1.03)
+        pt.stacked_group_bars(ax, sub, COMP, dict(zip(COMP, COMP_COL)), AGG, mouse_colors, MIN_PAIRS_PER_UNIT, ylabel="bits",
+                              total="I12")
+        ax.set_title(w)
+        if w == WIN[0]:
+            ax.legend(fontsize=8, frameon=False)
+    fig.suptitle(f"PID components (stack to I12; dots = {UNIT} I12) -- {tag}; {agg_note}", y=1.03, fontsize=9)
     fig.tight_layout()
-    save_fig(fig, figdir, "1_pid_components_by_area")
+    save_fig(fig, tdir, "2_component_breakdown")
+    plt.close(fig)
 
-    # 4b. Redundancy vs synergy scatter, per pair
-    fig, axes = plt.subplots(1, len(WINDOWS), figsize=(5 * len(WINDOWS), 5), squeeze=False)
-    for ax, window_name in zip(axes[0], WINDOWS):
-        sub = pid_table[pid_table["window"] == window_name]
-        if sub.empty:
-            continue
-        for area in [a for a in DEFAULT_AREA_ORDER if a in sub["roi_name"].unique()]:
-            asub = sub[sub["roi_name"] == area]
-            ax.scatter(asub["redundancy"], asub["synergy"], s=10, alpha=0.4,
-                       color=AREA_COLORS.get(area, "gray"), label=area)
+    fig, axes = plt.subplots(1, len(WIN), figsize=(5 * len(WIN), 5), squeeze=False)
+    for ax, w in zip(axes[0], WIN):
+        sub = sub_t[sub_t["window"] == w]
+        for g in SIX_GROUP_ORDER:
+            a_ = sub[sub["group"] == group_key(g)]
+            ax.scatter(a_["redundancy"], a_["synergy"], s=10, alpha=0.4, color=SIX_GROUP_COLORS[g],
+                       label=f"{SIX_GROUP_LABELS[g]} (n={len(a_)})")
+        ax.legend(fontsize=7, frameon=False)
         ax.axhline(0, color="grey", linewidth=0.7)
         ax.axvline(0, color="grey", linewidth=0.7)
-        ax.set_xlabel("redundancy")
-        ax.set_ylabel("synergy")
-        ax.set_title(window_name)
-        ax.legend(fontsize=7, frameon=False)
-    fig.suptitle(f"Redundancy vs. synergy, per pair -- {REDUNDANCY_MEASURE}, {PROTOCOL}", y=1.03)
+        ax.set_xlabel("redundancy (bits)")
+        ax.set_ylabel("synergy (bits)")
+        ax.set_title(w)
+    fig.suptitle(f"Redundancy vs synergy, per pair (not aggregated) -- {tag}", y=1.03)
     fig.tight_layout()
-    save_fig(fig, figdir, "2_redundancy_vs_synergy")
+    save_fig(fig, tdir, "3_redundancy_vs_synergy")
+    plt.close(fig)
 
-print(f"\nWrote tables to {paths.out}, figures to {figdir}")
-print("Run `python b_progress/make_progress_md.py 3c_pair_information_pid` to build a markdown summary.")
+for val, nm in (("I12", "joint information I12 (bits)"), ("redundancy", "redundancy (bits)"), ("synergy", "synergy (bits)")):
+    panels(table, f"compare_targets_{val}", val, f"mean {nm}", f"Mean {nm}: stimulus binning strategies vs. choice; {agg_note}",
+           figdir, series_col="target", series_order=TARGETS)
+
+print(f"\nWrote tables to {table_dir}, figures to {figdir}")

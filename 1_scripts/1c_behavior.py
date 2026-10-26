@@ -43,6 +43,26 @@ What this does
    single best predictor's own pairwise R^2 -- directly showing how
    much (if anything) the rest of the predictor set adds beyond it.
 
+Project-wide rules (infotheory/project_config.py)
+    * selection : --animals / --sessions restrict the sessions (always intersected with 1b's included
+                  list). A restricted run writes to out/selection/<tag>/ and never overwrites out/.
+    * aggregate : --aggregate pooled|session|mouse sets the UNIT OF ANALYSIS of every figure and table:
+                    pooled  trials of all sessions pooled (the original behavior of this script)
+                    session each session analysed on its own; curves/bars = mean +- SEM over sessions
+                    mouse   each mouse analysed on its own (its sessions pooled); mean +- SEM over mice
+                  The pairwise / multivariate MI + linear fits and the stepwise selection are computed
+                  per unit. Tables for session/mouse are written as <name>__<aggregate>.csv with a
+                  `unit` column; the pooled tables keep their original names and columns.
+                  Not unit-based: the pairwise scatter (3_pairwise_relationships) is always a pooled
+                  scatter of (capped) samples.
+    * memory    : one session in RAM per worker (--n-jobs); per-session caches in store/. Pooled
+                  continuous samples are capped at POOLED_MAX_SAMPLES_PER_SESSION per session (exploratory
+                  plots only; per-variable means for the distribution plot use ALL samples).
+    * binning   : the trial-aligned plots group trials by the SHARED stimulus-binning strategies
+                  (infotheory/stim_binning.py, selected by PSTH_STIM_STRATEGIES) instead of a private
+                  10-quantile binning. The KSG MI / linear fits here are on continuous variables
+                  (no binning), so the shared response binning does not apply.
+
 Reads: 2_pipeline/1b_psychometric/out/psychometric_fits.csv for the
 included-session list (Rule #1: read an earlier script's out/, don't
 recompute its exclusions).
@@ -86,15 +106,11 @@ Outputs
                                          and one
                                          8_stepwise_dominant_predictor_<window>.png
                                          per MI_WINDOWS entry
-    store/  trial_features.pkl          per-trial mean speed/pupil/motion, one row per
-                                         (trial, window) -- see MI_WINDOWS below
-            position_binned.pkl         corridor-tuning aggregates (whole-session, not trial-locked)
-            pooled_downsampled.pkl      pooled continuous samples for the exploratory
-                                         distribution/pairwise plots (full resolution by
-                                         default -- see DOWNSAMPLE_HZ below)
-            psth_time.pkl               trial-aligned time-domain traces (onset = stimulus)
-            psth_position.pkl           trial-aligned position-domain traces (onset = stimulus)
-            (all reused unless --recompute is passed)
+    out/selection/<tag>/...     the same files for a restricted run
+    store/  behavior_session_<hash>.pkl   ONE per-session cache holding that session's per-trial
+                                         features (per MI_WINDOWS window), corridor / time-course
+                                         aggregates, capped pooled samples, per-variable sums, and the
+                                         trial-aligned time/position traces (reused unless --recompute)
 
 Schema note: `stimStart` (and rewardZoneStart/rewardZoneEnd) are
 POSITIONS, on the same scale as `zpos` -- confirmed against the real
@@ -116,6 +132,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from joblib import Parallel, delayed
+import zlib
 
 from infotheory.pipeline import get_pipeline_paths
 from infotheory.session import load_sessions, PROTOCOLS
@@ -128,6 +145,13 @@ from infotheory.behavior import add_trial_outcome
 from infotheory.info_theory import mutual_information_shuffle_ksg, compare_mi_to_linear, linear_fit, \
     multivariate_linear_fit, quantile_bin_edges, forward_stepwise_selection
 from infotheory.plotting import set_style, save_fig, clear_figures, PROTOCOL_COLORS, OUTCOME_COLORS
+from infotheory.session import discover_sessions
+from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_columns, unit_noun
+from infotheory.session_jobs import run_sessions
+from infotheory.unit_stats import unit_curve, stable_seed
+from infotheory.unit_plots import unit_bars, hbar_units, mouse_palette, mouse_legend
+from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, bin_stimulus, strategy_names,
+                                     psychometric_pct)
 
 # All behavior variables considered "in relation to themselves". Checked
 # for availability per-session (`if c in merged.columns`), so this list
@@ -180,27 +204,33 @@ PSTH_VARS = ["runspeed", "lick", "pupil_area", "motionenergy"]
 PSTH_T_PRE, PSTH_T_POST, PSTH_T_BINSIZE = -3.0, 3.0, 0.15      # trial-aligned time window/bin (s)
 PSTH_S_PRE, PSTH_S_POST, PSTH_S_BINSIZE = -80.0, 60.0, 5.0     # trial-aligned position window/bin (cm)
 
-# Parallelism (joblib, matching the project's convention -- see e.g. the
-# uploaded plot_mi_behavior.py/plot_temporal_information.py, which
-# parallelize the same way): -1 = use all available cores. Session
-# loading/feature-extraction is embarrassingly parallel (one session's
-# work never depends on another's); the MI computation loop is
-# parallelized separately, coarse-grained over (protocol, window) groups
-# -- see section 4 -- since KSG with shuffling is the other real cost.
-N_JOBS_SESSIONS = -1
-N_JOBS_MI = -1
-JOBLIB_VERBOSE = 5
+# Cap on pooled continuous samples KEPT PER SESSION for the exploratory pooled plots (distribution box
+# plot in pooled mode, pairwise scatter): evenly spaced in time, so the pooled table stays small however
+# many sessions there are. None = keep every sample (high RAM -- not recommended).
+POOLED_MAX_SAMPLES_PER_SESSION = 3000
+
+# Stimulus grouping of the trial-aligned plots (sections 5_/6_): one column per STRATEGY from the shared
+# infotheory/stim_binning.py (psychometric-curve based, so only protocols with a 1b fit, i.e. DN, can use
+# the curve_pct strategies). DP has no fit: its (few) raw signal levels are used directly. DM: outcome only.
+PSTH_STIM_STRATEGIES = list(DEFAULT_STRATEGIES)
+
+JOBLIB_VERBOSE = 5   # parallelism: sessions / MI tasks run with --n-jobs (project_config.N_JOBS_SESSIONS)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--recompute", action="store_true",
-                     help="Reload sessions from 0_data/ instead of reusing the cached store/ tables")
+add_scope_args(parser)
 args = parser.parse_args()
+scope = scope_from_args(args)
+AGG = scope.aggregate
+UNIT = unit_noun(AGG)
+N_JOBS = scope.n_jobs
+AGG_SUFFIX = "" if AGG == "pooled" else f"__{AGG}"   # pooled tables keep their original file names
 
 paths = get_pipeline_paths(__file__)
-figdir = paths.out / "figures"
+table_dir, figdir = scoped_dirs(paths, scope)
 clear_figures(figdir)
 set_style()
 rng = np.random.default_rng(0)
+print(scope.describe())
 
 
 # --------------------------------------------------------------------- #
@@ -212,11 +242,15 @@ if not fits_path.exists():
 
 fits_df = pd.read_csv(fits_path)
 included = fits_df[fits_df["included"]]
-included_ids = included["session_id"].tolist()
+all_triples = discover_sessions(PROTOCOLS)
+selected_ids = {f"{a}_{d}" for _, a, d in select_sessions(all_triples, scope)}
+included_ids = [sid for sid in included["session_id"].tolist() if sid in selected_ids]
 if not included_ids:
-    raise SystemExit("No sessions passed 1b_psychometric's inclusion criteria -- nothing to analyze.")
+    raise SystemExit("No selected session passed 1b_psychometric's inclusion criteria -- nothing to analyze.")
 print(f"Using {len(included_ids)} included sessions from 1b_psychometric "
-      f"({included['protocol'].value_counts().to_dict()})")
+      f"({included[included['session_id'].isin(included_ids)]['protocol'].value_counts().to_dict()})")
+triple_of = {f"{a}_{d}": (p, a, d) for p, a, d in all_triples}
+mouse_colors = mouse_palette(a for _, a, _ in all_triples)
 
 # mu/sigma per session (only ever non-NaN for DN, since that's the only
 # protocol 1b actually fits) -- used below to z-score intermediate signal
@@ -227,245 +261,201 @@ mu_sigma_lookup = fits_df.set_index("session_id")[["mu", "sigma"]].to_dict("inde
 # --------------------------------------------------------------------- #
 # 2. Per-trial features + position-binned corridor stats -- or cache
 # --------------------------------------------------------------------- #
-trial_features_cache = paths.store / "trial_features.pkl"
-position_binned_cache = paths.store / "position_binned.pkl"
-time_course_cache = paths.store / "time_course.pkl"
-pooled_cache = paths.store / "pooled_downsampled.pkl"
-psth_time_cache = paths.store / "psth_time.pkl"
-psth_position_cache = paths.store / "psth_position.pkl"
-
-# Schema required in each cached table -- checked after loading so a
-# cache built by an OLDER version of this script (before some column
-# existed, e.g. frac_position) is treated as a miss and recomputed,
-# rather than crashing with a bare KeyError deep in the plotting code.
-# Bump/extend this whenever a cached table's columns change.
-REQUIRED_CACHE_COLUMNS = {
-    "trial_features": ["window", "session_id", "protocol"],
-    "position_binned": ["frac_position", "bin_center", "session_id", "protocol"],
-    "time_course": ["bin_center", "session_id", "protocol"],
-    "pooled": ["session_id", "protocol"],
-    "psth_time": ["t_rel", "variable", "value", "trialOutcome"],
-    "psth_position": ["s_rel", "variable", "value", "trialOutcome"],
-}
+def _session_key(sid):
+    """cache-key extra: raw-file fingerprint + the session's psychometric fit (mu, sigma feed signal_psy / stim_pct)"""
+    ms = mu_sigma_lookup.get(sid, {})
+    return f"{data_stamp(*triple_of[sid])}|{ms.get('mu')}|{ms.get('sigma')}"
 
 
-def _load_cache_if_valid():
-    """Load all six cached tables and check their columns against
-    REQUIRED_CACHE_COLUMNS. Returns the tables on success, or None (and
-    prints why) if anything is missing/stale -- the caller should then
-    fall through to recomputing from 0_data/."""
-    cache_files = {
-        "trial_features": trial_features_cache, "position_binned": position_binned_cache,
-        "time_course": time_course_cache, "pooled": pooled_cache,
-        "psth_time": psth_time_cache, "psth_position": psth_position_cache,
-    }
-    if args.recompute or not all(p.exists() for p in cache_files.values()):
-        return None
-    try:
-        loaded = {name: pd.read_pickle(path) for name, path in cache_files.items()}
-    except Exception as e:
-        print(f"Could not load cached tables from {paths.store} ({e}); recomputing from 0_data/ ...")
-        return None
-
-    for name, required_cols in REQUIRED_CACHE_COLUMNS.items():
-        df = loaded[name]
-        missing = [c for c in required_cols if not df.empty and c not in df.columns]
-        if missing:
-            print(f"Cached '{name}' is missing columns {missing} -- looks like it was built by an "
-                  f"older version of this script. Recomputing from 0_data/ instead of using {paths.store} "
-                  "(safe to delete that folder's *.pkl files to silence this check in the future).")
-            return None
-    return loaded
-
-
-cached = _load_cache_if_valid()
-if cached is not None:
-    print(f"Reusing cached behavior tables from {paths.store} (pass --recompute to reload 0_data/)")
-    trial_features = cached["trial_features"]
-    position_binned = cached["position_binned"]
-    time_course = cached["time_course"]
-    pooled = cached["pooled"]
-    psth_time = cached["psth_time"]
-    psth_position = cached["psth_position"]
-else:
-    sessions = load_sessions(protocols=PROTOCOLS, load_behaviordata=True, load_videodata=True,
-                              only_session_ids=included_ids)
-
-    def process_session(ses, mu_sigma_lookup, compute_zpos_diag=False):
-        """All per-session work for one session, returned as a dict of
-        the (up to) six sub-tables this step builds -- None for any
-        that don't apply (e.g. no zpos column). Kept as a single,
-        self-contained function (rather than appending to shared outer-
-        scope lists) specifically so it can be dispatched via
-        joblib.Parallel across sessions: each worker returns its own
-        results independently, then the caller concatenates them --
-        no shared mutable state between sessions.
-        """
-        result = {"session_id": ses.session_id, "zpos_diag": None, "trial_features": None,
-                   "position_binned": None, "time_course": None, "pooled": None,
-                   "psth_time": None, "psth_position": None}
-        if ses.trialdata is None or ses.behaviordata is None:
-            return result
-
-        if compute_zpos_diag:
-            result["zpos_diag"] = check_zpos_consistency(ses.behaviordata, ses.videodata)
-
-        merged_full = merge_behavior_video(ses.behaviordata, ses.videodata)
-        merged_full = remove_pupil_outliers(merged_full)
-        if merged_full.empty:
-            return result
-        # Engaged-only view: for whole-session/pooled stats and the
-        # per-trial-mean features, which SHOULD exclude disengaged
-        # periods. NOT used for the PSTH alignment below -- that needs
-        # the full trace so a window around trial k's onset can still
-        # reach into the tail of trial k-1 / the ITI (see psth.py's
-        # module docstring for why restricting first is wrong here).
-        merged = restrict_to_engaged(merged_full, ses.trialdata)
-        if merged.empty:
-            return result
-
-        available_vars = [c for c in VARIABLES if c in merged.columns]
-        available_rate_vars = [c for c in RATE_VARIABLES if c in available_vars]
-
-        engaged_trials = (ses.trialdata[ses.trialdata["engaged"] == 1]
-                           if "engaged" in ses.trialdata.columns else ses.trialdata)
-        # stimStart is a POSITION (see psth.py's module docstring), so the
-        # per-trial window features below subtract it directly against
-        # zpos -- no time derivation needed for that. A derived onset
-        # TIME is still needed further down for the time-domain PSTH
-        # (align_trials_time), so compute it once here regardless.
-        engaged_trials = derive_onset_time(engaged_trials, merged_full)
-
-        # One set of per-trial mean features per MI_WINDOWS entry
-        # (pre_stim/stim/reward), stacked into one table with a "window"
-        # column -- each window is [start_cm, end_cm] relative to
-        # stimStart (a position), see MI_WINDOWS above to adjust the
-        # bounds. Uses `merged` (engaged-only) since these features
-        # should reflect engaged behavior only -- unlike the PSTH
-        # alignment below, these are small, fixed-size windows expected
-        # to sit entirely within one trial, so there's no need for the
-        # "search the full trace" treatment align_trials_position uses.
-        tf_windows = []
-        for window_name, (s_start, s_end) in MI_WINDOWS.items():
-            tf_w = compute_trial_position_window_means(engaged_trials, merged, columns=available_vars,
-                                                         s_start=s_start, s_end=s_end,
-                                                         rate_columns=available_rate_vars)
-            tf_w["window"] = window_name
-            tf_windows.append(tf_w)
-        tf = pd.concat(tf_windows, ignore_index=True)
-        tf["session_id"] = ses.session_id
-        tf["protocol"] = ses.protocol
-        result["trial_features"] = tf
-
-        if "zpos" in merged.columns:
-            # Session-local bins (not a shared global range -- each
-            # session can span a different absolute zpos range,
-            # especially since zpos may accumulate across the whole
-            # session rather than reset; see the zpos QC diagnostic
-            # above). Pooling across sessions therefore uses
-            # frac_position (0-1, this session's own range) rather than
-            # bin_center directly -- see the plotting section below.
-            session_bins = np.linspace(merged["zpos"].min(), merged["zpos"].max(), N_POSITION_BINS + 1)
-            corridor_vars = [c for c in available_vars if c != "zpos"]
-            pb = bin_by_position(merged, columns=corridor_vars, bins=session_bins,
-                                  rate_columns=available_rate_vars)
-            span = session_bins[-1] - session_bins[0]
-            pb["frac_position"] = (pb["bin_center"] - session_bins[0]) / span if span > 0 else np.nan
-            pb["session_id"] = ses.session_id
-            pb["protocol"] = ses.protocol
-            result["position_binned"] = pb
-
-        # Elapsed-session-time binning, as a whole-session view that
-        # stays meaningful regardless of whether `zpos` resets every lap
-        # or (as turned out to be the case here) accumulates across the
-        # whole session -- see the print diagnostic after this loop.
-        elapsed = merged.assign(elapsed_s=merged["ts"] - merged["ts"].iloc[0])
-        time_bins = np.linspace(0, elapsed["elapsed_s"].max(), N_POSITION_BINS + 1)
-        tc = bin_by_position(elapsed, columns=[c for c in available_vars if c != "zpos"],
-                              bins=time_bins, position_col="elapsed_s", rate_columns=available_rate_vars)
-        tc["session_id"] = ses.session_id
-        tc["protocol"] = ses.protocol
-        result["time_course"] = tc
-
-        if DOWNSAMPLE_HZ is not None:
-            median_dt = np.median(np.diff(merged["ts"].to_numpy()))
-            step = 1 if not np.isfinite(median_dt) or median_dt <= 0 else max(1, int(round(1 / (DOWNSAMPLE_HZ * median_dt))))
-        else:
-            step = 1
-        down = merged.iloc[::step][available_vars].copy()
-        down["session_id"] = ses.session_id
-        down["protocol"] = ses.protocol
-        result["pooled"] = down
-
-        # Per-trial metadata to merge onto the PSTH tables below: outcome
-        # (HIT/MISS/FA/CR) and, where a fit exists (DN only), the
-        # z-scored intermediate-stimulus regressor signal_psy = (signal - mu) / sigma.
-        trial_meta = add_trial_outcome(engaged_trials)
-        mu_sigma = mu_sigma_lookup.get(ses.session_id, {})
-        if mu_sigma and np.isfinite(mu_sigma.get("mu", np.nan)) and np.isfinite(mu_sigma.get("sigma", np.nan)):
-            trial_meta = trial_meta.assign(
-                signal_psy=(trial_meta["signal"] - mu_sigma["mu"]) / mu_sigma["sigma"])
-        else:
-            trial_meta = trial_meta.assign(signal_psy=np.nan)
-        trial_meta = trial_meta[["trialNumber", "trialOutcome", "signal", "signal_psy"]]
-
-        psth_vars_avail = [c for c in PSTH_VARS if c in merged_full.columns]
-        psth_rate_vars = [c for c in RATE_VARIABLES if c in psth_vars_avail]
-        if psth_vars_avail:
-            pt = align_trials_time(engaged_trials, merged_full, columns=psth_vars_avail,
-                                    t_pre=PSTH_T_PRE, t_post=PSTH_T_POST, binsize=PSTH_T_BINSIZE,
-                                    rate_columns=psth_rate_vars)
-            if len(pt):
-                pt = pt.merge(trial_meta, on="trialNumber", how="left")
-                pt["session_id"], pt["protocol"] = ses.session_id, ses.protocol
-                result["psth_time"] = pt
-
-            pp = align_trials_position(engaged_trials, merged_full, columns=psth_vars_avail,
-                                        s_pre=PSTH_S_PRE, s_post=PSTH_S_POST, binsize=PSTH_S_BINSIZE,
-                                        rate_columns=psth_rate_vars)
-            if len(pp):
-                pp = pp.merge(trial_meta, on="trialNumber", how="left")
-                pp["session_id"], pp["protocol"] = ses.session_id, ses.protocol
-                result["psth_position"] = pp
-
+def process_session(ses, seed):
+    """All per-session work for one session, returned as a dict of
+    the (up to) six sub-tables this step builds -- None for any
+    that don't apply (e.g. no zpos column). Kept as a single,
+    self-contained function (rather than appending to shared outer-
+    scope lists) specifically so it can be dispatched via
+    joblib.Parallel across sessions: each worker returns its own
+    results independently, then the caller concatenates them --
+    no shared mutable state between sessions.
+    """
+    result = {"session_id": ses.session_id, "zpos_diag": None, "trial_features": None,
+               "position_binned": None, "time_course": None, "pooled": None, "var_stats": None,
+               "psth_time": None, "psth_position": None}
+    if ses.trialdata is None or ses.behaviordata is None:
         return result
 
-    print(f"Processing {len(sessions)} sessions (n_jobs={N_JOBS_SESSIONS}) ...")
-    session_results = Parallel(n_jobs=N_JOBS_SESSIONS, backend="loky", verbose=JOBLIB_VERBOSE)(
-        delayed(process_session)(ses, mu_sigma_lookup, compute_zpos_diag=(i == 0))
-        for i, ses in enumerate(sessions)
-    )
+    if True:  # cheap; the first session's diagnostic is printed below
+        result["zpos_diag"] = check_zpos_consistency(ses.behaviordata, ses.videodata)
 
-    for r in session_results:
-        if r["zpos_diag"] is not None:
-            diag = r["zpos_diag"]
-            print(f"\nzpos QC ({r['session_id']}): behaviordata vs videodata position after "
-                  f"nearest-timestamp match -- median |diff|={diag['median_abs_diff']:.2f}, "
-                  f"95th pct={diag['p95_abs_diff']:.2f}, max={diag['max_abs_diff']:.2f} "
-                  f"(n={diag['n_compared']}). merge_behavior_video keeps behaviordata's copy; "
-                  "large numbers here would mean that choice matters.")
-            break
+    merged_full = merge_behavior_video(ses.behaviordata, ses.videodata)
+    merged_full = remove_pupil_outliers(merged_full)
+    if merged_full.empty:
+        return result
+    # Engaged-only view: for whole-session/pooled stats and the
+    # per-trial-mean features, which SHOULD exclude disengaged
+    # periods. NOT used for the PSTH alignment below -- that needs
+    # the full trace so a window around trial k's onset can still
+    # reach into the tail of trial k-1 / the ITI (see psth.py's
+    # module docstring for why restricting first is wrong here).
+    merged = restrict_to_engaged(merged_full, ses.trialdata)
+    if merged.empty:
+        return result
 
-    trial_rows = [r["trial_features"] for r in session_results if r["trial_features"] is not None]
-    position_rows = [r["position_binned"] for r in session_results if r["position_binned"] is not None]
-    time_course_rows = [r["time_course"] for r in session_results if r["time_course"] is not None]
-    pooled_rows = [r["pooled"] for r in session_results if r["pooled"] is not None]
-    psth_time_rows = [r["psth_time"] for r in session_results if r["psth_time"] is not None]
-    psth_position_rows = [r["psth_position"] for r in session_results if r["psth_position"] is not None]
+    available_vars = [c for c in VARIABLES if c in merged.columns]
+    available_rate_vars = [c for c in RATE_VARIABLES if c in available_vars]
 
-    trial_features = pd.concat(trial_rows, ignore_index=True) if trial_rows else pd.DataFrame()
-    position_binned = pd.concat(position_rows, ignore_index=True) if position_rows else pd.DataFrame()
-    time_course = pd.concat(time_course_rows, ignore_index=True) if time_course_rows else pd.DataFrame()
-    pooled = pd.concat(pooled_rows, ignore_index=True) if pooled_rows else pd.DataFrame()
-    psth_time = pd.concat(psth_time_rows, ignore_index=True) if psth_time_rows else pd.DataFrame()
-    psth_position = pd.concat(psth_position_rows, ignore_index=True) if psth_position_rows else pd.DataFrame()
+    engaged_trials = (ses.trialdata[ses.trialdata["engaged"] == 1]
+                       if "engaged" in ses.trialdata.columns else ses.trialdata)
+    # stimStart is a POSITION (see psth.py's module docstring), so the
+    # per-trial window features below subtract it directly against
+    # zpos -- no time derivation needed for that. A derived onset
+    # TIME is still needed further down for the time-domain PSTH
+    # (align_trials_time), so compute it once here regardless.
+    engaged_trials = derive_onset_time(engaged_trials, merged_full)
 
-    trial_features.to_pickle(trial_features_cache)
-    position_binned.to_pickle(position_binned_cache)
-    time_course.to_pickle(time_course_cache)
-    pooled.to_pickle(pooled_cache)
-    psth_time.to_pickle(psth_time_cache)
-    psth_position.to_pickle(psth_position_cache)
+    # One set of per-trial mean features per MI_WINDOWS entry
+    # (pre_stim/stim/reward), stacked into one table with a "window"
+    # column -- each window is [start_cm, end_cm] relative to
+    # stimStart (a position), see MI_WINDOWS above to adjust the
+    # bounds. Uses `merged` (engaged-only) since these features
+    # should reflect engaged behavior only -- unlike the PSTH
+    # alignment below, these are small, fixed-size windows expected
+    # to sit entirely within one trial, so there's no need for the
+    # "search the full trace" treatment align_trials_position uses.
+    tf_windows = []
+    for window_name, (s_start, s_end) in MI_WINDOWS.items():
+        tf_w = compute_trial_position_window_means(engaged_trials, merged, columns=available_vars,
+                                                     s_start=s_start, s_end=s_end,
+                                                     rate_columns=available_rate_vars)
+        tf_w["window"] = window_name
+        tf_windows.append(tf_w)
+    tf = pd.concat(tf_windows, ignore_index=True)
+    tf["session_id"] = ses.session_id
+    tf["protocol"] = ses.protocol
+    result["trial_features"] = tf
+
+    if "zpos" in merged.columns:
+        # Session-local bins (not a shared global range -- each
+        # session can span a different absolute zpos range,
+        # especially since zpos may accumulate across the whole
+        # session rather than reset; see the zpos QC diagnostic
+        # above). Pooling across sessions therefore uses
+        # frac_position (0-1, this session's own range) rather than
+        # bin_center directly -- see the plotting section below.
+        session_bins = np.linspace(merged["zpos"].min(), merged["zpos"].max(), N_POSITION_BINS + 1)
+        corridor_vars = [c for c in available_vars if c != "zpos"]
+        pb = bin_by_position(merged, columns=corridor_vars, bins=session_bins,
+                              rate_columns=available_rate_vars)
+        span = session_bins[-1] - session_bins[0]
+        pb["frac_position"] = (pb["bin_center"] - session_bins[0]) / span if span > 0 else np.nan
+        pb["session_id"] = ses.session_id
+        pb["protocol"] = ses.protocol
+        result["position_binned"] = pb
+
+    # Elapsed-session-time binning, as a whole-session view that
+    # stays meaningful regardless of whether `zpos` resets every lap
+    # or (as turned out to be the case here) accumulates across the
+    # whole session -- see the print diagnostic after this loop.
+    elapsed = merged.assign(elapsed_s=merged["ts"] - merged["ts"].iloc[0])
+    time_bins = np.linspace(0, elapsed["elapsed_s"].max(), N_POSITION_BINS + 1)
+    tc = bin_by_position(elapsed, columns=[c for c in available_vars if c != "zpos"],
+                          bins=time_bins, position_col="elapsed_s", rate_columns=available_rate_vars)
+    tc["session_id"] = ses.session_id
+    tc["protocol"] = ses.protocol
+    result["time_course"] = tc
+
+    if DOWNSAMPLE_HZ is not None:
+        median_dt = np.median(np.diff(merged["ts"].to_numpy()))
+        step = 1 if not np.isfinite(median_dt) or median_dt <= 0 else max(1, int(round(1 / (DOWNSAMPLE_HZ * median_dt))))
+    else:
+        step = 1
+    down = merged.iloc[::step][available_vars].copy()
+    if POOLED_MAX_SAMPLES_PER_SESSION and len(down) > POOLED_MAX_SAMPLES_PER_SESSION:
+        down = down.iloc[np.linspace(0, len(down) - 1, POOLED_MAX_SAMPLES_PER_SESSION).astype(int)]
+    down["session_id"] = ses.session_id
+    down["protocol"] = ses.protocol
+    result["pooled"] = down
+    # exact (all-sample) per-variable sums, so per-unit means do not depend on the cap above
+    vs = []
+    for v in available_vars:
+        x = merged[v].to_numpy(dtype=float)
+        x = x[np.isfinite(x)]
+        vs.append({"variable": v, "n": len(x), "sum": float(x.sum()), "sumsq": float((x * x).sum())})
+    result["var_stats"] = pd.DataFrame(vs)
+    result["var_stats"]["session_id"], result["var_stats"]["protocol"] = ses.session_id, ses.protocol
+
+    # Per-trial metadata to merge onto the PSTH tables below: outcome
+    # (HIT/MISS/FA/CR) and, where a fit exists (DN only), the
+    # z-scored intermediate-stimulus regressor signal_psy = (signal - mu) / sigma.
+    trial_meta = add_trial_outcome(engaged_trials)
+    mu_sigma = mu_sigma_lookup.get(ses.session_id, {})
+    if mu_sigma and np.isfinite(mu_sigma.get("mu", np.nan)) and np.isfinite(mu_sigma.get("sigma", np.nan)):
+        trial_meta = trial_meta.assign(
+            signal_psy=(trial_meta["signal"] - mu_sigma["mu"]) / mu_sigma["sigma"])
+    else:
+        trial_meta = trial_meta.assign(signal_psy=np.nan)
+    trial_meta = trial_meta.assign(stim_pct=psychometric_pct(trial_meta["signal"], mu_sigma.get("mu"), mu_sigma.get("sigma")))
+    trial_meta = trial_meta[["trialNumber", "trialOutcome", "signal", "signal_psy", "stim_pct"]]
+
+    psth_vars_avail = [c for c in PSTH_VARS if c in merged_full.columns]
+    psth_rate_vars = [c for c in RATE_VARIABLES if c in psth_vars_avail]
+    if psth_vars_avail:
+        pt = align_trials_time(engaged_trials, merged_full, columns=psth_vars_avail,
+                                t_pre=PSTH_T_PRE, t_post=PSTH_T_POST, binsize=PSTH_T_BINSIZE,
+                                rate_columns=psth_rate_vars)
+        if len(pt):
+            pt = pt.merge(trial_meta, on="trialNumber", how="left")
+            pt["session_id"], pt["protocol"] = ses.session_id, ses.protocol
+            result["psth_time"] = pt
+
+        pp = align_trials_position(engaged_trials, merged_full, columns=psth_vars_avail,
+                                    s_pre=PSTH_S_PRE, s_post=PSTH_S_POST, binsize=PSTH_S_BINSIZE,
+                                    rate_columns=psth_rate_vars)
+        if len(pp):
+            pp = pp.merge(trial_meta, on="trialNumber", how="left")
+            pp["session_id"], pp["protocol"] = ses.session_id, ses.protocol
+            result["psth_position"] = pp
+
+    for key in ("trial_features", "position_binned", "time_course", "pooled", "var_stats", "psth_time", "psth_position"):
+        if result[key] is not None:
+            result[key]["animal_id"] = ses.animal_id
+    return result
+
+
+session_results = run_sessions(
+    included_ids, process_session, list(PROTOCOLS), paths.store, "behavior_session",
+    key_params=dict(version="1c-v2", variables=VARIABLES, rate_variables=RATE_VARIABLES, windows=MI_WINDOWS,
+                    n_pos_bins=N_POSITION_BINS, downsample=DOWNSAMPLE_HZ, pooled_cap=POOLED_MAX_SAMPLES_PER_SESSION,
+                    psth_vars=PSTH_VARS, psth_t=(PSTH_T_PRE, PSTH_T_POST, PSTH_T_BINSIZE),
+                    psth_s=(PSTH_S_PRE, PSTH_S_POST, PSTH_S_BINSIZE)),
+    load_kwargs=dict(load_behaviordata=True, load_videodata=True),
+    n_jobs=N_JOBS, recompute=args.recompute, verbose=JOBLIB_VERBOSE,
+    extra_key_by_session={sid: _session_key(sid) for sid in included_ids}, flatten=False)
+session_results = [r for r in session_results if r is not None]
+
+for r in session_results:
+    if r["zpos_diag"] is not None:
+        diag = r["zpos_diag"]
+        print(f"\nzpos QC ({r['session_id']}): behaviordata vs videodata position after "
+              f"nearest-timestamp match -- median |diff|={diag['median_abs_diff']:.2f}, "
+              f"95th pct={diag['p95_abs_diff']:.2f}, max={diag['max_abs_diff']:.2f} "
+              f"(n={diag['n_compared']}). merge_behavior_video keeps behaviordata's copy; "
+              "large numbers here would mean that choice matters.")
+        break
+
+
+def _concat(key):
+    parts = [r[key] for r in session_results if r.get(key) is not None]
+    return pd.concat(parts, ignore_index=True) if parts else pd.DataFrame()
+
+
+trial_features = _concat("trial_features")
+position_binned = _concat("position_binned")
+time_course = _concat("time_course")
+pooled = _concat("pooled")
+var_stats = _concat("var_stats")
+psth_time = _concat("psth_time")
+psth_position = _concat("psth_position")
+del session_results
 
 if not pooled.empty and "zpos" in pooled.columns:
     zpos_range = pooled["zpos"].max() - pooled["zpos"].min()
@@ -491,22 +481,36 @@ print(f"Pooled continuous samples: {len(pooled)} ({downsample_note})")
 # 3. Exploratory plots
 # --------------------------------------------------------------------- #
 # 3a. Distributions per protocol
+#     pooled : box plot over the pooled (capped, evenly spaced) samples of all sessions
+#     session/mouse : mean of the variable per analysis unit (exact, from ALL samples), bars = mean over
+#                     units +- SEM, dots = units
 plot_vars = [v for v in VARIABLES if v not in ("zpos", *RATE_VARIABLES) and v in pooled.columns]
 if plot_vars:
     ncols = min(4, len(plot_vars))
     nrows = int(np.ceil(len(plot_vars) / ncols))
     fig, axes = plt.subplots(nrows, ncols, figsize=(4 * ncols, 3.2 * nrows), squeeze=False)
     flat_axes = axes.flatten()
+    protocols_present = [p for p in PROTOCOLS if p in pooled["protocol"].unique()]
+    ukeys = ["protocol"] + {"pooled": [], "session": ["animal_id", "session_id"], "mouse": ["animal_id"]}[AGG]
+    unit_means = (var_stats.groupby(ukeys + ["variable"])[["n", "sum"]].sum().reset_index()
+                  .assign(mean=lambda d: d["sum"] / d["n"]))
     for ax, var in zip(flat_axes, plot_vars):
-        sns.violinplot(data=pooled, x="protocol", y=var, order=PROTOCOLS, ax=ax,
+        if AGG == "pooled":
+            sns.boxplot(showfliers=False, data=pooled, x="protocol", y=var, order=protocols_present, ax=ax,
                         hue="protocol", palette=PROTOCOL_COLORS, legend=False)
+            ax.set_ylabel("")
+        else:
+            unit_bars(ax, unit_means[unit_means["variable"] == var], "protocol", "mean", protocols_present, AGG,
+                      colors={p: PROTOCOL_COLORS[p] for p in protocols_present}, mouse_colors=mouse_colors,
+                      ylabel=f"mean per {UNIT}")
         ax.set_title(VAR_LABELS.get(var, var))
-        ax.set_ylabel("")
     for ax in flat_axes[len(plot_vars):]:
         ax.set_visible(False)
-    fig.suptitle("Behavior variable distributions (engaged trials)", y=1.01)
+    fig.suptitle("Behavior variable distributions (engaged trials)" if AGG == "pooled" else
+                 f"Behavior variables, mean per {UNIT} (engaged trials)", y=1.01)
     fig.tight_layout()
     save_fig(fig, figdir, "1_variable_distributions")
+    plt.close(fig)
 
 # 3b. Corridor (position) tuning -- whole session, not trial-locked.
 # Uses each session's own FRACTIONAL position range (frac_position,
@@ -527,9 +531,7 @@ if corridor_vars:
             sub = position_binned[position_binned["protocol"] == protocol]
             if sub.empty:
                 continue
-            frac_rounded = sub["frac_position"].round(4)
-            agg = sub.groupby(frac_rounded)[f"{var}_mean"].mean()
-            sem = sub.groupby(frac_rounded)[f"{var}_mean"].sem().fillna(0)
+            agg, sem = unit_curve(sub.assign(_x=sub["frac_position"].round(4)), "_x", f"{var}_mean", AGG)
             ax.plot(agg.index, agg.to_numpy(), color=PROTOCOL_COLORS[protocol], label=protocol)
             ax.fill_between(agg.index, (agg - sem).to_numpy(), (agg + sem).to_numpy(),
                              color=PROTOCOL_COLORS[protocol], alpha=0.2)
@@ -538,9 +540,10 @@ if corridor_vars:
     for ax in flat_axes[len(corridor_vars):]:
         ax.set_visible(False)
     flat_axes[0].legend(frameon=False, fontsize=8)
-    fig.suptitle("Behavior variables vs. position, whole session (engaged trials)", y=1.01)
+    fig.suptitle(f"Behavior variables vs. position, whole session (engaged trials) -- mean +- SEM over {UNIT}s" if AGG != "pooled" else "Behavior variables vs. position, whole session (engaged trials)", y=1.01)
     fig.tight_layout()
     save_fig(fig, figdir, "2_corridor_position_tuning")
+    plt.close(fig)
 
 # 2b. Same whole-session view, but by elapsed session time instead of
 # distance -- meaningful regardless of whether zpos resets or accumulates.
@@ -556,8 +559,7 @@ if time_vars:
             sub = time_course[time_course["protocol"] == protocol]
             if sub.empty:
                 continue
-            agg = sub.groupby("bin_center")[f"{var}_mean"].mean()
-            sem = sub.groupby("bin_center")[f"{var}_mean"].sem().fillna(0)
+            agg, sem = unit_curve(sub, "bin_center", f"{var}_mean", AGG)
             ax.plot(agg.index / 60, agg.to_numpy(), color=PROTOCOL_COLORS[protocol], label=protocol)
             ax.fill_between(agg.index / 60, (agg - sem).to_numpy(), (agg + sem).to_numpy(),
                              color=PROTOCOL_COLORS[protocol], alpha=0.2)
@@ -566,9 +568,10 @@ if time_vars:
     for ax in flat_axes[len(time_vars):]:
         ax.set_visible(False)
     flat_axes[0].legend(frameon=False, fontsize=8)
-    fig.suptitle("Behavior variables vs. elapsed session time (engaged trials)", y=1.01)
+    fig.suptitle(f"Behavior variables vs. elapsed session time (engaged trials) -- mean +- SEM over {UNIT}s" if AGG != "pooled" else "Behavior variables vs. elapsed session time (engaged trials)", y=1.01)
     fig.tight_layout()
     save_fig(fig, figdir, "2b_session_time_course")
+    plt.close(fig)
 
 # 3c. Pairwise relationships (linear fit overlaid, by protocol)
 pairplot_vars = [v for v in VARIABLES if v not in RATE_VARIABLES and v in pooled.columns]
@@ -580,11 +583,12 @@ if len(pairplot_vars) >= 2 and not pooled.empty:
             d.sample(min(len(d), per_protocol_cap), random_state=0) for _, d in plot_df.groupby("protocol")
         ], ignore_index=True)
     g = sns.pairplot(plot_df, hue="protocol", palette=PROTOCOL_COLORS, corner=True, kind="reg",
-                      plot_kws=dict(scatter_kws=dict(alpha=0.25, s=8), line_kws=dict(linewidth=1.5)),
+                      plot_kws=dict(ci=None, scatter_kws=dict(alpha=0.25, s=8), line_kws=dict(linewidth=1.5)),  # ci=None: skip the (slow, invisible at this N) bootstrap band
                       diag_kind="hist")
     title_suffix = "" if PAIRPLOT_MAX_ROWS is None or len(pooled) <= PAIRPLOT_MAX_ROWS else " (subsampled for rendering)"
     g.figure.suptitle(f"Pairwise behavior variables (engaged trials{title_suffix})", y=1.02)
     save_fig(g.figure, figdir, "3_pairwise_relationships")
+    plt.close(g.figure)
 
 
 # --------------------------------------------------------------------- #
@@ -598,12 +602,6 @@ if len(pairplot_vars) >= 2 and not pooled.empty:
 #     non-trial-locked view is the "2_corridor_position_tuning" plot
 #     above -- these are the trial-locked complement.
 # --------------------------------------------------------------------- #
-SIGNAL_GROUP_BINS = 10  # continuous groupings (signal / signal_psy) get binned into this many levels
-                         # before averaging -- pooling sessions by *exact* z-scored value (each session
-                         # has its own fitted mu/sigma) would otherwise produce dozens of near-unique
-                         # levels instead of a handful of representative ones
-
-
 def _group_order(values, group_col):
     if group_col == "trialOutcome":
         order = ["HIT", "MISS", "FA", "CR"]
@@ -611,79 +609,77 @@ def _group_order(values, group_col):
     return sorted(values)
 
 
+def _stim_groupings(sub_protocol, protocol):
+    """Stimulus groupings for one protocol: list of (column name, panel title, level names, level colours).
+    DN -> every strategy in PSTH_STIM_STRATEGIES (shared stim_binning definitions; bins are computed per
+    row from `signal` and the session's position on its psychometric curve `stim_pct`).
+    DP -> its raw signal levels (no fit, discrete). DM -> none."""
+    cmap = plt.get_cmap("plasma")
+    out = []
+    if protocol == "DN" and sub_protocol["stim_pct"].notna().any():
+        for strat in PSTH_STIM_STRATEGIES:
+            rule = STIM_BINNING_STRATEGIES[strat]
+            col = f"_bin_{strat}"
+            sub_protocol[col] = bin_stimulus(sub_protocol["signal"].to_numpy(), sub_protocol["stim_pct"].to_numpy(), rule,
+                                             stim_z=sub_protocol["signal_psy"].to_numpy())
+            names = strategy_names(rule)
+            levels = [i for i in range(len(names)) if (sub_protocol[col] == i).any()]
+            out.append((col, f"stimulus: {strat}", {i: names[i] for i in levels},
+                        {i: cmap(0.1 + 0.8 * i / max(len(names) - 1, 1)) for i in levels}))
+    elif protocol == "DP" and sub_protocol["signal"].notna().any():
+        levels = sorted(sub_protocol["signal"].dropna().unique())
+        out.append(("signal", "by signal (%)", {v: f"{v:g}" for v in levels},
+                    {v: cmap(0.1 + 0.8 * i / max(len(levels) - 1, 1)) for i, v in enumerate(levels)}))
+    return out
+
+
 def plot_trial_aligned(psth_long: pd.DataFrame, x_col: str, x_label: str, prefix: str):
     if psth_long.empty:
         return
-    cmap = plt.get_cmap("plasma")
-
     for protocol in PROTOCOLS:
-        sub_protocol = psth_long[psth_long["protocol"] == protocol]
+        sub_protocol = psth_long[psth_long["protocol"] == protocol].copy()
         if sub_protocol.empty:
             continue
 
-        groupings = [("trialOutcome", "by outcome", OUTCOME_COLORS)]
-        signal_col = "signal_psy" if protocol == "DN" else ("signal" if protocol == "DP" else None)
-        if signal_col is not None and sub_protocol[signal_col].notna().any():
-            label = "by z-scored signal (signal_psy)" if signal_col == "signal_psy" else "by signal (%)"
-            groupings.append((signal_col, label, None))
+        groupings = [("trialOutcome", "by outcome", {k: k for k in OUTCOME_COLORS}, dict(OUTCOME_COLORS))]
+        groupings += _stim_groupings(sub_protocol, protocol)
 
         variables = [v for v in PSTH_VARS if v in sub_protocol["variable"].unique()]
         if not variables:
             continue
 
         fig, axes = plt.subplots(len(variables), len(groupings),
-                                  figsize=(5.5 * len(groupings), 3 * len(variables)), squeeze=False)
+                                  figsize=(5.2 * len(groupings), 3 * len(variables)), squeeze=False)
         for i, var in enumerate(variables):
             var_data = sub_protocol[sub_protocol["variable"] == var]
-            for j, (group_col, group_label, palette) in enumerate(groupings):
+            for j, (group_col, group_label, names, colors) in enumerate(groupings):
                 ax = axes[i][j]
-                gdata_all = var_data.dropna(subset=[group_col]).copy()
-
-                if palette is None:
-                    # Continuous grouping (signal / signal_psy): bin into a
-                    # handful of representative levels rather than pooling
-                    # by exact value across sessions. quantile_bin_edges
-                    # (not a naive np.quantile+unique) avoids collapsing to
-                    # far fewer bins than requested when the data is
-                    # concentrated on a few repeated values.
-                    edges = quantile_bin_edges(gdata_all[group_col].to_numpy(dtype=float), SIGNAL_GROUP_BINS)
-                    if len(edges) < 2:
-                        continue
-                    gdata_all["_level"] = pd.cut(gdata_all[group_col], bins=edges, include_lowest=True)
-                    level_values = {b: b.mid for b in gdata_all["_level"].cat.categories}
-                    levels = sorted(level_values, key=lambda b: b.mid)
-                    norm = plt.Normalize(min(level_values.values()), max(level_values.values()))
-                    group_key_col = "_level"
-                else:
-                    levels = _group_order(gdata_all[group_col].unique(), group_col)
-                    group_key_col = group_col
-                    norm = None
-
+                gdata_all = var_data.dropna(subset=[group_col])
+                levels = [lv for lv in (_group_order(gdata_all[group_col].unique(), group_col)
+                                        if group_col == "trialOutcome" else names) if lv in set(gdata_all[group_col].unique())]
                 for level in levels:
-                    gdata = gdata_all[gdata_all[group_key_col] == level]
+                    gdata = gdata_all[gdata_all[group_col] == level]
                     if gdata.empty:
                         continue
-                    agg = gdata.groupby(x_col)["value"].mean()
-                    sem = gdata.groupby(x_col)["value"].sem().fillna(0)
-                    if palette is not None:
-                        color, label_str = palette[level], str(level)
-                    else:
-                        color, label_str = cmap(norm(level_values[level])), f"{level_values[level]:.2g}"
-                    ax.plot(agg.index, agg.to_numpy(), color=color, label=label_str, linewidth=1.3)
-                    ax.fill_between(agg.index, (agg - sem).to_numpy(), (agg + sem).to_numpy(),
-                                     color=color, alpha=0.15)
+                    agg, sem = unit_curve(gdata, x_col, "value", AGG)
+                    ax.plot(agg.index, agg.to_numpy(), color=colors[level], label=str(names[level]), linewidth=1.3)
+                    if AGG != "pooled":
+                        ax.fill_between(agg.index, (agg - sem).to_numpy(), (agg + sem).to_numpy(),
+                                         color=colors[level], alpha=0.15)
 
                 ax.axvline(0, color="black", linestyle=":", linewidth=1)
                 if i == 0:
-                    ax.set_title(group_label)
+                    ax.set_title(group_label, fontsize=9)
                 if j == 0:
                     ax.set_ylabel(VAR_LABELS.get(var, var))
                 ax.set_xlabel(x_label)
                 ax.legend(fontsize=6, frameon=False, ncol=2 if len(levels) > 6 else 1)
 
-        fig.suptitle(f"Trial-aligned {prefix.split('_')[-1]} -- {protocol} (0 = stimulus onset)", y=1.02)
+        fig.suptitle(f"Trial-aligned {prefix.split('_')[-1]} -- {protocol} (0 = stimulus onset)"
+                     + ("" if AGG == "pooled" else f"; mean +- SEM over {UNIT}s"), y=1.02)
         fig.tight_layout()
         save_fig(fig, figdir, f"{prefix}_{protocol}")
+        plt.close(fig)
 
 
 plot_trial_aligned(psth_time, "t_rel", "time rel. to stimulus onset (s)", "5_psth_time")
@@ -702,17 +698,35 @@ plot_trial_aligned(psth_position, "s_rel", "position rel. to stimulus onset (cm)
 mi_vars = [v for v in VARIABLES if v in trial_features.columns]
 pairs = list(itertools.combinations(mi_vars, 2))
 
-mi_groups = []
+# Analysis units: pooled -> all trials of a protocol together; session -> each session on its own;
+# mouse -> each mouse on its own (its sessions pooled).
+unit_col = {"pooled": None, "session": "session_id", "mouse": "animal_id"}[AGG]
+mi_groups = []   # (protocol, window, unit label, sub-table)
 for protocol in PROTOCOLS:
     for window_name in MI_WINDOWS:
         sub = (trial_features[(trial_features["protocol"] == protocol)
                                & (trial_features["window"] == window_name)]
                if len(trial_features) else pd.DataFrame())
-        if not sub.empty:
-            mi_groups.append((protocol, window_name, sub))
+        if sub.empty:
+            continue
+        if unit_col is None:
+            mi_groups.append((protocol, window_name, "all", sub))
+        else:
+            for unit, usub in sub.groupby(unit_col):
+                mi_groups.append((protocol, window_name, unit, usub))
 
 
-def compute_pairwise_mi_for_group(protocol, window_name, sub, pairs, ksg_k, n_shuffles, seed):
+def _tag_unit(records, unit, sub):
+    """Add the unit columns to records (none for the pooled tables, which keep their original schema)."""
+    if unit_col is None:
+        return records
+    for r in records:
+        r["unit"] = unit
+        r["animal_id"] = sub["animal_id"].iloc[0]
+    return records
+
+
+def compute_pairwise_mi_for_group(protocol, window_name, unit, sub, pairs, ksg_k, n_shuffles, seed):
     rng_local = np.random.default_rng(seed)
     records = []
     for var_x, var_y in pairs:
@@ -737,19 +751,20 @@ def compute_pairwise_mi_for_group(protocol, window_name, sub, pairs, ksg_k, n_sh
             "linear_sufficient": (cmp.frac_explained_linearly >= LINEAR_SUFFICIENT_FRAC)
             if not np.isnan(cmp.frac_explained_linearly) else None,
         })
-    return records
+    return _tag_unit(records, unit, sub)
 
 
 print(f"\nComputing pairwise MI/linear fits for {len(mi_groups)} (protocol, window) groups "
-      f"x {len(pairs)} pairs (n_jobs={N_JOBS_MI}) ...")
-nested_pairwise = Parallel(n_jobs=N_JOBS_MI, backend="loky", verbose=JOBLIB_VERBOSE)(
-    delayed(compute_pairwise_mi_for_group)(protocol, window_name, sub, pairs, KSG_K, N_SHUFFLES, seed=i)
-    for i, (protocol, window_name, sub) in enumerate(mi_groups)
+      f"x {len(pairs)} pairs (n_jobs={N_JOBS}) ...")
+nested_pairwise = Parallel(n_jobs=N_JOBS, backend="loky", verbose=JOBLIB_VERBOSE)(
+    delayed(compute_pairwise_mi_for_group)(protocol, window_name, unit, sub, pairs, KSG_K, N_SHUFFLES,
+                                           seed=stable_seed("pairwise", protocol, window_name, unit))
+    for protocol, window_name, unit, sub in mi_groups
 )
 records = [rec for group in nested_pairwise for rec in group]
 
 mi_table = pd.DataFrame(records)
-mi_table.to_csv(paths.out / "behavior_mi_vs_linear.csv", index=False)
+mi_table.to_csv(table_dir / f"behavior_mi_vs_linear{AGG_SUFFIX}.csv", index=False)
 
 if len(mi_table):
     n_insufficient = (mi_table["linear_sufficient"] == False).sum()  # noqa: E712 (None must not match)
@@ -774,7 +789,7 @@ if len(mi_table):
 #    alone AND weakly to lick rate alone, but strongly predictable from
 #    the two TOGETHER).
 # --------------------------------------------------------------------- #
-def compute_multivariate_for_group(protocol, window_name, sub, mi_vars, ksg_k, n_shuffles, seed):
+def compute_multivariate_for_group(protocol, window_name, unit, sub, mi_vars, ksg_k, n_shuffles, seed):
     rng_local = np.random.default_rng(seed)
     available = [v for v in mi_vars if v in sub.columns]
     records = []
@@ -803,19 +818,20 @@ def compute_multivariate_for_group(protocol, window_name, sub, mi_vars, ksg_k, n
             "linear_sufficient": (cmp.frac_explained_linearly >= LINEAR_SUFFICIENT_FRAC)
             if not np.isnan(cmp.frac_explained_linearly) else None,
         })
-    return records
+    return _tag_unit(records, unit, sub)
 
 
 print(f"\nComputing multivariate (leave-one-out) MI/linear fits for {len(mi_groups)} "
-      f"(protocol, window) groups x {len(mi_vars)} targets (n_jobs={N_JOBS_MI}) ...")
-nested_multivariate = Parallel(n_jobs=N_JOBS_MI, backend="loky", verbose=JOBLIB_VERBOSE)(
-    delayed(compute_multivariate_for_group)(protocol, window_name, sub, mi_vars, KSG_K, N_SHUFFLES, seed=1000 + i)
-    for i, (protocol, window_name, sub) in enumerate(mi_groups)
+      f"(protocol, window) groups x {len(mi_vars)} targets (n_jobs={N_JOBS}) ...")
+nested_multivariate = Parallel(n_jobs=N_JOBS, backend="loky", verbose=JOBLIB_VERBOSE)(
+    delayed(compute_multivariate_for_group)(protocol, window_name, unit, sub, mi_vars, KSG_K, N_SHUFFLES,
+                                            seed=stable_seed("multivariate", protocol, window_name, unit))
+    for protocol, window_name, unit, sub in mi_groups
 )
 multivariate_records = [rec for group in nested_multivariate for rec in group]
 
 multivariate_table = pd.DataFrame(multivariate_records)
-multivariate_table.to_csv(paths.out / "behavior_multivariate_mi_vs_linear.csv", index=False)
+multivariate_table.to_csv(table_dir / f"behavior_multivariate_mi_vs_linear{AGG_SUFFIX}.csv", index=False)
 
 if len(multivariate_table):
     top = multivariate_table.sort_values("r2", ascending=False).head(10)
@@ -840,7 +856,7 @@ if len(multivariate_table):
 #    still add tells you whether the rest of the predictor set is
 #    actually contributing anything beyond that first variable.
 # --------------------------------------------------------------------- #
-def compute_stepwise_for_group(protocol, window_name, sub, mi_vars, seed):
+def compute_stepwise_for_group(protocol, window_name, unit, sub, mi_vars, seed):
     available = [v for v in mi_vars if v in sub.columns]
     records = []
     for target in available:
@@ -863,18 +879,19 @@ def compute_stepwise_for_group(protocol, window_name, sub, mi_vars, seed):
                 "delta_r2": s.delta_r2,
                 "frac_of_full_r2": (s.cumulative_r2 / final_r2) if final_r2 else np.nan,
             })
-    return records
+    return _tag_unit(records, unit, sub)
 
 
 print(f"\nComputing forward-stepwise selection for {len(mi_groups)} (protocol, window) groups "
-      f"x {len(mi_vars)} targets (n_jobs={N_JOBS_MI}) ...")
-nested_stepwise = Parallel(n_jobs=N_JOBS_MI, backend="loky", verbose=JOBLIB_VERBOSE)(
-    delayed(compute_stepwise_for_group)(protocol, window_name, sub, mi_vars, seed=2000 + i)
-    for i, (protocol, window_name, sub) in enumerate(mi_groups)
+      f"x {len(mi_vars)} targets (n_jobs={N_JOBS}) ...")
+nested_stepwise = Parallel(n_jobs=N_JOBS, backend="loky", verbose=JOBLIB_VERBOSE)(
+    delayed(compute_stepwise_for_group)(protocol, window_name, unit, sub, mi_vars,
+                                        seed=stable_seed("stepwise", protocol, window_name, unit))
+    for protocol, window_name, unit, sub in mi_groups
 )
 stepwise_records = [rec for group in nested_stepwise for rec in group]
 stepwise_table = pd.DataFrame(stepwise_records)
-stepwise_table.to_csv(paths.out / "behavior_multivariate_stepwise.csv", index=False)
+stepwise_table.to_csv(table_dir / f"behavior_multivariate_stepwise{AGG_SUFFIX}.csv", index=False)
 
 if len(stepwise_table):
     first_steps = stepwise_table[stepwise_table["step"] == 1].sort_values("frac_of_full_r2", ascending=False)
@@ -918,14 +935,16 @@ if len(mi_table) and np.isfinite(mi_table["mi_reference_bits"]).any():
             for _, row in sub.iterrows():
                 ax.scatter(row["mi_reference_bits"], row["mi_bits_from_r2"],
                            marker=var_marker[row["var_x"]], color=var_color[row["var_y"]],
-                           s=70, edgecolor="black", linewidth=0.4)
+                           s=70 if AGG == "pooled" else 30, edgecolor="black", linewidth=0.4,
+                           alpha=1.0 if AGG == "pooled" else 0.6)
             ax.plot(lims, lims, color="grey", linestyle="--", linewidth=1)
             ax.set_xlim(lims)
             ax.set_ylim(lims)
             ax.set_title(protocol)
             ax.set_xlabel("MI, best available estimate (bits)")
         axes[0].set_ylabel("MI implied by linear r\u00b2 (bits)")
-        fig.suptitle(f"Is the linear fit capturing the full relationship? -- {window_name} window\n"
+        fig.suptitle(f"Is the linear fit capturing the full relationship? -- {window_name} window"
+                     f" -- one point per pair{'' if AGG == 'pooled' else ' and ' + UNIT}\n"
                      "(shape = 1st variable, color = 2nd variable; dashed = linear matches MI exactly)", y=1.08)
 
         shape_handles = [plt.Line2D([0], [0], marker=var_marker[v], linestyle="none", markerfacecolor="white",
@@ -939,6 +958,7 @@ if len(mi_table) and np.isfinite(mi_table["mi_reference_bits"]).any():
                    fontsize=7, title="color = 2nd var", frameon=False)
         fig.tight_layout()
         save_fig(fig, figdir, f"4_mi_vs_linear_summary_{window_name}")
+        plt.close(fig)
 
     # 5a. Same comparison, but as the FRACTION explained linearly
     # directly (frac_explained_linearly = mi_from_r2 / max(mi_corrected,
@@ -951,23 +971,25 @@ if len(mi_table) and np.isfinite(mi_table["mi_reference_bits"]).any():
             continue
         finite = finite.assign(pair_label=finite["var_x"] + " - " + finite["var_y"])
         protocols_present = [p for p in PROTOCOLS if p in finite["protocol"].unique()]
-        n_pairs_max = finite.groupby("protocol").size().max()
+        n_pairs_max = finite.groupby("protocol")["pair_label"].nunique().max()
         fig, axes = plt.subplots(1, len(protocols_present),
                                   figsize=(4.8 * len(protocols_present), max(4, 0.22 * n_pairs_max)),
                                   squeeze=False)
         for ax, protocol in zip(axes[0], protocols_present):
-            sub = finite[finite["protocol"] == protocol].sort_values("frac_explained_linearly")
-            ax.barh(sub["pair_label"], sub["frac_explained_linearly"], color=PROTOCOL_COLORS[protocol],
-                    edgecolor="black", linewidth=0.4)
+            sub = finite[finite["protocol"] == protocol]
+            hbar_units(ax, sub, "pair_label", "frac_explained_linearly", AGG, colors=PROTOCOL_COLORS[protocol],
+                       mouse_colors=mouse_colors)
             ax.axvline(1.0, color="grey", linestyle="--", linewidth=1)
             ax.set_xlim(0, max(1.05, sub["frac_explained_linearly"].max() * 1.05))
             ax.set_xlabel("MI(linear) / MI(full)")
             ax.set_title(protocol)
             ax.tick_params(axis="y", labelsize=6)
-        fig.suptitle(f"Fraction of mutual information a linear fit captures, per pair -- {window_name} window",
+        fig.suptitle(f"Fraction of mutual information a linear fit captures, per pair -- {window_name} window"
+                     + ("" if AGG == "pooled" else f" (bar: mean over {UNIT}s, dots: {UNIT}s)"),
                      y=1.005)
         fig.tight_layout()
         save_fig(fig, figdir, f"4a_frac_explained_linearly_{window_name}")
+        plt.close(fig)
 
 
 # --------------------------------------------------------------------- #
@@ -997,7 +1019,8 @@ if len(multivariate_table) and np.isfinite(multivariate_table["mi_reference_bits
             sub = finite_mv[finite_mv["protocol"] == protocol]
             for _, row in sub.iterrows():
                 h = ax.scatter(row["mi_reference_bits"], row["mi_bits_from_r2"],
-                                color=target_color[row["target"]], s=90, edgecolor="black", linewidth=0.5)
+                                color=target_color[row["target"]], s=90 if AGG == "pooled" else 35,
+                                edgecolor="black", linewidth=0.5, alpha=1.0 if AGG == "pooled" else 0.6)
                 handles.setdefault(row["target"], h)
             ax.plot(lims_mv, lims_mv, color="grey", linestyle="--", linewidth=1)
             ax.set_xlim(lims_mv)
@@ -1012,6 +1035,7 @@ if len(multivariate_table) and np.isfinite(multivariate_table["mi_reference_bits
                    fontsize=7, title="target", frameon=False)
         fig.tight_layout()
         save_fig(fig, figdir, f"7_multivariate_mi_vs_linear_summary_{window_name}")
+        plt.close(fig)
 
     # 7a. Same, as a fraction: one bar per target, sorted, per protocol,
     # per window.
@@ -1022,9 +1046,8 @@ if len(multivariate_table) and np.isfinite(multivariate_table["mi_reference_bits
         protocols_present = [p for p in PROTOCOLS if p in finite_mv["protocol"].unique()]
         fig, axes = plt.subplots(1, len(protocols_present), figsize=(4.5 * len(protocols_present), 4), squeeze=False)
         for ax, protocol in zip(axes[0], protocols_present):
-            sub = finite_mv[finite_mv["protocol"] == protocol].sort_values("frac_explained_linearly")
-            colors = [target_color[t] for t in sub["target"]]
-            ax.barh(sub["target"], sub["frac_explained_linearly"], color=colors, edgecolor="black", linewidth=0.5)
+            sub = finite_mv[finite_mv["protocol"] == protocol]
+            hbar_units(ax, sub, "target", "frac_explained_linearly", AGG, colors=target_color, mouse_colors=mouse_colors)
             ax.axvline(1.0, color="grey", linestyle="--", linewidth=1)
             ax.set_xlim(0, max(1.05, sub["frac_explained_linearly"].max() * 1.05))
             ax.set_xlabel("MI(linear) / MI(full)")
@@ -1034,6 +1057,7 @@ if len(multivariate_table) and np.isfinite(multivariate_table["mi_reference_bits
                      f"{window_name} window", y=1.02)
         fig.tight_layout()
         save_fig(fig, figdir, f"7a_multivariate_frac_explained_linearly_{window_name}")
+        plt.close(fig)
 
 
 # --------------------------------------------------------------------- #
@@ -1057,10 +1081,12 @@ if len(stepwise_table):
         protocols_present = [p for p in PROTOCOLS if p in finite_step["protocol"].unique()]
         fig, axes = plt.subplots(1, len(protocols_present), figsize=(4.5 * len(protocols_present), 4), squeeze=False)
         for ax, protocol in zip(axes[0], protocols_present):
-            sub = finite_step[finite_step["protocol"] == protocol].sort_values("frac_of_full_r2")
-            colors = [target_color[t] for t in sub["target"]]
-            labels = [f"{t} (+{p})" for t, p in zip(sub["target"], sub["predictor_added"])]
-            ax.barh(labels, sub["frac_of_full_r2"], color=colors, edgecolor="black", linewidth=0.5)
+            sub = finite_step[finite_step["protocol"] == protocol].copy()
+            # label = target + its most frequent single best predictor across units
+            best = sub.groupby("target")["predictor_added"].agg(lambda x: x.value_counts().index[0])
+            sub["target_label"] = [f"{t} (+{best[t]})" for t in sub["target"]]
+            hbar_units(ax, sub, "target_label", "frac_of_full_r2", AGG,
+                       colors={f"{t} (+{best[t]})": target_color[t] for t in best.index}, mouse_colors=mouse_colors)
             ax.axvline(1.0, color="grey", linestyle="--", linewidth=1)
             ax.set_xlim(0, 1.05)
             ax.set_xlabel("R\u00b2(best single predictor) / R\u00b2(all predictors)")
@@ -1071,6 +1097,7 @@ if len(stepwise_table):
                      "little beyond that one variable)", y=1.06)
         fig.tight_layout()
         save_fig(fig, figdir, f"8_stepwise_dominant_predictor_{window_name}")
+        plt.close(fig)
 
-print(f"\nWrote tables to {paths.out}, figures to {figdir}")
+print(f"\nWrote tables to {table_dir}, figures to {figdir}")
 print("Run `python b_progress/make_progress_md.py 1c_behavior` to build a markdown summary.")

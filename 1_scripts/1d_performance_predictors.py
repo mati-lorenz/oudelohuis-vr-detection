@@ -2,92 +2,58 @@
 """
 1d_performance_predictors
 ==========================
-Relationships between the animal's trial-by-trial PERFORMANCE and
-behavioral variables -- both from the CURRENT trial and from the
-PREVIOUS trial (classic "history effects": does yesterday's/last
-trial's state or outcome predict today's/this trial's accuracy?).
-Across all three protocols (DM, DP, DN).
+Relationships between the animal's trial-by-trial PERFORMANCE and behavioral variables -- both from the
+CURRENT trial and from the PREVIOUS trial (classic "history effects": does the previous trial's state or
+outcome predict this trial's accuracy?). Across all three protocols (DM, DP, DN).
 
-Performance is CORRECTNESS (0/1), generalized to EVERY signal level, not
-just the 0%/100% catch trials: "any signal present -> should lick,
-no signal -> should withhold" is the task rule at every signal strength
-in a detection task, so
+Performance is CORRECTNESS (0/1), generalized to EVERY signal level, not just the 0%/100% catch trials:
     correct = (signal > 0 AND lickResponse == 1) OR (signal == 0 AND lickResponse == 0)
-applies uniformly. (This subsumes the old catch-trial-only HIT/CR=1,
-MISS/FA=0 definition -- those are exactly the signal==100/signal==0
-special cases of the same rule.)
+(this subsumes the catch-trial-only HIT/CR = 1, MISS/FA = 0 definition: those are the signal == 100 /
+signal == 0 special cases of the same rule).
 
-Stimulus strength itself is included as a predictor -- "stim", the
-signal level binned into 4 groups. Where a psychometric fit exists (DN
-only, from 1b_psychometric), stim uses the NORMALIZED/z-scored signal
-(signal_psy = (signal-mu)/sigma, the same convention used in
-1c_behavior.py's trial-aligned plots) so bins are comparable across
-sessions with different thresholds; where no fit exists (DM, DP), it
-falls back to the raw signal value. DM only ever has 2 signal levels
-(0%/100%), so its "4 bins" naturally collapse to 2.
+Predictors
+----------
+* Behavioral state (speed, pupil area, motion energy, lick rate) from the PRE-STIMULUS window only
+  ([-30 cm, -10 cm] relative to stimStart; a window after stimulus onset would be circular, since the
+  response that determines "correct" happens there), for the current and the previous trial.
+* Previous trial's correctness and choice (win-stay / lose-shift).
+* STIMULUS strength, current and previous trial, binned with the SHARED strategies of
+  infotheory/stim_binning.py (STIM_STRATEGIES below; the bin INDEX is the predictor value).
+  Strategies defined on the psychometric curve need a 1b fit (DN only); DM/DP get the strategies that do
+  not (zero_vs_nonzero). Strategies undefined for a protocol are skipped for it.
 
-Behavioral predictors (speed, pupil area, motion energy, lick rate) are
-taken from the PRE-STIMULUS window only ([-30cm, -10cm] relative to
-stimStart, matching 1c_behavior.py's MI_WINDOWS convention) -- using a
-window from AFTER stimulus onset would be circular, since the response
-that determines "correct" happens in that window. This restriction only
-matters for the CURRENT trial's predictors; the previous trial's
-predictors (whichever window they're drawn from) are unambiguously
-"past" relative to the current trial's outcome regardless.
+Project-wide rules (infotheory/project_config.py) -- what applies to 1d
+    * selection : --animals / --sessions restrict the sessions; a restricted run writes to
+                  out/selection/<tag>/ and NEVER overwrites the full-dataset out/ that later steps read.
+    * aggregate : --aggregate pooled|session|mouse = the unit of analysis for every plot AND for the MI /
+                  linear / multivariate tables. pooled: one analysis per protocol, no error bars.
+                  session: one analysis per session; bars = mean over sessions +- SEM, dots = sessions
+                  (coloured by mouse). mouse: a mouse's sessions pooled first, mean +- SEM over mice.
+    * memory    : each session is loaded, reduced to its small trial table, cached in store/ and freed;
+                  raw behavior/video data of several sessions is never in RAM together
+                  (--n-jobs = sessions in parallel).
+    * binning   : the histogram MI uses the SHARED project_config.RESPONSE_BINS (quantile bins) and the
+                  shared trial filters (MIN_TRIALS_PER_TARGET_BIN / MIN_TRIALS_ANALYSIS), and the stimulus
+                  is binned with the shared strategies -- so the numbers here are comparable with 2c / 3a-3c
+                  BEFORE bias correction. (The old private MI_BINS = 20 and 4 quantile stimulus bins are gone.)
 
-Reads: 2_pipeline/1b_psychometric/out/psychometric_fits.csv for the
-included-session list AND each session's fitted mu/sigma (Rule #1).
-Loads: raw behaviordata/videodata for those sessions (1b/1c never
-cached the merged continuous trace, and this step needs its own
-pre-stimulus window extraction anyway).
-
-What this does
---------------
-1. Builds one row per (session, engaged trial): current-trial pre-stim
-   behavioral state + binned stimulus strength, the SAME variables from
-   the previous trial, the previous trial's outcome/choice, and this
-   trial's correctness (now defined at every signal level -- see above).
-2. Exploratory plots: accuracy by protocol, accuracy conditioned on the
-   previous trial's outcome/choice (post-error/post-correct, win-stay/
-   lose-shift), accuracy as a function of each behavioral predictor AND
-   of stimulus strength (current AND previous trial, quantile-binned
-   "tuning curves" -- the stim one is just the psychometric curve, as a
-   sanity check that the generalized correctness rule behaves as
-   expected), and a history kernel (how far back does previous-trial
-   correctness predict current accuracy).
-3. For every predictor: mutual information (histogram/quantile-based --
-   appropriate here since the target, correctness, is already binary,
-   unlike the continuous-vs-continuous case in 1c_behavior.py where the
-   KSG estimator was used instead) AND a linear fit (r^2, a linear-
-   probability-model since the target is 0/1). Compares the MI implied
-   by r^2 against the actual (corrected) MI, same logic as 1c_behavior.py.
-
-Parallelism: both the per-session feature extraction and the MI
-computation loop are parallelized with joblib (matching the project's
-existing convention, e.g. the uploaded plot_mi_behavior.py/
-plot_temporal_information.py) -- see N_JOBS_SESSIONS/N_JOBS_MI below.
+Reads: 2_pipeline/1b_psychometric/out/psychometric_fits.csv (included sessions + per-session mu/sigma).
+Loads: raw behaviordata/videodata, one session at a time.
 
 Outputs
 -------
 2_pipeline/1d_performance_predictors/
-    out/    performance_mi_vs_linear.csv   one row per (protocol,
-                                            predictor): r, r2, MI
-                                            raw/corrected, MI implied by
-                                            r2, whether linear looks
-                                            sufficient
-            performance_multivariate_mi_vs_linear.csv   one row per
-                                            protocol: the same
-                                            comparison but for ALL
-                                            predictors fit jointly (see
-                                            section 4b) -- includes
-                                            adj_r2
+    out/    performance_mi_vs_linear[__<aggregate>].csv              (protocol, [unit], predictor): r, r2,
+                                                MI raw/corrected, MI implied by r2, linear sufficient?
+            performance_multivariate_mi_vs_linear[__<aggregate>].csv (protocol, [unit]): all predictors jointly
+            performance_history_kernel[__<aggregate>].csv            (protocol, lag, [unit]): accuracy delta
+            performance_overview[__<aggregate>].csv                  accuracy per (protocol, [unit])
+            performance_binning_used.csv                              the shared settings + stimulus
+                                                strategies actually used, per protocol
             figures/*.png
-    store/  trial_performance.pkl          per-(session, engaged trial)
-                                            table: current/previous
-                                            behavioral features + binned
-                                            stim, previous outcome/choice,
-                                            correctness (reused unless
-                                            --recompute)
+    out/selection/<tag>/...  the same for a restricted run
+    store/  trial_performance_<hash>.pkl      per-session trial table (reused unless --recompute)
+(pooled tables keep their original names and columns; session / mouse tables carry `unit` and `animal_id`.)
 """
 from __future__ import annotations
 
@@ -96,63 +62,74 @@ import argparse
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 from joblib import Parallel, delayed
 
 from infotheory.pipeline import get_pipeline_paths
-from infotheory.session import load_sessions, PROTOCOLS
+from infotheory.session import discover_sessions, PROTOCOLS
 from infotheory.continuous import merge_behavior_video, restrict_to_engaged, remove_pupil_outliers, \
     compute_trial_position_window_means
 from infotheory.info_theory import mutual_information_shuffle, mutual_information_shuffle_ksg, \
-    compare_mi_to_linear, linear_fit, multivariate_linear_fit, robust_qcut
+    compare_mi_to_linear, linear_fit, multivariate_linear_fit, quantile_bin_edges
 from infotheory.plotting import set_style, save_fig, clear_figures, PROTOCOL_COLORS
+from infotheory import project_config as cfg
+from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, \
+    unit_columns, unit_noun
+from infotheory.session_jobs import run_sessions
+from infotheory.unit_stats import unit_curve, stable_seed
+from infotheory.unit_plots import unit_bars, hbar_units, mouse_palette, mouse_legend
+from infotheory.stim_binning import STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, psychometric_pct, \
+    bin_stimulus, strategy_names, target_signature
 
 BEHAVIOR_VARS = ["runspeed", "pupil_area", "motionenergy", "lick"]
 RATE_VARIABLES = ["lick"]  # 0/1 event channel -- binned as counts/width (a rate), never averaged
 VAR_LABELS = {"runspeed": "speed (cm/s)", "pupil_area": "pupil area (a.u.)",
-              "motionenergy": "motion energy (a.u.)", "lick": "lick rate", "stim": "stimulus strength"}
-PRESTIM_WINDOW = (-30.0, -10.0)  # cm relative to stimStart -- BEFORE the stimulus (see module
-                                  # docstring for why this matters), matches 1c_behavior.py's
-                                  # MI_WINDOWS pre_stim entry
-N_STIM_BINS = 4          # bin count for the normalized-stimulus predictor (see module docstring)
-N_QUANTILE_BINS = 10      # exploratory "tuning curve" plots: accuracy per quantile bin of a predictor
-MAX_LAG_KERNEL = 5       # history-kernel plot: how many trials back to check previous-correctness
-MI_BINS = 20             # histogram MI is appropriate here since the target (correctness) is
-                          # already binary -- see module docstring for why this differs from
-                          # 1c_behavior.py's KSG choice for continuous-vs-continuous pairs
-N_SHUFFLES = 100
-KSG_K = 5                # neighbors for the multivariate KSG estimator (section 4b) -- see
-                          # info_theory.py; not used for the pairwise histogram MI above
-N_SHUFFLES_MULTIVARIATE = 20  # fewer than N_SHUFFLES: each multivariate KSG call costs more
-                               # (higher-dimensional joint space), and there's only one model
-                               # per protocol here rather than one per predictor
-LINEAR_SUFFICIENT_FRAC = 0.8
+              "motionenergy": "motion energy (a.u.)", "lick": "lick rate", "stim": "stimulus bin"}
+PRESTIM_WINDOW = (-30.0, -10.0)   # cm relative to stimStart -- BEFORE the stimulus (see docstring)
 
-# Parallelism (joblib, matching the project's convention -- see e.g. the
-# uploaded plot_mi_behavior.py/plot_temporal_information.py): -1 = use
-# all available cores. Session feature-extraction is embarrassingly
-# parallel; the MI computation loop is parallelized separately,
-# coarse-grained over protocol -- see section 4.
-N_JOBS_SESSIONS = -1
-N_JOBS_MI = -1
+# --- stimulus binning (shared strategies, infotheory/stim_binning.py; edit them THERE) ----------------
+STIM_STRATEGIES = list(DEFAULT_STRATEGIES)   # which strategies are used as pairwise predictors
+MULTIVARIATE_STIM_PREFERENCE = ["pct_0-20_20-80_80-100", "zero_vs_nonzero"]   # the one strategy that goes into the
+                                             # multivariate model of a protocol: first one defined for it
+
+# --- shared with the other scripts (project_config.py): change them THERE, not here ----------------------
+MI_BINS = cfg.RESPONSE_BINS                  # histogram-MI bins per variable (quantile, equal occupancy)
+MIN_TRIALS_PER_TARGET_BIN = cfg.MIN_TRIALS_PER_TARGET_BIN   # each outcome class (correct / error) needs this many
+MIN_TRIALS_ANALYSIS = cfg.MIN_TRIALS_ANALYSIS               # trials needed to analyse a (protocol, unit, predictor)
+
+# --- local to this script -------------------------------------------------------------------------------
+N_QUANTILE_BINS = 5      # exploratory tuning curves: accuracy per quantile bin of a predictor
+MAX_LAG_KERNEL = 5       # history kernel: how many trials back
+KERNEL_MIN_TRIALS = 5    # per class, for one kernel point
+N_SHUFFLES = 100
+KSG_K = 5                # neighbors of the multivariate KSG estimator (section 5)
+N_SHUFFLES_MULTIVARIATE = 20
+LINEAR_SUFFICIENT_FRAC = 0.8
 JOBLIB_VERBOSE = 5
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--recompute", action="store_true",
-                     help="Reload sessions from 0_data/ instead of reusing the cached "
-                          "store/trial_performance.pkl")
+add_scope_args(parser)
 args = parser.parse_args()
+scope = scope_from_args(args)
+AGG = scope.aggregate
+UNIT = unit_noun(AGG)
+N_JOBS = scope.n_jobs
+AGG_SUFFIX = "" if AGG == "pooled" else f"__{AGG}"   # pooled tables keep their original file names
+unit_col = {"pooled": None, "session": "session_id", "mouse": "animal_id"}[AGG]
+UNIT_KEYS = {"pooled": [], "session": ["animal_id", "session_id"], "mouse": ["animal_id"]}[AGG]
 
 paths = get_pipeline_paths(__file__)
-figdir = paths.out / "figures"
+table_dir, figdir = scoped_dirs(paths, scope)
 clear_figures(figdir)
 set_style()
-rng = np.random.default_rng(0)
+print(scope.describe())
+
+unknown = [s for s in STIM_STRATEGIES if s not in STIM_BINNING_STRATEGIES]
+if unknown:
+    raise SystemExit(f"STIM_STRATEGIES has undefined strategies {unknown}; defined: {list(STIM_BINNING_STRATEGIES)}")
 
 
 # --------------------------------------------------------------------- #
-# 1. Included sessions from 1b, plus each session's fitted mu/sigma
-#    (only ever non-NaN for DN -- see module docstring)
+# 1. Included sessions from 1b (intersected with the selection), plus each session's mu / sigma
 # --------------------------------------------------------------------- #
 fits_path = paths.out_from("1b_psychometric") / "psychometric_fits.csv"
 if not fits_path.exists():
@@ -160,300 +137,318 @@ if not fits_path.exists():
 
 fits_df = pd.read_csv(fits_path)
 included = fits_df[fits_df["included"]]
-included_ids = included["session_id"].tolist()
+all_triples = discover_sessions(PROTOCOLS)
+selected_ids = {f"{a}_{d}" for _, a, d in select_sessions(all_triples, scope)}
+included_ids = [sid for sid in included["session_id"].tolist() if sid in selected_ids]
 if not included_ids:
-    raise SystemExit("No sessions passed 1b_psychometric's inclusion criteria -- nothing to analyze.")
+    raise SystemExit("No selected session passed 1b_psychometric's inclusion criteria -- nothing to analyze.")
 print(f"Using {len(included_ids)} included sessions from 1b_psychometric "
-      f"({included['protocol'].value_counts().to_dict()})")
-
+      f"({included[included['session_id'].isin(included_ids)]['protocol'].value_counts().to_dict()})")
+triple_of = {f"{a}_{d}": (p, a, d) for p, a, d in all_triples}
+mouse_colors = mouse_palette(a for _, a, _ in all_triples)
 mu_sigma_lookup = fits_df.set_index("session_id")[["mu", "sigma"]].to_dict("index")
 
 
 # --------------------------------------------------------------------- #
-# 2. Build the per-trial (current + previous trial features, outcome)
-#    table -- or reuse the cache. Parallelized across sessions.
+# 2. Per-session trial tables (one session in RAM at a time) -- cached per session
 # --------------------------------------------------------------------- #
-trial_performance_cache = paths.store / "trial_performance.pkl"
+def _session_key(sid):
+    ms = mu_sigma_lookup.get(sid, {})
+    return f"{data_stamp(*triple_of[sid])}|{ms.get('mu')}|{ms.get('sigma')}"
 
-# Columns the rest of this script expects in trial_performance -- checked
-# after loading so a cache built by an OLDER version of this script
-# (e.g. before cur_stim/prev_stim existed) is treated as a miss and
-# recomputed, rather than crashing with a bare KeyError once section 2b
-# tries to bin a column that was never cached. Extend this whenever the
-# cached schema changes.
-REQUIRED_TRIAL_PERFORMANCE_COLUMNS = ["cur_stim", "prev_stim", "correct", "session_id", "protocol"]
 
-trial_performance = None
-if not args.recompute and trial_performance_cache.exists():
-    try:
-        candidate = pd.read_pickle(trial_performance_cache)
-        missing = [c for c in REQUIRED_TRIAL_PERFORMANCE_COLUMNS if c not in candidate.columns]
-        if missing:
-            print(f"Cached trial-performance table is missing columns {missing} -- looks like it was "
-                  f"built by an older version of this script. Recomputing from 0_data/ instead of using "
-                  f"{trial_performance_cache} (safe to delete that file to silence this check in the future).")
-        else:
-            trial_performance = candidate
-            print(f"Reusing cached trial-performance table from {paths.store} (pass --recompute to reload 0_data/)")
-    except Exception as e:
-        print(f"Could not load cached trial-performance table ({e}); recomputing from 0_data/ ...")
+def process_session(ses, seed):
+    """One DataFrame (one row per engaged trial: current + previous-trial features, outcome) or None.
+    Stimulus strategies are applied later (section 3) so editing them does not invalidate the cache."""
+    if ses.trialdata is None or ses.behaviordata is None:
+        return None
+    merged_full = merge_behavior_video(ses.behaviordata, ses.videodata)
+    merged_full = remove_pupil_outliers(merged_full)
+    if merged_full.empty:
+        return None
+    merged = restrict_to_engaged(merged_full, ses.trialdata)
+    if merged.empty:
+        return None
 
-if trial_performance is None:
-    sessions = load_sessions(protocols=PROTOCOLS, load_behaviordata=True, load_videodata=True,
-                              only_session_ids=included_ids)
+    available_vars = [v for v in BEHAVIOR_VARS if v in merged.columns]
+    available_rate_vars = [v for v in RATE_VARIABLES if v in available_vars]
+    engaged_trials = (ses.trialdata[ses.trialdata["engaged"] == 1]
+                      if "engaged" in ses.trialdata.columns else ses.trialdata.copy())
+    engaged_trials = engaged_trials.assign(
+        correct=(((engaged_trials["signal"] > 0) & (engaged_trials["lickResponse"] == 1))
+                 | ((engaged_trials["signal"] == 0) & (engaged_trials["lickResponse"] == 0))).astype(int))
 
-    def process_session(ses, mu_sigma_lookup):
-        """All per-session work for one session, returned as a trial-
-        level DataFrame (or None if the session had no usable data).
-        Self-contained (no shared outer-scope state) so it can be
-        dispatched via joblib.Parallel across sessions."""
-        if ses.trialdata is None or ses.behaviordata is None:
-            return None
-        merged_full = merge_behavior_video(ses.behaviordata, ses.videodata)
-        merged_full = remove_pupil_outliers(merged_full)
-        if merged_full.empty:
-            return None
-        merged = restrict_to_engaged(merged_full, ses.trialdata)
-        if merged.empty:
-            return None
+    ms = mu_sigma_lookup.get(ses.session_id, {})
+    engaged_trials["stim_pct"] = psychometric_pct(engaged_trials["signal"], ms.get("mu"), ms.get("sigma"))
 
-        available_vars = [v for v in BEHAVIOR_VARS if v in merged.columns]
-        available_rate_vars = [v for v in RATE_VARIABLES if v in available_vars]
+    pre = compute_trial_position_window_means(engaged_trials, merged, columns=available_vars,
+                                              s_start=PRESTIM_WINDOW[0], s_end=PRESTIM_WINDOW[1],
+                                              rate_columns=available_rate_vars)
+    pre = pre.rename(columns={v: f"cur_{v}" for v in available_vars})
+    trial = engaged_trials[["trialNumber", "signal", "stim_pct", "lickResponse", "correct"]].merge(
+        pre, on="trialNumber", how="left")
+    trial = trial.sort_values("trialNumber").reset_index(drop=True)
 
-        engaged_trials = (ses.trialdata[ses.trialdata["engaged"] == 1]
-                           if "engaged" in ses.trialdata.columns else ses.trialdata.copy())
+    # "previous" = the previous ENGAGED trial that is analysed (a gap in trialNumber is not special-cased)
+    for col in [f"cur_{v}" for v in available_vars] + ["signal", "stim_pct", "correct", "lickResponse"]:
+        trial[f"prev_{col[4:]}" if col.startswith("cur_") else f"prev_{col}"] = trial[col].shift(1)
+    for lag in range(1, MAX_LAG_KERNEL + 1):
+        trial[f"correct_lag{lag}"] = trial["correct"].shift(lag)
+    trial["session_id"] = ses.session_id
+    trial["animal_id"] = ses.animal_id
+    trial["protocol"] = ses.protocol
+    return trial
 
-        # Generalized correctness -- see module docstring: "any signal
-        # present -> should lick" applies at every signal strength, not
-        # just the 0%/100% catch levels.
-        engaged_trials = engaged_trials.assign(
-            correct=((engaged_trials["signal"] > 0) & (engaged_trials["lickResponse"] == 1))
-            | ((engaged_trials["signal"] == 0) & (engaged_trials["lickResponse"] == 0)))
-        engaged_trials["correct"] = engaged_trials["correct"].astype(int)
 
-        # Normalized stimulus strength: z-scored via this session's own
-        # fitted mu/sigma where a fit exists (DN), else the raw signal
-        # value (DM/DP) -- binned into groups downstream (pooled across
-        # a protocol's sessions, so binning happens after concatenation,
-        # not here).
-        mu_sigma = mu_sigma_lookup.get(ses.session_id, {})
-        if mu_sigma and np.isfinite(mu_sigma.get("mu", np.nan)) and np.isfinite(mu_sigma.get("sigma", np.nan)):
-            engaged_trials["stim"] = (engaged_trials["signal"] - mu_sigma["mu"]) / mu_sigma["sigma"]
-        else:
-            engaged_trials["stim"] = engaged_trials["signal"].astype(float)
-
-        pre = compute_trial_position_window_means(engaged_trials, merged, columns=available_vars,
-                                                    s_start=PRESTIM_WINDOW[0], s_end=PRESTIM_WINDOW[1],
-                                                    rate_columns=available_rate_vars)
-        pre = pre.rename(columns={v: f"cur_{v}" for v in available_vars})
-
-        trial = engaged_trials[["trialNumber", "signal", "stim", "lickResponse", "correct"]].merge(
-            pre, on="trialNumber", how="left")
-        trial = trial.rename(columns={"stim": "cur_stim"})
-        trial = trial.sort_values("trialNumber").reset_index(drop=True)
-
-        # Previous-(analyzed, i.e. engaged)-trial features: the same
-        # current-trial behavioral + stim columns shifted by one row,
-        # plus the previous trial's own outcome and choice -- the
-        # classic "history effect" predictors. A gap in trialNumber (a
-        # disengaged trial in between) is NOT specially handled: "prev"
-        # here means the previous ENGAGED trial actually analyzed, not
-        # strictly trialNumber-1.
-        lag_source_cols = [f"cur_{v}" for v in available_vars] + ["cur_stim", "correct", "lickResponse"]
-        for col in lag_source_cols:
-            out_name = col.replace("cur_", "prev_", 1) if col.startswith("cur_") else f"prev_{col}"
-            trial[out_name] = trial[col].shift(1)
-
-        for lag in range(1, MAX_LAG_KERNEL + 1):
-            trial[f"correct_lag{lag}"] = trial["correct"].shift(lag)
-
-        trial["session_id"] = ses.session_id
-        trial["protocol"] = ses.protocol
-        return trial
-
-    print(f"Processing {len(sessions)} sessions (n_jobs={N_JOBS_SESSIONS}) ...")
-    session_results = Parallel(n_jobs=N_JOBS_SESSIONS, backend="loky", verbose=JOBLIB_VERBOSE)(
-        delayed(process_session)(ses, mu_sigma_lookup) for ses in sessions
-    )
-    session_rows = [r for r in session_results if r is not None]
-
-    if not session_rows:
-        raise SystemExit("No sessions had usable behaviordata -- nothing to analyze.")
-    trial_performance = pd.concat(session_rows, ignore_index=True)
-    trial_performance.to_pickle(trial_performance_cache)
-
+session_tables = run_sessions(
+    included_ids, process_session, list(PROTOCOLS), paths.store, "trial_performance",
+    key_params=dict(version="1d-v2", variables=BEHAVIOR_VARS, rate_variables=RATE_VARIABLES,
+                    window=PRESTIM_WINDOW, max_lag=MAX_LAG_KERNEL),
+    load_kwargs=dict(load_behaviordata=True, load_videodata=True),
+    n_jobs=N_JOBS, recompute=args.recompute, verbose=JOBLIB_VERBOSE,
+    extra_key_by_session={sid: _session_key(sid) for sid in included_ids}, flatten=False)
+session_tables = [t for t in session_tables if t is not None and len(t)]
+if not session_tables:
+    raise SystemExit("No selected session had usable behaviordata -- nothing to analyze.")
+trial_performance = pd.concat(session_tables, ignore_index=True)   # small: one row per engaged trial
+del session_tables
 print(f"Trials with a defined outcome: {len(trial_performance)} across "
       f"{trial_performance['session_id'].nunique()} sessions")
 
 
 # --------------------------------------------------------------------- #
-# 2b. Bin cur_stim/prev_stim into N_STIM_BINS groups, per protocol
-#    (pooling across that protocol's sessions -- signal_psy is already
-#    comparable across sessions for DN since it's z-scored per-session;
-#    raw signal for DM/DP is on the same 0-100 scale for every session
-#    of a given protocol already). Stored as the bin's numeric midpoint
-#    (cur_stim_bin/prev_stim_bin) so it's usable as an ordinary numeric
-#    predictor in the MI/linear analysis below, same as any other.
+# 3. Stimulus predictors from the SHARED strategies. Applied per protocol (curve-based strategies are
+#    NaN without a 1b fit -> that strategy is simply not available for the protocol). The bin index is
+#    the numeric predictor value.
 # --------------------------------------------------------------------- #
-for col, out_col in [("cur_stim", "cur_stim_bin"), ("prev_stim", "prev_stim_bin")]:
-    trial_performance[out_col] = np.nan
+stim_strats_of = {p: [] for p in PROTOCOLS}   # strategies usable per protocol
+for strat in STIM_STRATEGIES:
+    trial_performance[f"cur_stim__{strat}"] = np.nan
+    trial_performance[f"prev_stim__{strat}"] = np.nan
+    rule = STIM_BINNING_STRATEGIES[strat]
     for protocol in PROTOCOLS:
-        mask = trial_performance["protocol"] == protocol
-        vals = trial_performance.loc[mask, col]
-        if vals.notna().sum() < N_STIM_BINS:
+        m = (trial_performance["protocol"] == protocol).to_numpy()
+        if not m.any():
             continue
-        try:
-            binned = robust_qcut(vals, N_STIM_BINS)
-        except ValueError:
-            continue
-        trial_performance.loc[mask, out_col] = binned.apply(
-            lambda iv: round(iv.mid, 6) if pd.notna(iv) else np.nan)
+        sub = trial_performance.loc[m]
+        cur = bin_stimulus(sub["signal"], sub["stim_pct"], rule)
+        prev = bin_stimulus(sub["prev_signal"], sub["prev_stim_pct"], rule)
+        if np.unique(cur[np.isfinite(cur)]).size < 2:
+            continue   # undefined (no fit) or a single bin for this protocol
+        trial_performance.loc[m, f"cur_stim__{strat}"] = cur
+        trial_performance.loc[m, f"prev_stim__{strat}"] = prev
+        stim_strats_of[protocol].append(strat)
 
+mv_strategy = {p: next((s for s in MULTIVARIATE_STIM_PREFERENCE if s in stim_strats_of[p]), None)
+               for p in PROTOCOLS}
+for p in PROTOCOLS:
+    if (trial_performance["protocol"] == p).any():
+        print(f"  {p}: stimulus strategies available {stim_strats_of[p]}; multivariate model uses {mv_strategy[p]}")
 
-# --------------------------------------------------------------------- #
-# 3. Exploratory plots
-# --------------------------------------------------------------------- #
 current_vars = [v for v in BEHAVIOR_VARS if f"cur_{v}" in trial_performance.columns]
 previous_vars = [v for v in BEHAVIOR_VARS if f"prev_{v}" in trial_performance.columns]
+protocols_present = [p for p in PROTOCOLS if (trial_performance["protocol"] == p).any()]
 
-# 3a. Overview: accuracy by protocol, by previous outcome, by previous choice
-fig, axes = plt.subplots(1, 3, figsize=(11, 3.5))
 
-sns.barplot(data=trial_performance, x="protocol", y="correct", order=PROTOCOLS, ax=axes[0],
-            hue="protocol", palette=PROTOCOL_COLORS, legend=False, errorbar="se")
-axes[0].set_ylabel("accuracy (fraction correct)")
+def predictors_for(protocol, sub, multivariate=False):
+    """Predictor columns usable for one protocol (not all-NaN there)."""
+    if multivariate:
+        s = mv_strategy[protocol]
+        stim = [f"cur_stim__{s}", f"prev_stim__{s}"] if s else []
+    else:
+        stim = [f"{w}_stim__{s}" for s in stim_strats_of[protocol] for w in ("cur", "prev")]
+    cols = (stim + [f"cur_{v}" for v in current_vars] + [f"prev_{v}" for v in previous_vars]
+            + ["prev_correct", "prev_lickResponse"])
+    return [c for c in cols if c in sub.columns and sub[c].notna().any()]
+
+
+binning_used = pd.DataFrame([{
+    "protocol": p, "response_bins": MI_BINS, "response_bin_method": cfg.RESPONSE_BIN_METHOD,
+    "min_trials_per_target_bin": MIN_TRIALS_PER_TARGET_BIN, "min_trials_analysis": MIN_TRIALS_ANALYSIS,
+    "pairwise_stim_strategies": ", ".join(stim_strats_of[p]), "multivariate_stim_strategy": mv_strategy[p],
+    "strategy_definitions": target_signature(stim_strats_of[p] + ([mv_strategy[p]] if mv_strategy[p] else []))
+} for p in protocols_present])
+binning_used.to_csv(table_dir / "performance_binning_used.csv", index=False)
+
+
+# --------------------------------------------------------------------- #
+# 4. Exploratory plots (at the chosen unit of analysis)
+# --------------------------------------------------------------------- #
+def tag_unit(records, unit, sub):
+    """Add unit columns for the non-pooled tables (pooled keeps its original schema)."""
+    if unit_col is None:
+        return records
+    for r in records:
+        r["unit"] = unit
+        r["animal_id"] = sub["animal_id"].iloc[0]
+    return records
+
+
+def unit_groups(df):
+    """(unit label, sub-table) pairs for df at the chosen aggregate."""
+    if unit_col is None:
+        return [("all", df)]
+    return list(df.groupby(unit_col))
+
+
+def per_unit_mean(df, by, y):
+    """One row per (by..., unit): mean of y. Pooled -> one row per `by` combination."""
+    out = df.groupby(by + UNIT_KEYS, observed=True)[y].mean().reset_index()
+    return out
+
+
+# 4a. overview -----------------------------------------------------------------------------------------
+fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+acc = per_unit_mean(trial_performance, ["protocol"], "correct")
+unit_bars(axes[0], acc, "protocol", "correct", protocols_present, AGG, colors=PROTOCOL_COLORS,
+          mouse_colors=mouse_colors, ylabel="accuracy (fraction correct)")
 axes[0].set_title("Accuracy by protocol")
 axes[0].set_ylim(0, 1)
+if AGG != "pooled":
+    mouse_legend(axes[0], mouse_colors, animals=trial_performance["animal_id"].unique(), loc="lower left")
 
-prev_outcome_df = trial_performance.dropna(subset=["prev_correct"]).assign(
-    prev_outcome=lambda d: d["prev_correct"].map({1: "prev correct", 0: "prev error"}))
-sns.barplot(data=prev_outcome_df, x="prev_outcome", y="correct", hue="protocol",
-            hue_order=PROTOCOLS, palette=PROTOCOL_COLORS, ax=axes[1], errorbar="se")
-axes[1].set_ylabel("accuracy")
-axes[1].set_xlabel("")
-axes[1].set_title("Post-error vs. post-correct")
-axes[1].set_ylim(0, 1)
-axes[1].legend(fontsize=7, frameon=False)
-
-prev_choice_df = trial_performance.dropna(subset=["prev_lickResponse"]).assign(
-    prev_choice=lambda d: d["prev_lickResponse"].map({1: "prev licked", 0: "prev no lick"}))
-sns.barplot(data=prev_choice_df, x="prev_choice", y="correct", hue="protocol",
-            hue_order=PROTOCOLS, palette=PROTOCOL_COLORS, ax=axes[2], errorbar="se")
-axes[2].set_ylabel("accuracy")
-axes[2].set_xlabel("")
-axes[2].set_title("Accuracy by previous choice")
-axes[2].set_ylim(0, 1)
-axes[2].legend(fontsize=7, frameon=False)
-
-fig.suptitle("Performance overview (all trials, correctness generalized to every signal level)", y=1.03)
+for ax, col, mapping, title in [
+        (axes[1], "prev_correct", {1: "prev correct", 0: "prev error"}, "Post-error vs. post-correct"),
+        (axes[2], "prev_lickResponse", {1: "prev licked", 0: "prev no lick"}, "Accuracy by previous choice")]:
+    d = trial_performance.dropna(subset=[col]).assign(cond=lambda x: x[col].map(mapping))
+    u = per_unit_mean(d, ["protocol", "cond"], "correct")
+    u["label"] = u["protocol"] + "\n" + u["cond"]
+    order = [f"{p}\n{c}" for p in protocols_present for c in mapping.values()]
+    unit_bars(ax, u, "label", "correct", order, AGG, colors={f"{p}\n{c}": PROTOCOL_COLORS[p]
+                                                              for p in protocols_present for c in mapping.values()},
+              mouse_colors=mouse_colors, ylabel="accuracy")
+    ax.set_title(title)
+    ax.set_ylim(0, 1)
+    ax.tick_params(axis="x", labelsize=7)
+fig.suptitle(f"Performance overview (correctness at every signal level; unit = {UNIT})", y=1.03)
 fig.tight_layout()
 save_fig(fig, figdir, "1_performance_overview")
 
+overview = per_unit_mean(trial_performance, ["protocol"], "correct").rename(columns={"correct": "accuracy"})
+n_tr = trial_performance.groupby(["protocol"] + UNIT_KEYS)["correct"].size().rename("n_trials").reset_index()
+overview = overview.merge(n_tr, on=["protocol"] + UNIT_KEYS)
+for col, name in [("prev_correct", "prev_correct"), ("prev_lickResponse", "prev_lick")]:
+    for val in (1, 0):
+        sub = trial_performance[trial_performance[col] == val]
+        m = sub.groupby(["protocol"] + UNIT_KEYS)["correct"].mean().rename(f"accuracy_{name}{val}").reset_index()
+        overview = overview.merge(m, on=["protocol"] + UNIT_KEYS, how="left")
+overview.to_csv(table_dir / f"performance_overview{AGG_SUFFIX}.csv", index=False)
 
-def _plot_tuning_grid(df: pd.DataFrame, columns: list[tuple[str, str, bool]], title: str, filename: str):
-    """Accuracy vs. quantile-binned predictor, one panel per (label,
-    column) entry (protocol overlaid) -- the "does this predictor track
-    performance" exploratory view. `columns` is a list of
-    (label, column_name, already_binned) tuples; already_binned=True
-    (used for cur_stim_bin/prev_stim_bin, pre-binned in section 2b)
-    groups directly on the existing values instead of re-binning."""
+
+# 4b/4c. tuning curves: accuracy vs. quantile-binned predictor (shared bin edges per protocol) ------------
+def plot_tuning_grid(columns, title, filename):
+    """columns: [(label, column, is_stim_bin)]. Per protocol the quantile edges come from that protocol's
+    selected trials; mean +- SEM across units (pooled: no error); faint lines = single units."""
     if not columns:
         return
-    fig, axes = plt.subplots(1, len(columns), figsize=(4.2 * len(columns), 3.5), squeeze=False)
-    axes = axes[0]
-    for ax, (label, col, already_binned) in zip(axes, columns):
-        sub = df.dropna(subset=[col, "correct"])
-        for protocol in PROTOCOLS:
-            psub = sub[sub["protocol"] == protocol]
-            if len(psub) < N_QUANTILE_BINS * 2:
+    fig, axes = plt.subplots(1, len(columns), figsize=(4.2 * len(columns), 3.6), squeeze=False)
+    for ax, (label, col, is_stim) in zip(axes[0], columns):
+        for protocol in protocols_present:
+            sub = trial_performance[trial_performance["protocol"] == protocol].dropna(subset=[col, "correct"])
+            if len(sub) < N_QUANTILE_BINS * 2:
                 continue
-            if already_binned:
-                agg = psub.groupby(col)["correct"].mean()
-                sem = psub.groupby(col)["correct"].sem()
-                x = agg.index.to_numpy()
+            sub = sub.copy()
+            if is_stim:
+                sub["_x"] = sub[col]
             else:
-                try:
-                    bins = robust_qcut(psub[col], N_QUANTILE_BINS)
-                except ValueError:
+                edges = quantile_bin_edges(sub[col].to_numpy(), N_QUANTILE_BINS)
+                if len(edges) < 2:
                     continue
-                agg = psub.groupby(bins, observed=True)["correct"].mean()
-                sem = psub.groupby(bins, observed=True)["correct"].sem()
-                x = [interval.mid for interval in agg.index]
-            ax.errorbar(x, agg.to_numpy(), yerr=sem.fillna(0).to_numpy(), color=PROTOCOL_COLORS[protocol],
-                        marker="o", markersize=4, capsize=3, label=protocol)
+                cut = pd.cut(sub[col], edges, include_lowest=True)
+                sub["_x"] = cut.apply(lambda iv: iv.mid if pd.notna(iv) else np.nan).astype(float)
+                sub = sub.dropna(subset=["_x"])
+            m, sem = unit_curve(sub, "_x", "correct", AGG)
+            color = PROTOCOL_COLORS[protocol]
+            if AGG != "pooled":
+                for _, u in sub.groupby(unit_col):
+                    um = u.groupby("_x")["correct"].mean()
+                    ax.plot(um.index, um.values, color=color, alpha=0.18, linewidth=0.8)
+            ax.errorbar(m.index, m.values, yerr=sem.values, color=color, marker="o", markersize=4,
+                        capsize=3, label=protocol)
         ax.set_xlabel(label)
         ax.set_ylabel("accuracy")
         ax.set_ylim(0, 1)
-    axes[0].legend(fontsize=7, frameon=False)
-    fig.suptitle(title, y=1.03)
+    axes[0][0].legend(fontsize=7, frameon=False)
+    fig.suptitle(f"{title} (unit = {UNIT})", y=1.03)
     fig.tight_layout()
     save_fig(fig, figdir, filename)
 
 
-# 3b/3c. Accuracy vs. quantile-binned behavioral state (+ binned stim),
-# current and previous trial.
-current_columns = [(VAR_LABELS[v], f"cur_{v}", False) for v in current_vars]
-current_columns.append((VAR_LABELS["stim"], "cur_stim_bin", True))
-previous_columns = [(VAR_LABELS[v], f"prev_{v}", False) for v in previous_vars]
-previous_columns.append((VAR_LABELS["stim"], "prev_stim_bin", True))
+stim_note = "; ".join(f"{p}: {mv_strategy[p]}" for p in protocols_present if mv_strategy[p])
+for window, pre_vars in [("cur", current_vars), ("prev", previous_vars)]:
+    cols = [(VAR_LABELS[v], f"{window}_{v}", False) for v in pre_vars]
+    # one stimulus panel per protocol-specific strategy would be cluttered: show the multivariate strategy
+    # of each protocol on a shared "bin index" axis (the strategy is named in the label)
+    by_col = {}
+    for p in protocols_present:
+        if mv_strategy[p]:
+            by_col.setdefault(f"{window}_stim__{mv_strategy[p]}", []).append(p)
+    uniq = list(cols)
+    for col, prots in by_col.items():
+        strat = col.split("__", 1)[1]
+        uniq.append((f"stimulus bin index [{'/'.join(prots)}: {strat}]", col, True))
+    plot_tuning_grid(uniq, f"Accuracy vs. {'CURRENT' if window == 'cur' else 'PREVIOUS'}-trial pre-stimulus state "
+                           f"& stimulus", "2_tuning_current_trial" if window == "cur" else "3_tuning_previous_trial")
 
-_plot_tuning_grid(trial_performance, current_columns,
-                   "Accuracy vs. CURRENT-trial pre-stimulus state & stimulus strength",
-                   "2_tuning_current_trial")
-_plot_tuning_grid(trial_performance, previous_columns,
-                   "Accuracy vs. PREVIOUS-trial pre-stimulus state & stimulus strength",
-                   "3_tuning_previous_trial")
 
-# 3d. History kernel: how far back does previous correctness predict
-# current accuracy?
-lag_cols = [f"correct_lag{lag}" for lag in range(1, MAX_LAG_KERNEL + 1)]
-if all(c in trial_performance.columns for c in lag_cols):
-    fig, ax = plt.subplots(figsize=(5, 3.5))
-    for protocol in PROTOCOLS:
-        psub = trial_performance[trial_performance["protocol"] == protocol]
-        means, sems = [], []
+# 4d. history kernel --------------------------------------------------------------------------------------
+kernel_rows = []
+for protocol in protocols_present:
+    psub = trial_performance[trial_performance["protocol"] == protocol]
+    for unit, usub in unit_groups(psub):
         for lag in range(1, MAX_LAG_KERNEL + 1):
-            sub = psub.dropna(subset=[f"correct_lag{lag}", "correct"])
-            same = sub[sub[f"correct_lag{lag}"] == 1]["correct"]
-            diff = sub[sub[f"correct_lag{lag}"] == 0]["correct"]
-            if len(same) < 5 or len(diff) < 5:
-                means.append(np.nan)
-                sems.append(np.nan)
+            s = usub.dropna(subset=[f"correct_lag{lag}", "correct"])
+            same = s[s[f"correct_lag{lag}"] == 1]["correct"]
+            diff = s[s[f"correct_lag{lag}"] == 0]["correct"]
+            if len(same) < KERNEL_MIN_TRIALS or len(diff) < KERNEL_MIN_TRIALS:
                 continue
-            delta = same.mean() - diff.mean()
-            se = np.sqrt(same.var(ddof=1) / len(same) + diff.var(ddof=1) / len(diff))
-            means.append(delta)
-            sems.append(se)
-        ax.errorbar(range(1, MAX_LAG_KERNEL + 1), means, yerr=sems, color=PROTOCOL_COLORS[protocol],
-                    marker="o", markersize=4, capsize=3, label=protocol)
+            row = {"protocol": protocol, "lag": lag, "delta_accuracy": same.mean() - diff.mean(),
+                   "n_prev_correct": len(same), "n_prev_error": len(diff)}
+            kernel_rows.append(tag_unit([row], unit, usub)[0])
+kernel = pd.DataFrame(kernel_rows)
+kernel.to_csv(table_dir / f"performance_history_kernel{AGG_SUFFIX}.csv", index=False)
+if len(kernel):
+    fig, ax = plt.subplots(figsize=(5.2, 3.8))
+    for protocol in protocols_present:
+        k = kernel[kernel["protocol"] == protocol]
+        if k.empty:
+            continue
+        color = PROTOCOL_COLORS[protocol]
+        if AGG != "pooled":
+            for _, u in k.groupby("unit"):
+                ax.plot(u["lag"], u["delta_accuracy"], color=color, alpha=0.18, linewidth=0.8)
+        g = k.groupby("lag")["delta_accuracy"]
+        sem = g.sem().fillna(0.0) if AGG != "pooled" else g.mean() * 0.0
+        ax.errorbar(g.mean().index, g.mean().values, yerr=sem.values, color=color, marker="o", markersize=4,
+                    capsize=3, label=protocol)
     ax.axhline(0, color="grey", linewidth=0.8)
     ax.set_xlabel("trials back")
     ax.set_ylabel("accuracy(prev correct) - accuracy(prev error)")
-    ax.set_title("History kernel: how far back does correctness matter?")
+    ax.set_title(f"History kernel (unit = {UNIT})")
     ax.legend(fontsize=8, frameon=False)
     fig.tight_layout()
     save_fig(fig, figdir, "4_history_kernel")
 
 
 # --------------------------------------------------------------------- #
-# 4. Mutual information vs. linear regression, per predictor, per
-#    protocol -- parallelized across protocols (coarse-grained: each
-#    task computes every predictor for one protocol sequentially).
+# 5. Mutual information vs. linear fit, per predictor, per protocol, per unit
+#    Histogram MI with the SHARED MI_BINS (quantile bins; a discrete variable gets one bin per value).
 # --------------------------------------------------------------------- #
-predictors = (["cur_stim_bin", "prev_stim_bin"] + [f"cur_{v}" for v in current_vars]
-              + [f"prev_{v}" for v in previous_vars] + ["prev_correct", "prev_lickResponse"])
-predictors = [p for p in predictors if p in trial_performance.columns]
+def class_counts_ok(y):
+    c = pd.Series(y).value_counts()
+    return all(c.get(k, 0) >= MIN_TRIALS_PER_TARGET_BIN for k in (0, 1))
 
 
-def compute_mi_for_protocol(protocol, sub, predictors, mi_bins, n_shuffles, seed):
+def pairwise_for_group(protocol, unit, sub, predictors, mi_bins, n_shuffles, seed):
     rng_local = np.random.default_rng(seed)
     records = []
     for predictor in predictors:
         pair_data = sub[[predictor, "correct"]].dropna()
-        if len(pair_data) < 10:
+        if len(pair_data) < MIN_TRIALS_ANALYSIS or not class_counts_ok(pair_data["correct"]) \
+                or pair_data[predictor].nunique() < 2:
             continue
         mi = mutual_information_shuffle(pair_data[predictor], pair_data["correct"], bins=mi_bins,
-                                         n_shuffles=n_shuffles, rng=rng_local)
+                                        n_shuffles=n_shuffles, rng=rng_local)
         lin = linear_fit(pair_data[predictor], pair_data["correct"])
         cmp = compare_mi_to_linear(mi.bits_corrected, lin.r2)
         records.append({
@@ -466,69 +461,45 @@ def compute_mi_for_protocol(protocol, sub, predictors, mi_bins, n_shuffles, seed
             "linear_sufficient": (cmp.frac_explained_linearly >= LINEAR_SUFFICIENT_FRAC)
             if not np.isnan(cmp.frac_explained_linearly) else None,
         })
-    return records
+    return tag_unit(records, unit, sub)
 
 
-protocol_groups = [(protocol, trial_performance[trial_performance["protocol"] == protocol])
-                    for protocol in PROTOCOLS]
-protocol_groups = [(p, sub) for p, sub in protocol_groups if not sub.empty]
-
-print(f"\nComputing MI/linear fits for {len(protocol_groups)} protocols x {len(predictors)} "
-      f"predictors (n_jobs={N_JOBS_MI}) ...")
-nested_records = Parallel(n_jobs=N_JOBS_MI, backend="loky", verbose=JOBLIB_VERBOSE)(
-    delayed(compute_mi_for_protocol)(protocol, sub, predictors, MI_BINS, N_SHUFFLES, seed=i)
-    for i, (protocol, sub) in enumerate(protocol_groups)
-)
-records = [rec for group in nested_records for rec in group]
-
-mi_table = pd.DataFrame(records)
-mi_table.to_csv(paths.out / "performance_mi_vs_linear.csv", index=False)
+groups = [(protocol, unit, usub) for protocol in protocols_present
+          for unit, usub in unit_groups(trial_performance[trial_performance["protocol"] == protocol])]
+print(f"\nPairwise MI/linear fits: {len(groups)} (protocol, {UNIT}) groups, {MI_BINS} quantile bins "
+      f"(n_jobs={N_JOBS}) ...")
+nested = Parallel(n_jobs=N_JOBS, backend="loky", verbose=JOBLIB_VERBOSE)(
+    delayed(pairwise_for_group)(protocol, unit, usub, predictors_for(protocol, usub), MI_BINS, N_SHUFFLES,
+                                seed=stable_seed("1d-pairwise", protocol, unit))
+    for protocol, unit, usub in groups)
+mi_table = pd.DataFrame([r for g in nested for r in g])
+mi_table.to_csv(table_dir / f"performance_mi_vs_linear{AGG_SUFFIX}.csv", index=False)
 
 if len(mi_table):
-    mi_table_sorted = mi_table.sort_values("mi_bits_corrected", ascending=False)
-    print("\nStrongest predictors of performance (by bias-corrected MI, top 10):")
-    print(mi_table_sorted[["protocol", "predictor", "n_trials", "r2", "mi_bits_corrected", "mi_p_value"]]
-          .head(10).to_string(index=False))
-
-    n_insufficient = (mi_table["linear_sufficient"] == False).sum()  # noqa: E712 (None must not match)
-    print(f"\n{n_insufficient}/{len(mi_table)} (protocol, predictor) combinations show a linear fit "
-          f"missing >{100 * (1 - LINEAR_SUFFICIENT_FRAC):.0f}% of the (bias-corrected) mutual information:")
-    if n_insufficient:
-        print(mi_table.loc[mi_table["linear_sufficient"] == False,  # noqa: E712
-                            ["protocol", "predictor", "r2", "mi_bits_corrected", "mi_bits_from_r2"]]
-              .to_string(index=False))
+    top = (mi_table.groupby(["protocol", "predictor"])[["n_trials", "r2", "mi_bits_corrected"]].mean()
+           .sort_values("mi_bits_corrected", ascending=False).head(10))
+    print(f"\nStrongest predictors of performance (mean over {UNIT}s, bias-corrected MI, top 10):")
+    print(top.to_string())
+    n_insuff = (mi_table["linear_sufficient"] == False).sum()  # noqa: E712 (None must not match)
+    print(f"\n{n_insuff}/{len(mi_table)} rows show a linear fit missing >{100 * (1 - LINEAR_SUFFICIENT_FRAC):.0f}% "
+          f"of the (bias-corrected) mutual information.")
 
 
 # --------------------------------------------------------------------- #
-# 4b. MULTIVARIATE regression + joint MI: not just pairwise -- one
-#    model per protocol using EVERY predictor at once (correct ~ all
-#    current/previous behavioral state + stim + history predictors
-#    jointly), with the joint mutual information between that whole
-#    predictor SET and correctness for comparison. A predictor can be
-#    only weakly related to performance pairwise while the full set
-#    together is much more predictive (or the reverse: mostly redundant
-#    predictors that don't add much beyond the single best one) --
-#    adj_r2 (not just r2) is reported specifically to catch the latter,
-#    since r2 alone mechanically increases with every added predictor.
-#    Uses KSG (not the histogram estimator the pairwise case above
-#    uses) since multivariate histogram binning is impractical (curse
-#    of dimensionality) -- KSG handles a binary target fine as one
-#    dimension of the joint space, same as the pairwise KSG comparisons
-#    in 1c_behavior.py.
+# 5b. MULTIVARIATE: one model per (protocol, unit) with every predictor at once; joint MI (KSG)
+#     for comparison. Predictors that are constant within the unit are dropped from that unit's model.
 # --------------------------------------------------------------------- #
-def compute_multivariate_for_protocol(protocol, sub, predictors, ksg_k, n_shuffles, seed):
-    if len(predictors) < 2:
-        return []
+def multivariate_for_group(protocol, unit, sub, predictors, ksg_k, n_shuffles, seed):
     data = sub[predictors + ["correct"]].dropna()
-    if len(data) < len(predictors) + 10:
+    predictors = [p for p in predictors if data[p].nunique() > 1]
+    if len(predictors) < 2 or len(data) < max(MIN_TRIALS_ANALYSIS, len(predictors) + 10) \
+            or not class_counts_ok(data["correct"]):
         return []
-    X = data[predictors].to_numpy()
-    y = data["correct"].to_numpy()
+    X, y = data[predictors].to_numpy(), data["correct"].to_numpy()
     lin = multivariate_linear_fit(X, y, predictor_names=predictors)
-    mi = mutual_information_shuffle_ksg(X, y, k=ksg_k, n_shuffles=n_shuffles,
-                                         rng=np.random.default_rng(seed))
+    mi = mutual_information_shuffle_ksg(X, y, k=ksg_k, n_shuffles=n_shuffles, rng=np.random.default_rng(seed))
     cmp = compare_mi_to_linear(mi.bits_corrected, lin.r2)
-    return [{
+    return tag_unit([{
         "protocol": protocol, "predictors": ", ".join(predictors), "n_predictors": len(predictors),
         "n_trials": lin.n, "r2": lin.r2, "adj_r2": lin.adj_r2, "p_linear": lin.p_value,
         "mi_bits_raw": mi.bits_raw, "mi_bits_shuffle_mean": mi.bits_shuffle_mean,
@@ -537,127 +508,108 @@ def compute_multivariate_for_protocol(protocol, sub, predictors, ksg_k, n_shuffl
         "frac_explained_linearly": cmp.frac_explained_linearly,
         "linear_sufficient": (cmp.frac_explained_linearly >= LINEAR_SUFFICIENT_FRAC)
         if not np.isnan(cmp.frac_explained_linearly) else None,
-    }]
+    }], unit, sub)
 
 
-print(f"\nComputing multivariate (all predictors at once) MI/linear fit for {len(protocol_groups)} "
-      f"protocols (n_jobs={N_JOBS_MI}) ...")
-nested_multivariate = Parallel(n_jobs=N_JOBS_MI, backend="loky", verbose=JOBLIB_VERBOSE)(
-    delayed(compute_multivariate_for_protocol)(protocol, sub, predictors, KSG_K, N_SHUFFLES_MULTIVARIATE,
-                                                 seed=1000 + i)
-    for i, (protocol, sub) in enumerate(protocol_groups)
-)
-multivariate_records = [rec for group in nested_multivariate for rec in group]
-multivariate_table = pd.DataFrame(multivariate_records)
-multivariate_table.to_csv(paths.out / "performance_multivariate_mi_vs_linear.csv", index=False)
-
+print(f"\nMultivariate (all predictors jointly): {len(groups)} groups (n_jobs={N_JOBS}) ...")
+nested_mv = Parallel(n_jobs=N_JOBS, backend="loky", verbose=JOBLIB_VERBOSE)(
+    delayed(multivariate_for_group)(protocol, unit, usub, predictors_for(protocol, usub, multivariate=True),
+                                    KSG_K, N_SHUFFLES_MULTIVARIATE,
+                                    seed=stable_seed("1d-multivariate", protocol, unit))
+    for protocol, unit, usub in groups)
+multivariate_table = pd.DataFrame([r for g in nested_mv for r in g])
+multivariate_table.to_csv(table_dir / f"performance_multivariate_mi_vs_linear{AGG_SUFFIX}.csv", index=False)
 if len(multivariate_table):
-    print("\nMultivariate fit of performance from ALL predictors jointly, per protocol:")
-    print(multivariate_table[["protocol", "n_trials", "r2", "adj_r2", "mi_bits_corrected", "mi_p_value"]]
-          .to_string(index=False))
+    print("\nMultivariate fit of performance from ALL predictors jointly (mean over units):")
+    print(multivariate_table.groupby("protocol")[["n_trials", "r2", "adj_r2", "mi_bits_corrected"]].mean()
+          .to_string())
 
 
 # --------------------------------------------------------------------- #
-# 5. Figure: MI (best estimate) vs. MI-implied-by-r2, one point per
-#    (protocol, predictor) -- color encodes the predictor (no shape
-#    dimension needed here, unlike 1c_behavior.py's pairwise comparison,
-#    since every point already shares the same "y" variable: performance).
+# 6. Figures: does a linear model capture what predicts performance?
+#    small translucent points = single units, large markers = mean over units (pooled: the pooled value)
 # --------------------------------------------------------------------- #
+all_predictors = list(dict.fromkeys(mi_table["predictor"])) if len(mi_table) else []
+palette = list(plt.cm.tab20(np.linspace(0, 1, 20)))
+predictor_color = {p: palette[i % 20] for i, p in enumerate(all_predictors)}
+
+
+def scatter_units(ax, df, color, label=None):
+    """Single units small, their mean large."""
+    d = df.replace([np.inf, -np.inf], np.nan).dropna(subset=["mi_reference_bits", "mi_bits_from_r2"])
+    if d.empty:
+        return None
+    if AGG != "pooled":
+        ax.scatter(d["mi_reference_bits"], d["mi_bits_from_r2"], color=color, s=12, alpha=0.35, linewidth=0)
+    return ax.scatter(d["mi_reference_bits"].mean(), d["mi_bits_from_r2"].mean(), color=color, s=75,
+                      edgecolor="black", linewidth=0.5, label=label, zorder=3)
+
+
 if len(mi_table) and np.isfinite(mi_table["mi_reference_bits"]).any():
     finite = mi_table.replace([np.inf, -np.inf], np.nan).dropna(subset=["mi_reference_bits", "mi_bits_from_r2"])
-    lims = [0, finite["mi_reference_bits"].max() * 1.1 + 1e-6] if len(finite) else [0, 1]
-
-    color_palette = list(plt.cm.tab20(np.linspace(0, 1, 20)))
-    predictor_color = {p: color_palette[i % len(color_palette)] for i, p in enumerate(predictors)}
-
-    protocols_present = [p for p in PROTOCOLS if p in finite["protocol"].unique()]
-    fig, axes = plt.subplots(1, len(protocols_present), figsize=(4.3 * len(protocols_present), 4.3), squeeze=False)
-    axes = axes[0]
+    top_lim = max(finite["mi_reference_bits"].max(), finite["mi_bits_from_r2"].max()) * 1.1 + 1e-6 if len(finite) else 1
+    prots = [p for p in protocols_present if p in finite["protocol"].unique()]
+    fig, axes = plt.subplots(1, len(prots), figsize=(4.3 * len(prots), 4.3), squeeze=False)
     handles = {}
-    for ax, protocol in zip(axes, protocols_present):
-        sub = finite[finite["protocol"] == protocol]
-        for _, row in sub.iterrows():
-            h = ax.scatter(row["mi_reference_bits"], row["mi_bits_from_r2"],
-                            color=predictor_color[row["predictor"]], s=70, edgecolor="black", linewidth=0.4)
-            handles.setdefault(row["predictor"], h)
-        ax.plot(lims, lims, color="grey", linestyle="--", linewidth=1)
-        ax.set_xlim(lims)
-        ax.set_ylim(lims)
+    for ax, protocol in zip(axes[0], prots):
+        for pred, g in finite[finite["protocol"] == protocol].groupby("predictor"):
+            h = scatter_units(ax, g, predictor_color[pred])
+            if h is not None:
+                handles.setdefault(pred, h)
+        ax.plot([0, top_lim], [0, top_lim], color="grey", linestyle="--", linewidth=1)
+        ax.set_xlim(0, top_lim)
+        ax.set_ylim(0, top_lim)
         ax.set_title(protocol)
         ax.set_xlabel("MI, best available estimate (bits)")
-    axes[0].set_ylabel("MI implied by linear r\u00b2 (bits)")
-    fig.suptitle("Does a linear model capture what predicts performance?\n"
-                 "(dashed = linear matches MI exactly)", y=1.06)
-    fig.legend(handles.values(), handles.keys(), loc="center left", bbox_to_anchor=(1.0, 0.5),
-               fontsize=7, title="predictor", frameon=False)
+    axes[0][0].set_ylabel("MI implied by linear r² (bits)")
+    fig.suptitle(f"Does a linear model capture what predicts performance? (unit = {UNIT}; dashed = exact)", y=1.06)
+    fig.legend(handles.values(), handles.keys(), loc="center left", bbox_to_anchor=(1.0, 0.5), fontsize=7,
+               title="predictor", frameon=False)
     fig.tight_layout()
     save_fig(fig, figdir, "5_mi_vs_linear_summary")
 
-# 5a. Same comparison, but as the FRACTION explained linearly directly
-# (frac_explained_linearly = mi_from_r2 / max(mi_corrected, mi_from_r2),
-# already in [0,1] by construction -- see compare_mi_to_linear) rather
-# than reading it off the scatter's distance from the diagonal. One bar
-# per predictor, sorted, one panel per protocol.
-if len(mi_table):
-    finite_frac = mi_table.dropna(subset=["frac_explained_linearly"])
-    if len(finite_frac):
-        protocols_present = [p for p in PROTOCOLS if p in finite_frac["protocol"].unique()]
-        fig, axes = plt.subplots(1, len(protocols_present), figsize=(4.5 * len(protocols_present), 4.5), squeeze=False)
-        for ax, protocol in zip(axes[0], protocols_present):
-            sub = finite_frac[finite_frac["protocol"] == protocol].sort_values("frac_explained_linearly")
-            colors = [predictor_color[p] for p in sub["predictor"]]
-            ax.barh(sub["predictor"], sub["frac_explained_linearly"], color=colors, edgecolor="black", linewidth=0.5)
+    ff = mi_table.dropna(subset=["frac_explained_linearly"])
+    prots = [p for p in protocols_present if p in ff["protocol"].unique()]
+    if prots:
+        n_lab = max(ff[ff["protocol"] == p]["predictor"].nunique() for p in prots)
+        fig, axes = plt.subplots(1, len(prots), figsize=(5 * len(prots), max(3.5, 0.32 * n_lab + 1.8)), squeeze=False)
+        for ax, protocol in zip(axes[0], prots):
+            sub = ff[ff["protocol"] == protocol]
+            hbar_units(ax, sub, "predictor", "frac_explained_linearly", AGG, colors=predictor_color,
+                       mouse_colors=mouse_colors)
             ax.axvline(1.0, color="grey", linestyle="--", linewidth=1)
-            ax.set_xlim(0, max(1.05, sub["frac_explained_linearly"].max() * 1.05))
             ax.set_xlabel("MI(linear) / MI(full)")
             ax.set_title(protocol)
             ax.tick_params(axis="y", labelsize=7)
-        fig.suptitle("Fraction of mutual information a linear fit actually captures, per predictor", y=1.02)
+        fig.suptitle(f"Fraction of the mutual information a linear fit captures (unit = {UNIT})", y=1.02)
         fig.tight_layout()
         save_fig(fig, figdir, "5a_frac_explained_linearly")
 
-
-# --------------------------------------------------------------------- #
-# 5b. Figure: multivariate MI vs. multivariate r2, one point per
-#    protocol -- the multivariate analogue of the figure above. A point
-#    below the diagonal means the joint predictor set has a real
-#    nonlinear/interaction structure a purely linear-probability model
-#    of correctness is missing.
-# --------------------------------------------------------------------- #
 if len(multivariate_table) and np.isfinite(multivariate_table["mi_reference_bits"]).any():
-    finite_mv = multivariate_table.replace([np.inf, -np.inf], np.nan).dropna(
-        subset=["mi_reference_bits", "mi_bits_from_r2"])
-    if len(finite_mv):
-        lims_mv = [0, finite_mv["mi_reference_bits"].max() * 1.1 + 1e-6]
-        fig, ax = plt.subplots(figsize=(4.5, 4.5))
-        for _, row in finite_mv.iterrows():
-            ax.scatter(row["mi_reference_bits"], row["mi_bits_from_r2"],
-                       color=PROTOCOL_COLORS[row["protocol"]], s=90, edgecolor="black", linewidth=0.5,
-                       label=row["protocol"])
-        ax.plot(lims_mv, lims_mv, color="grey", linestyle="--", linewidth=1)
-        ax.set_xlim(lims_mv)
-        ax.set_ylim(lims_mv)
+    fm = multivariate_table.replace([np.inf, -np.inf], np.nan).dropna(subset=["mi_reference_bits", "mi_bits_from_r2"])
+    if len(fm):
+        lim = max(fm["mi_reference_bits"].max(), fm["mi_bits_from_r2"].max()) * 1.1 + 1e-6
+        fig, ax = plt.subplots(figsize=(4.8, 4.5))
+        for protocol, g in fm.groupby("protocol"):
+            scatter_units(ax, g, PROTOCOL_COLORS[protocol], label=protocol)
+        ax.plot([0, lim], [0, lim], color="grey", linestyle="--", linewidth=1)
+        ax.set_xlim(0, lim)
+        ax.set_ylim(0, lim)
         ax.set_xlabel("joint MI, best available estimate (bits)")
-        ax.set_ylabel("MI implied by multivariate r\u00b2 (bits)")
-        ax.set_title("Multivariate: all predictors jointly vs. performance\n(dashed = linear matches MI exactly)")
+        ax.set_ylabel("MI implied by multivariate r² (bits)")
+        ax.set_title(f"Multivariate: all predictors vs. performance (unit = {UNIT})")
         ax.legend(fontsize=8, frameon=False)
         fig.tight_layout()
         save_fig(fig, figdir, "6_multivariate_mi_vs_linear_summary")
 
-# 6a. Same, as a fraction: one bar per protocol.
-if len(multivariate_table):
-    finite_mv_frac = multivariate_table.dropna(subset=["frac_explained_linearly"])
-    if len(finite_mv_frac):
-        fig, ax = plt.subplots(figsize=(4, 4))
-        colors = [PROTOCOL_COLORS[p] for p in finite_mv_frac["protocol"]]
-        ax.bar(finite_mv_frac["protocol"], finite_mv_frac["frac_explained_linearly"],
-               color=colors, edgecolor="black", linewidth=0.5)
-        ax.axhline(1.0, color="grey", linestyle="--", linewidth=1)
-        ax.set_ylim(0, max(1.05, finite_mv_frac["frac_explained_linearly"].max() * 1.05))
-        ax.set_ylabel("MI(linear) / MI(full)")
-        ax.set_title("Fraction of the joint MI a\nmultivariate linear fit captures")
+    fmf = multivariate_table.dropna(subset=["frac_explained_linearly"])
+    if len(fmf):
+        order = [p for p in protocols_present if p in fmf["protocol"].unique()]
+        fig, ax = plt.subplots(figsize=(4.5, 4))
+        unit_bars(ax, fmf, "protocol", "frac_explained_linearly", order, AGG, colors=PROTOCOL_COLORS,
+                  mouse_colors=mouse_colors, ylabel="MI(linear) / MI(full)", hline=1.0)
+        ax.set_title(f"Fraction of the joint MI a multivariate\nlinear fit captures (unit = {UNIT})")
         fig.tight_layout()
         save_fig(fig, figdir, "6a_multivariate_frac_explained_linearly")
 
-print(f"\nWrote tables to {paths.out}, figures to {figdir}")
-print("Run `python b_progress/make_progress_md.py 1d_performance_predictors` to build a markdown summary.")
+print(f"\nWrote tables to {table_dir}, figures to {figdir}")

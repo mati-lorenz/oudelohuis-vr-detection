@@ -24,7 +24,7 @@ import pandas as pd
 
 from .continuous import (
     merge_behavior_video, build_calcium_continuous, restrict_to_engaged, remove_pupil_outliers,
-    compute_trial_position_window_means,
+    compute_trial_position_window_means, restrict_to_trials,
 )
 from .psth import derive_onset_time
 
@@ -48,7 +48,7 @@ def load_cell_inclusion(cell_dist_out, activity_stats_out) -> pd.DataFrame:
     DataFrame with session_id, cell_id, include (bool: passes BOTH
     2a's proximity filter and 2b's QC)
     """
-    celldata = pd.read_csv(cell_dist_out / "celldata_combined.csv")[
+    celldata = pd.read_csv(cell_dist_out / "celldata_combined.csv", low_memory=False)[
         ["session_id", "cell_id", "passes_proximity_filter"]]
     qc = pd.read_csv(activity_stats_out / "qc_per_cell.csv")[["session_id", "cell_id", "qc_pass"]]
     merged = celldata.merge(qc, on=["session_id", "cell_id"], how="inner")
@@ -60,7 +60,7 @@ def build_session_tables(ses, mu_sigma_lookup: dict, windows: dict,
                           included_cell_ids: set | None = None,
                           behavior_predictors=BEHAVIOR_PREDICTORS,
                           rate_predictors=RATE_PREDICTORS,
-                          n_stim_bins: int = N_STIM_BINS) -> dict:
+                          n_stim_bins: int = N_STIM_BINS, trial_numbers=None) -> dict:
     """Build one session's per-window (predictor + per-cell neural
     response) table. `ses` must already be loaded with
     load_behaviordata=True, load_videodata=True, load_celldata=True,
@@ -74,6 +74,9 @@ def build_session_tables(ses, mu_sigma_lookup: dict, windows: dict,
         stim_bin, choice, correct (trial-level, same across windows),
         plus one column per included cell (cell_id as the column name,
         that cell's mean activity in this window/trial)
+    trial_numbers : None (default) -> the ENGAGED trials. Otherwise an iterable of trialNumbers: exactly
+        those trials are used whatever their engaged flag (end-of-session disengaged-trial tests, see
+        engagement.py); the table then also has an `engaged` column.
     Returns {} if this session has no usable celldata/calciumdata/
     behaviordata, or no cells survive `included_cell_ids`.
     """
@@ -95,7 +98,10 @@ def build_session_tables(ses, mu_sigma_lookup: dict, windows: dict,
     merged_full = remove_pupil_outliers(merged_full)
     if merged_full.empty:
         return {}
-    merged = restrict_to_engaged(merged_full, ses.trialdata)
+    if trial_numbers is None:
+        merged = restrict_to_engaged(merged_full, ses.trialdata)
+    else:
+        merged = restrict_to_trials(merged_full, ses.trialdata, trial_numbers)
     if merged.empty:
         return {}
     calcium_continuous = build_calcium_continuous(calciumdata, ses.ts_F, ses.behaviordata)
@@ -103,8 +109,11 @@ def build_session_tables(ses, mu_sigma_lookup: dict, windows: dict,
     available_behavior = [v for v in behavior_predictors if v in merged.columns]
     available_rate = [v for v in rate_predictors if v in available_behavior]
 
-    engaged_trials = (ses.trialdata[ses.trialdata["engaged"] == 1]
-                       if "engaged" in ses.trialdata.columns else ses.trialdata.copy())
+    if trial_numbers is None:
+        engaged_trials = (ses.trialdata[ses.trialdata["engaged"] == 1]
+                           if "engaged" in ses.trialdata.columns else ses.trialdata.copy())
+    else:
+        engaged_trials = ses.trialdata[ses.trialdata["trialNumber"].isin(list(trial_numbers))].copy()
     engaged_trials = derive_onset_time(engaged_trials, merged_full)
 
     # Trial-level (window-independent) predictors: stim strength
@@ -131,7 +140,16 @@ def build_session_tables(ses, mu_sigma_lookup: dict, windows: dict,
     except (ValueError, TypeError):
         engaged_trials = engaged_trials.assign(stim_bin=np.nan)
 
-    trial_meta = engaged_trials[["trialNumber", "stim_bin", "choice", "correct"]]
+    # Raw contrast + position on the fitted psychometric curve (0-1), so callers can apply ANY
+    # binning from stim_binning.STIM_BINNING_STRATEGIES; `stim_bin` above is the legacy quantile bin.
+    from .stim_binning import psychometric_pct
+    engaged_trials = engaged_trials.assign(
+        stim_pct=psychometric_pct(engaged_trials["signal"], mu_sigma.get("mu"), mu_sigma.get("sigma")))
+
+    meta_cols = ["trialNumber", "stim_bin", "choice", "correct", "signal", "stim", "stim_pct"]
+    if trial_numbers is not None and "engaged" in engaged_trials.columns:
+        meta_cols.append("engaged")
+    trial_meta = engaged_trials[meta_cols]
 
     tables = {}
     for window_name, (s_start, s_end) in windows.items():

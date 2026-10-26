@@ -112,6 +112,20 @@ def restrict_to_engaged(continuous: pd.DataFrame, trialdata: pd.DataFrame) -> pd
     return continuous.loc[keep].copy()
 
 
+def restrict_to_trials(continuous: pd.DataFrame, trialdata: pd.DataFrame, trial_numbers) -> pd.DataFrame:
+    """Keep only samples inside the [tStart, tEnd] window of the trials whose trialNumber is in
+    `trial_numbers`, irrespective of their engaged flag (restrict_to_engaged is the special case
+    'all engaged trials'). Used for the end-of-session disengaged-trial tests."""
+    sel = trialdata[trialdata["trialNumber"].isin(list(trial_numbers))]
+    if sel.empty:
+        return continuous.iloc[0:0].copy()
+    ts = continuous["ts"].to_numpy()
+    keep = np.zeros(len(continuous), dtype=bool)
+    for t0, t1 in zip(sel["tStart"].to_numpy(), sel["tEnd"].to_numpy()):
+        keep |= (ts >= t0) & (ts <= t1)
+    return continuous.loc[keep].copy()
+
+
 def remove_pupil_outliers(continuous: pd.DataFrame, column: str = "pupil_area",
                            z_thresh: float = 5.0) -> pd.DataFrame:
     """Null out (not drop -- other channels' samples at that timestamp

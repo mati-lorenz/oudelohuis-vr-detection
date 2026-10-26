@@ -2,56 +2,47 @@
 """
 2a_cell_distribution
 ======================
-Single-cell statistical analysis of the SPATIAL organization of
-recorded cells -- DN sessions exclusively, since cell recording only
-happens for DN (see session.py's module docstring; DM/DP have no
-celldata at all). This is a survey of the recorded population itself
-(how many cells, where they sit in the brain and in the FOV, how big
-they are) -- not of their activity, which is what the later 2_ steps
-(single-cell/pairwise information) will cover.
+Survey of the SPATIAL organization of the recorded cells -- DN sessions exclusively, since cell recording only
+happens for DN (see session.py's module docstring). How many cells, where they sit in the brain and in the FOV,
+how big they are -- not their activity (that is 2b and the later steps).
 
 What this does
 --------------
-1. Loads celldata for every DN session, optionally restricted by
-   `RECOMBINASE_FILTER` ('cre'/'flp'/None for no filter -- see
-   celldata's 'recombinase' column, which is 'non' for any cell that
-   doesn't express that session's driver-line marker).
-2. Computes a spatial PROXIMITY filter for unlabeled V1/PM cells (an
-   unlabeled V1 cell only counts as "near labeled" if within
-   PROXIMITY_RADIUS_UM of a labeled V1 cell in the SAME session; same
-   for PM/PM -- see infotheory.celldata_utils.filter_nearlabeled).
-   Computed and reported either way; whether the REST of this script's
-   plots use the filtered or full population is controlled by
-   `APPLY_PROXIMITY_FILTER` below.
-3. Cell counts: per session, per animal, per (area, label) group.
-4. Depth/laminar distribution: depth is an absolute physical
-   measurement (microns from the pial surface), so -- unlike xloc/yloc
-   -- it IS comparable and pooled across sessions/animals here.
-5. x/y (FOV) spatial distribution -- explicitly NOT pooled across
-   sessions: xloc/yloc are local pixel/micron coordinates within each
-   session's own field of view, which is independently positioned
-   every recording day, so overlaying different sessions' coordinates
-   would produce a meaningless blob (see the per-session grid figure).
-6. Cell size/shape properties (radius, npix, npix_soma, skew,
-   iscell_prob) by area/label.
+1. Loads celldata of every DN session (one session at a time, cached per session), optionally restricted by
+   `RECOMBINASE_FILTER` ('cre' / 'flp' / None).
+2. Spatial PROXIMITY filter for unlabeled V1/PM cells (an unlabeled cell only counts as "near labeled" if
+   within PROXIMITY_RADIUS_UM of a labeled cell of the same area in the SAME session; see
+   celldata_utils.filter_nearlabeled). Computed and reported either way; `APPLY_PROXIMITY_FILTER` decides whether
+   the rest of this script's plots use the filtered or the full population.
+3. Cell counts per session / animal / group, depth and layer distribution (depth is absolute, so it is comparable
+   across sessions), FOV x/y positions (NEVER pooled across sessions or areas: local coordinates), cell size/shape.
 
-Reads: 0_data/ directly (celldata isn't behavior-inclusion-filtered by
-1b -- 1b's criteria are about task performance, not neurons -- so
-there's no upstream out/ to read the session list from; every DN
-session with a celldata.csv is included here).
+Project-wide rules (infotheory/project_config.py) -- what applies to 2a
+    * selection : --animals / --sessions restrict the sessions; a restricted run writes to out/selection/<tag>/
+                  and NEVER overwrites celldata_combined.csv in out/ (read by every later step). This step does
+                  not use 1b's session list (1b judges task performance, not neurons): all DN sessions.
+    * aggregate : --aggregate pooled|session|mouse = the unit for the group comparisons (counts, depth, layer
+                  composition, size/shape): pooled = all cells of a group together, no error bars; session / mouse =
+                  one value per session / mouse (MIN_CELLS_PER_UNIT cells needed in the group), bars = mean +- SEM
+                  over units, dots = units coloured by mouse. Always the six groups (V1-lab, V1-unl, PM-lab, PM-unl,
+                  AL, RSP). Per-session diagnostics (cells per session, depth per session, x/y maps, labeled-cell
+                  and proximity-pass diagnostics) are session-level by nature and not affected.
+    * memory    : celldata of ONE session at a time (per-session cache in store/); only the small combined cell table
+                  is held. No violin plots.
+    * binning   : not used here (no discrete information measures).
+
+Reads: 0_data/ directly (every DN session with a celldata.csv).
 
 Outputs
 -------
 2_pipeline/2a_cell_distribution/
-    out/    celldata_combined.csv   every DN session's celldata, tagged
-                                     with session_id/animal_id and a
-                                     passes_proximity_filter column --
-                                     read this (not 0_data/) from later
-                                     2_ steps that need celldata (Rule #1)
-            cell_counts_summary.csv per-session and per-(area,label) counts
+    out/    celldata_combined.csv     every DN session's celldata + session_id / animal_id + passes_proximity_filter
+                                      (+ labeled_grouped) -- read this from later steps (Rule #1)
+            cell_counts_summary.csv   per session / area counts
+            cell_properties_by_unit[__<aggregate>].csv   per group (and unit): n_cells, mean depth / size / shape
             figures/*.png
-    store/  celldata_combined.pkl   cached combined table (reused unless
-                                     --recompute is passed)
+    out/selection/<tag>/...           the same for a restricted run
+    store/  celldata_session_<hash>.pkl   per-session cache
 """
 from __future__ import annotations
 
@@ -61,114 +52,89 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from joblib import Parallel, delayed
 
 from infotheory.pipeline import get_pipeline_paths
-from infotheory.session import load_sessions
+from infotheory.session import discover_sessions
 from infotheory.celldata_utils import (
-    get_area_label, ordered_groups, bar_by_group, filter_nearlabeled, nearest_labeled_distance,
-    LABEL_SPLIT_AREAS,
-    AREA_COLORS, LABEL_LINESTYLES, LABEL_MARKERS, DEFAULT_AREA_ORDER, DEFAULT_LABEL_ORDER,
+    get_area_label, filter_nearlabeled, nearest_labeled_distance, LABEL_SPLIT_AREAS,
+    AREA_COLORS, LABEL_MARKERS, DEFAULT_AREA_ORDER, DEFAULT_LABEL_ORDER,
+    SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GROUP_COLORS,
 )
+from infotheory.groups import add_six_group_column, group_key
 from infotheory.plotting import set_style, save_fig, clear_figures
+from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
+from infotheory.session_jobs import run_sessions
+from infotheory.unit_stats import group_unit_table
+from infotheory.unit_plots import unit_bars, group_unit_bars, mouse_palette, mouse_legend
 
 PROTOCOL = "DN"  # cell recording only happens for DN -- see session.py's module docstring
 
-# Optional filter on the 'recombinase' column ('cre'/'flp'/'non', one
-# driver line per animal -- see make_fake_data.py). None = no filter
-# (all cells, of every recombinase value, kept). Set to 'cre' or 'flp'
-# to restrict to sessions/cells from that driver line; note this also
-# naturally drops every 'non' (unlabeled-marker) cell, since 'non' never
-# equals 'cre' or 'flp'.
+# Optional filter on the 'recombinase' column ('cre'/'flp'/'non'). None = no filter.
 RECOMBINASE_FILTER: str | None = None
 
-PROXIMITY_RADIUS_UM = 50.0       # how close an unlabeled V1/PM cell must be to a labeled
-                                  # same-area cell (same session) to pass the proximity filter
+PROXIMITY_RADIUS_UM = 50.0       # how close an unlabeled V1/PM cell must be to a labeled same-area cell
 PROXIMITY_AREAS = ("V1", "PM")
-APPLY_PROXIMITY_FILTER = True   # if True, sections 4 onward use ONLY cells that pass the
-                                  # proximity filter (labeled cells and cells outside
-                                  # PROXIMITY_AREAS are never excluded by it either way);
-                                  # if False (default), the filter is still computed and
-                                  # reported (section 3) but doesn't restrict the other plots
+APPLY_PROXIMITY_FILTER = False   # True: sections 4+ use ONLY cells that pass the proximity filter
 
-MAX_SESSIONS_PER_GRID_PAGE = 12  # x/y grid figures: paginate at MAX_SESSIONS_PER_GRID_PAGE x
-                                  # len(areas_present) PANELS per page (now one panel per
-                                  # (session, area), not one per session -- see section 6)
-GRID_NCOLS = 4
+MIN_CELLS_PER_UNIT = 5           # session / mouse aggregate: a unit needs this many cells in a group for its
+                                 # mean to be shown (ignored when pooled)
+MAX_SESSIONS_PER_GRID_PAGE = 6   # x/y figures: one ROW per session, one COLUMN per area; this many rows per page
 
-# Superficial-to-deep display order + colors for the layer-composition
-# figure. Any layer label actually present in the data but not listed
-# here (a naming convention this project hasn't seen yet) is still
-# plotted -- appended at the end with a colormap-generated color -- see
-# section 5 below.
 LAYER_ORDER = ["L1", "L2/3", "L4", "L5", "L6", "L6a", "L6b"]
 LAYER_COLORS_BASE = {"L1": "#a8dadc", "L2/3": "#8ecae6", "L4": "#219ebc",
                       "L5": "#023047", "L6": "#03045e", "L6a": "#03045e", "L6b": "#012a4a"}
-
-N_JOBS_SESSIONS = -1
+MIN_CELLS_FOR_KDE = 15
 JOBLIB_VERBOSE = 5
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--recompute", action="store_true",
-                     help="Reload sessions from 0_data/ instead of reusing the cached "
-                          "store/celldata_combined.pkl")
+add_scope_args(parser)
 args = parser.parse_args()
+scope = scope_from_args(args)
+AGG = scope.aggregate
+UNIT = unit_noun(AGG)
+UNITS = "mice" if UNIT == "mouse" else f"{UNIT}s"
+AGG_SUFFIX = "" if AGG == "pooled" else f"__{AGG}"
+UNIT_KEYS = {"pooled": [], "session": ["animal_id", "session_id"], "mouse": ["animal_id"]}[AGG]
 
 paths = get_pipeline_paths(__file__)
-figdir = paths.out / "figures"
+table_dir, figdir = scoped_dirs(paths, scope)
 clear_figures(figdir)
 set_style()
+print(scope.describe())
 
 
 # --------------------------------------------------------------------- #
-# 1. Load celldata for every DN session -- or reuse the cache
+# 1. Celldata of every selected DN session, one session at a time (cached per session)
 # --------------------------------------------------------------------- #
-combined_cache = paths.store / "celldata_combined.pkl"
-REQUIRED_COLUMNS = ["session_id", "animal_id", "roi_name", "labeled", "xloc", "yloc",
-                    "depth", "layer", "recombinase", "passes_proximity_filter"]
+all_triples = discover_sessions([PROTOCOL])
+triples = select_sessions(all_triples, scope)
+session_ids = [f"{a}_{d}" for _, a, d in triples]
+stamps = {f"{a}_{d}": data_stamp(p, a, d) for p, a, d in triples}
+mouse_colors = mouse_palette(a for _, a, _ in all_triples)
 
-celldata = None
-if not args.recompute and combined_cache.exists():
-    try:
-        candidate = pd.read_pickle(combined_cache)
-        missing = [c for c in REQUIRED_COLUMNS if c not in candidate.columns]
-        if missing:
-            print(f"Cached celldata is missing columns {missing} -- looks like it was built by an "
-                  f"older version of this script. Recomputing from 0_data/ instead of using "
-                  f"{combined_cache} (safe to delete that file to silence this check in the future).")
-        else:
-            celldata = candidate
-            print(f"Reusing cached celldata from {paths.store} (pass --recompute to reload 0_data/)")
-    except Exception as e:
-        print(f"Could not load cached celldata ({e}); recomputing from 0_data/ ...")
 
-if celldata is None:
-    sessions = load_sessions(protocols=[PROTOCOL], load_behaviordata=False, load_celldata=True)
+def process_session(ses, seed):
+    if ses.celldata is None or ses.celldata.empty:
+        return None
+    cd = ses.celldata.copy()
+    cd["session_id"] = ses.session_id
+    cd["animal_id"] = ses.animal_id
+    # proximity is computed per session by definition, so doing it here equals doing it on the combined table
+    cd["passes_proximity_filter"] = filter_nearlabeled(cd, radius_um=PROXIMITY_RADIUS_UM, areas=PROXIMITY_AREAS)
+    return cd
 
-    def process_session(ses):
-        if ses.celldata is None or ses.celldata.empty:
-            return None
-        cd = ses.celldata.copy()
-        cd["session_id"] = ses.session_id
-        cd["animal_id"] = ses.animal_id
-        return cd
 
-    print(f"Processing {len(sessions)} {PROTOCOL} sessions (n_jobs={N_JOBS_SESSIONS}) ...")
-    session_results = Parallel(n_jobs=N_JOBS_SESSIONS, backend="loky", verbose=JOBLIB_VERBOSE)(
-        delayed(process_session)(ses) for ses in sessions
-    )
-    session_tables = [r for r in session_results if r is not None]
-    if not session_tables:
-        raise SystemExit(f"No {PROTOCOL} session had a celldata.csv -- nothing to analyze.")
-    celldata = pd.concat(session_tables, ignore_index=True)
-
-    # Proximity filter computed once here (not re-derived every time this
-    # script's plots run), so it's available in the cache and in
-    # celldata_combined.csv for downstream 2_ steps too.
-    celldata["passes_proximity_filter"] = filter_nearlabeled(
-        celldata, radius_um=PROXIMITY_RADIUS_UM, areas=PROXIMITY_AREAS)
-
-    celldata.to_pickle(combined_cache)
+tables = run_sessions(
+    session_ids, process_session, [PROTOCOL], paths.store, "celldata_session",
+    key_params=dict(version="2a-v2", radius=PROXIMITY_RADIUS_UM, areas=PROXIMITY_AREAS),
+    load_kwargs=dict(load_behaviordata=False, load_celldata=True),
+    n_jobs=scope.n_jobs, recompute=args.recompute, verbose=JOBLIB_VERBOSE,
+    extra_key_by_session=stamps, flatten=False)
+tables = [t for t in tables if t is not None]
+if not tables:
+    raise SystemExit(f"No selected {PROTOCOL} session had a celldata.csv -- nothing to analyze.")
+celldata = pd.concat(tables, ignore_index=True)
+del tables
 
 n_sessions_total = celldata["session_id"].nunique()
 n_animals_total = celldata["animal_id"].nunique()
@@ -184,13 +150,11 @@ if RECOMBINASE_FILTER is not None:
     print(f"Recombinase filter = '{RECOMBINASE_FILTER}': kept {len(celldata)}/{n_before} cells "
           f"({celldata['session_id'].nunique()} sessions, {celldata['animal_id'].nunique()} animals)")
 else:
-    print(f"Recombinase filter: none (values present: "
-          f"{celldata['recombinase'].value_counts().to_dict()})")
+    print(f"Recombinase filter: none (values present: {celldata['recombinase'].value_counts().to_dict()})")
 
 
 # --------------------------------------------------------------------- #
-# 3. Proximity filter -- report before/after, decide which population
-#    the rest of this script uses
+# 3. Proximity filter -- report before/after, decide which population the rest uses
 # --------------------------------------------------------------------- #
 for area in PROXIMITY_AREAS:
     unl_mask = (celldata["roi_name"] == area) & (celldata["labeled"] == "unl")
@@ -200,12 +164,8 @@ for area in PROXIMITY_AREAS:
           f"{area} cell, same session): {n_pass}/{n_unl} pass"
           f"{' (0/0 -- no unlabeled ' + area + ' cells)' if n_unl == 0 else ''}")
 
-# 'labeled_grouped': like 'labeled', but every cell outside LABEL_SPLIT_AREAS
-# (V1/PM) is forced to 'unl' -- used for GROUP-SUMMARY plots (violins,
-# bars) below, so a stray labeled AL/RSP cell doesn't produce its own
-# near-empty, distorting group. The raw 'labeled' column is kept as-is
-# for per-CELL displays (the xy scatter/density figures), where showing
-# an individual labeled cell accurately is the point, not a group summary.
+# 'labeled_grouped': 'labeled' with every cell outside LABEL_SPLIT_AREAS (V1/PM) forced to 'unl' (a stray labeled
+# AL/RSP cell must not form its own near-empty group). Kept in celldata_combined.csv as before.
 _, celldata["labeled_grouped"], _ = get_area_label(celldata, label_split_areas=LABEL_SPLIT_AREAS)
 
 if APPLY_PROXIMITY_FILTER:
@@ -213,35 +173,35 @@ if APPLY_PROXIMITY_FILTER:
     analysis_celldata = celldata[celldata["passes_proximity_filter"]].copy()
     print(f"APPLY_PROXIMITY_FILTER=True: sections 4+ use {len(analysis_celldata)}/{n_before} cells")
 else:
-    analysis_celldata = celldata
-    print("APPLY_PROXIMITY_FILTER=False: sections 4+ use the full (unfiltered) population "
-          "-- set APPLY_PROXIMITY_FILTER=True at the top of this script to restrict them")
+    analysis_celldata = celldata.copy()
+    print("APPLY_PROXIMITY_FILTER=False: sections 4+ use the full (unfiltered) population")
+celldata.to_csv(table_dir / "celldata_combined.csv", index=False)
 
-celldata.to_csv(paths.out / "celldata_combined.csv", index=False)
+# the six project groups (V1-lab, V1-unl, PM-lab, PM-unl, AL, RSP) as column `group`, for all group plots
+analysis_celldata = add_six_group_column(analysis_celldata)
+GROUP_KEYS = [group_key(g) for g in SIX_GROUP_ORDER]
 
 
 # --------------------------------------------------------------------- #
-# 4. Cell counts: per session, per animal, per (area, label)
+# 4. Cell counts
 # --------------------------------------------------------------------- #
 counts_per_session = (analysis_celldata.groupby(["animal_id", "session_id", "roi_name"])
-                       .size().rename("n_cells").reset_index())
-counts_per_session.to_csv(paths.out / "cell_counts_summary.csv", index=False)
+                      .size().rename("n_cells").reset_index())
+counts_per_session.to_csv(table_dir / "cell_counts_summary.csv", index=False)
 
-session_order = (analysis_celldata.groupby("session_id")["animal_id"].first()
-                  .sort_values().index.tolist())
+session_order = (analysis_celldata.groupby("session_id")["animal_id"].first().sort_values().index.tolist())
 areas_present = [a for a in DEFAULT_AREA_ORDER if a in analysis_celldata["roi_name"].unique()]
 
 fig, axes = plt.subplots(1, 2, figsize=(13, 5))
-
-# 4a. Per-session, stacked by area
+# 4a. per session, stacked by area (session-level by nature)
 pivot = (counts_per_session.pivot_table(index="session_id", columns="roi_name", values="n_cells",
-                                         fill_value=0).reindex(session_order))
+                                        fill_value=0).reindex(session_order))
 bottom = np.zeros(len(pivot))
 for area in areas_present:
     if area not in pivot.columns:
         continue
-    axes[0].bar(range(len(pivot)), pivot[area].to_numpy(), bottom=bottom,
-                color=AREA_COLORS.get(area, "gray"), label=area, edgecolor="black", linewidth=0.3)
+    axes[0].bar(range(len(pivot)), pivot[area].to_numpy(), bottom=bottom, color=AREA_COLORS.get(area, "gray"),
+                label=area, edgecolor="black", linewidth=0.3)
     bottom += pivot[area].to_numpy()
 axes[0].set_xticks(range(len(pivot)))
 axes[0].set_xticklabels(pivot.index, rotation=90, fontsize=6)
@@ -249,15 +209,21 @@ axes[0].set_ylabel("cells")
 axes[0].set_title("Cells per session (stacked by area)")
 axes[0].legend(fontsize=8, frameon=False)
 
-# 4b. Pooled counts per (area, label)
-area_, label_, _ = get_area_label(analysis_celldata, label_split_areas=LABEL_SPLIT_AREAS)
-counts_by_group = {(a, l): np.ones(np.sum((area_ == a) & (label_ == l)))
-                    for a in areas_present for l in DEFAULT_LABEL_ORDER}
-bar_by_group(axes[1], counts_by_group, ylabel="cells", statistic="count", zero_line=False)
-axes[1].set_title(f"Total cells by area/label ({n_sessions_total} sessions, {n_animals_total} animals)")
-
-fig.suptitle(f"Cell counts -- {PROTOCOL}"
-             + (f" (recombinase={RECOMBINASE_FILTER})" if RECOMBINASE_FILTER else ""), y=1.03)
+# 4b. cells per group at the unit of analysis (a unit with no cell of a group counts 0)
+cnt = analysis_celldata.groupby(["group"] + UNIT_KEYS).size().rename("n_cells").reset_index()
+if UNIT_KEYS:
+    units = analysis_celldata[UNIT_KEYS].drop_duplicates()
+    full = units.merge(pd.DataFrame({"group": GROUP_KEYS}), how="cross")
+    cnt = full.merge(cnt, on=["group"] + UNIT_KEYS, how="left").fillna({"n_cells": 0})
+colors = {k: SIX_GROUP_COLORS[g] for k, g in zip(GROUP_KEYS, SIX_GROUP_ORDER)}
+unit_bars(axes[1], cnt, "group", "n_cells", GROUP_KEYS, AGG, colors=colors, mouse_colors=mouse_colors,
+          ylabel="cells" if AGG == "pooled" else f"cells per {UNIT}")
+axes[1].set_xticklabels([SIX_GROUP_LABELS[g] for g in SIX_GROUP_ORDER], fontsize=8)
+axes[1].set_title(f"Cells by group (unit = {UNIT}; {n_sessions_total} sessions, {n_animals_total} animals)")
+if AGG != "pooled":
+    mouse_legend(axes[1], mouse_colors, animals=analysis_celldata["animal_id"].unique(), loc="upper right")
+fig.suptitle(f"Cell counts -- {PROTOCOL}" + (f" (recombinase={RECOMBINASE_FILTER})" if RECOMBINASE_FILTER else ""),
+             y=1.03)
 fig.tight_layout()
 save_fig(fig, figdir, "1_cell_counts")
 
@@ -267,239 +233,167 @@ print(analysis_celldata.groupby("animal_id")["session_id"].apply(lambda s: (s.nu
 
 
 # --------------------------------------------------------------------- #
-# 5. Depth / laminar distribution -- pooled across sessions (depth is an
-#    absolute physical measurement, unlike xloc/yloc -- see module docstring)
+# 5. Depth / laminar distribution (depth is an absolute measurement)
 # --------------------------------------------------------------------- #
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-
-sns.violinplot(data=analysis_celldata, x="roi_name", y="depth", hue="labeled_grouped",
-                order=areas_present, hue_order=DEFAULT_LABEL_ORDER, split=True,
-                palette={"unl": "#cccccc", "lab": "#d62728"}, ax=axes[0])
+fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+group_unit_bars(axes[0], analysis_celldata, "depth", AGG, mouse_colors=mouse_colors,
+                min_cells_per_unit=MIN_CELLS_PER_UNIT)
 axes[0].invert_yaxis()  # depth increases downward from the pial surface
-axes[0].set_ylabel("depth (\u03bcm from pial surface)")
-axes[0].set_title("Depth by area/label")
+axes[0].set_ylabel("depth (μm from pial surface)")
+axes[0].set_title(f"Depth by group (unit = {UNIT})")
 
-layer_counts = (analysis_celldata.groupby(["roi_name", "layer"]).size()
-                .rename("n").reset_index())
-layer_pivot = layer_counts.pivot_table(index="roi_name", columns="layer", values="n", fill_value=0)
-layer_pivot = layer_pivot.reindex([a for a in areas_present if a in layer_pivot.index])
-
-# Order columns superficial-to-deep where the label is one of the usual
-# cortical layers; anything else (a naming convention this project
-# hasn't seen yet) is appended at the end and given a color from a
-# colormap, rather than the plot crashing on an unrecognized label (as
-# it did on real data, which turned out to also have 'L4' -- this
-# project's own synthetic data only ever generates L2/3/L5).
+# layer composition: fraction of each group's cells per layer (per unit first, then mean over units)
+lay = analysis_celldata.groupby(["group"] + UNIT_KEYS + ["layer"]).size().rename("n").reset_index()
+lay["frac"] = lay["n"] / lay.groupby(["group"] + UNIT_KEYS)["n"].transform("sum")
+if UNIT_KEYS:   # a unit with no cell in a layer contributes 0 to that layer's mean
+    allk = lay[["group"] + UNIT_KEYS].drop_duplicates().merge(
+        pd.DataFrame({"layer": lay["layer"].unique()}), how="cross")
+    lay = allk.merge(lay, on=["group"] + UNIT_KEYS + ["layer"], how="left").fillna({"frac": 0.0})
+layer_pivot = lay.groupby(["group", "layer"])["frac"].mean().unstack("layer").reindex(GROUP_KEYS).fillna(0.0)
 layers_present = list(layer_pivot.columns)
-ordered_layers = ([l for l in LAYER_ORDER if l in layers_present]
-                   + [l for l in layers_present if l not in LAYER_ORDER])
+ordered_layers = [l for l in LAYER_ORDER if l in layers_present] + [l for l in layers_present if l not in LAYER_ORDER]
 layer_pivot = layer_pivot[ordered_layers]
 layer_cmap = plt.colormaps["Blues"]
 layer_colors = {l: LAYER_COLORS_BASE.get(l, layer_cmap((i + 1) / (len(ordered_layers) + 1)))
-                 for i, l in enumerate(ordered_layers)}
-
-layer_pivot.plot(kind="bar", stacked=True, ax=axes[1], color=layer_colors,
-                  edgecolor="black", linewidth=0.3)
-axes[1].set_xlabel("area")
-axes[1].set_ylabel("cells")
-axes[1].set_title("Layer composition by area")
-axes[1].tick_params(axis="x", rotation=0)
+                for i, l in enumerate(ordered_layers)}
+layer_pivot.plot(kind="bar", stacked=True, ax=axes[1], color=layer_colors, edgecolor="black", linewidth=0.3)
+axes[1].set_xticklabels([SIX_GROUP_LABELS[g] for g in SIX_GROUP_ORDER], rotation=0, fontsize=8)
+axes[1].set_xlabel("")
+axes[1].set_ylabel("fraction of cells")
+axes[1].set_title("Layer composition" + ("" if AGG == "pooled" else f" (mean over {UNITS})"))
 axes[1].legend(title="layer", fontsize=8, frameon=False)
 
-# Depth per SESSION (small-multiples check: does depth range look
-# consistent across mice/sessions, or is one session an outlier -- e.g.
-# a different objective/zoom setting)
-sns.stripplot(data=analysis_celldata, x="session_id", y="depth", hue="roi_name",
-              order=session_order, palette=AREA_COLORS, size=2, alpha=0.5, ax=axes[2], legend=False)
+# depth per SESSION (consistency check: is one session an outlier -- e.g. a different objective/zoom)
+sns.stripplot(data=analysis_celldata, x="session_id", y="depth", hue="roi_name", order=session_order,
+              palette=AREA_COLORS, size=2, alpha=0.5, ax=axes[2], legend=False)
 axes[2].invert_yaxis()
 axes[2].tick_params(axis="x", rotation=90, labelsize=6)
-axes[2].set_ylabel("depth (\u03bcm)")
+axes[2].set_ylabel("depth (μm)")
 axes[2].set_title("Depth per session (consistency check)")
-
 fig.suptitle(f"Depth / laminar distribution -- {PROTOCOL}", y=1.03)
 fig.tight_layout()
 save_fig(fig, figdir, "2_depth_laminar_distribution")
 
-# Flag sessions whose median depth is a clear outlier relative to the
-# rest (e.g. a different objective/zoom setting that day) -- easy to
-# miss by eye in the strip plot above when there are many sessions.
 depth_by_session = analysis_celldata.groupby("session_id")["depth"].median()
 if len(depth_by_session) >= 4:
     med, spread = depth_by_session.median(), depth_by_session.std()
     outliers = depth_by_session[(depth_by_session - med).abs() > 2 * spread]
     if len(outliers):
-        print(f"\nDepth outlier session(s) (median depth >2 SD from the group median of "
-              f"{med:.0f}\u03bcm):")
+        print(f"\nDepth outlier session(s) (median depth >2 SD from the group median of {med:.0f}μm):")
         print(outliers.round(1).to_string())
 
 
 # --------------------------------------------------------------------- #
-# 6. x/y spatial distribution -- one panel PER (SESSION, AREA), never
-#    overlaid or pooled (see module docstring: this project's multi-area
-#    recordings very likely put each area on its own imaging plane even
-#    within one session, so xloc/yloc are local to (session, roi_name),
-#    not just session -- overlaying areas on shared axes, as an earlier
-#    version of this plot did, would mix independently-originated
-#    coordinate systems into one meaningless scatter).
+# 6. x/y spatial distribution -- one panel PER (SESSION, AREA), never overlaid or pooled
+#    (xloc/yloc are local to the (session, area) imaging plane)
 # --------------------------------------------------------------------- #
-existing_session_areas = set(analysis_celldata.groupby(["session_id", "roi_name"]).groups.keys())
-session_area_order = [(sid, a) for sid in session_order for a in areas_present
-                       if (sid, a) in existing_session_areas]
-MAX_PANELS_PER_GRID_PAGE = MAX_SESSIONS_PER_GRID_PAGE * len(areas_present) if areas_present else MAX_SESSIONS_PER_GRID_PAGE
-n_pages = int(np.ceil(len(session_area_order) / MAX_PANELS_PER_GRID_PAGE))
-for page in range(n_pages):
-    page_panels = session_area_order[page * MAX_PANELS_PER_GRID_PAGE:(page + 1) * MAX_PANELS_PER_GRID_PAGE]
-    ncols = min(GRID_NCOLS, len(page_panels))
-    nrows = int(np.ceil(len(page_panels) / ncols))
-    fig, axes = plt.subplots(nrows, ncols, figsize=(3.6 * ncols, 3.6 * nrows), squeeze=False)
-    flat_axes = axes.flatten()
-
-    for ax, (session_id, area) in zip(flat_axes, page_panels):
-        sdf = analysis_celldata[(analysis_celldata["session_id"] == session_id)
-                                 & (analysis_celldata["roi_name"] == area)]
-        for label in DEFAULT_LABEL_ORDER:
-            sub = sdf[sdf["labeled"] == label]
-            if sub.empty:
-                continue
-            ax.scatter(sub["xloc"], sub["yloc"], s=10 if label == "unl" else 22,
-                       color=AREA_COLORS.get(area, "gray"), marker=LABEL_MARKERS[label],
-                       alpha=0.6 if label == "unl" else 0.9,
-                       edgecolor="black" if label == "lab" else "none", linewidth=0.4)
-        ax.set_title(f"{session_id}\n{area}", fontsize=7)
-        ax.set_aspect("equal")
-        ax.set_xticks([])
-        ax.set_yticks([])
-    for ax in flat_axes[len(page_panels):]:
-        ax.set_visible(False)
-
-    handles = [plt.Line2D([0], [0], marker=LABEL_MARKERS[l], linestyle="none", markerfacecolor="gray",
-                           markeredgecolor="black" if l == "lab" else "none", markersize=7, label=l)
-               for l in DEFAULT_LABEL_ORDER]
-    handles += [plt.Line2D([0], [0], marker="s", linestyle="none", markerfacecolor=AREA_COLORS[a],
-                            markersize=8, label=a) for a in areas_present]
-    fig.legend(handles=handles, loc="center left", bbox_to_anchor=(1.0, 0.5), fontsize=8, frameon=False)
-    fig.suptitle(f"Cell positions per (session, area) (FOV/plane-local coordinates, NOT aligned "
-                 f"across sessions OR areas) -- page {page + 1}/{n_pages}", y=1.01)
-    fig.tight_layout()
-    save_fig(fig, figdir, f"3_xy_positions_page{page + 1}")
-
-
-# --------------------------------------------------------------------- #
-# 6b. SUPPLEMENTARY to the above (not a replacement): the same
-#    per-session layout, but synthesized into semi-transparent 2D KDE
-#    "blobs" per area instead of every individual cell -- a cleaner
-#    read of WHERE each area sits in the FOV at a glance across many
-#    sessions. Labeled cells are still plotted individually on top,
-#    since those (and specifically their clustering) are what the
-#    proximity filter depends on -- worth keeping visible even in this
-#    smoothed-out view.
-# --------------------------------------------------------------------- #
-MIN_CELLS_FOR_KDE = 15  # below this a KDE contour is more noise than signal -- fall back
-                         # to a plain scatter for that area/session instead
-
-for page in range(n_pages):
-    page_panels = session_area_order[page * MAX_PANELS_PER_GRID_PAGE:(page + 1) * MAX_PANELS_PER_GRID_PAGE]
-    ncols = min(GRID_NCOLS, len(page_panels))
-    nrows = int(np.ceil(len(page_panels) / ncols))
-    fig, axes = plt.subplots(nrows, ncols, figsize=(3.6 * ncols, 3.6 * nrows), squeeze=False)
-    flat_axes = axes.flatten()
-
-    for ax, (session_id, area) in zip(flat_axes, page_panels):
-        sdf = analysis_celldata[(analysis_celldata["session_id"] == session_id)
-                                 & (analysis_celldata["roi_name"] == area)]
-        if sdf.empty:
-            continue
-        if len(sdf) < MIN_CELLS_FOR_KDE or sdf["xloc"].std() == 0 or sdf["yloc"].std() == 0:
-            ax.scatter(sdf["xloc"], sdf["yloc"], s=8, color=AREA_COLORS.get(area, "gray"),
-                       alpha=0.5, linewidth=0)
+def plot_xy_pages(kind):
+    """x/y maps: ONE ROW PER SESSION, one fixed COLUMN PER AREA (same area in the same column on every row;
+    an area not recorded in a session leaves its panel empty). kind = "scatter" | "kde" (smoothed 2D density
+    per area, labeled cells still individual on top)."""
+    n_cols = len(areas_present)
+    n_pages = int(np.ceil(len(session_order) / MAX_SESSIONS_PER_GRID_PAGE))
+    for page in range(n_pages):
+        page_sessions = session_order[page * MAX_SESSIONS_PER_GRID_PAGE:(page + 1) * MAX_SESSIONS_PER_GRID_PAGE]
+        fig, axes = plt.subplots(len(page_sessions), n_cols, figsize=(3.4 * n_cols, 3.2 * len(page_sessions)),
+                                 squeeze=False, sharex=True, sharey = True)
+        for i, session_id in enumerate(page_sessions):
+            for j, area in enumerate(areas_present):
+                ax = axes[i, j]
+                # ax.set_xticks([])
+                # ax.set_yticks([])
+                if i == 0:
+                    ax.set_title(area, color=AREA_COLORS.get(area, "black"), fontsize=10)
+                if j == 0:
+                    ax.set_ylabel(session_id, fontsize=7)
+                sdf = analysis_celldata[(analysis_celldata["session_id"] == session_id)
+                                        & (analysis_celldata["roi_name"] == area)]
+                if sdf.empty:
+                    ax.text(0.5, 0.5, "not recorded", transform=ax.transAxes, ha="center", va="center",
+                            fontsize=7, color="grey")
+                    for sp in ax.spines.values():
+                        sp.set_visible(False)
+                    continue
+                color = AREA_COLORS.get(area, "gray")
+                if kind == "scatter":
+                    for label in DEFAULT_LABEL_ORDER:
+                        sub = sdf[sdf["labeled"] == label]
+                        if sub.empty:
+                            continue
+                        ax.scatter(sub["xloc"], sub["yloc"], s=10 if label == "unl" else 22, color=color,
+                                   marker=LABEL_MARKERS[label], alpha=0.6 if label == "unl" else 0.9,
+                                   edgecolor="black" if label == "lab" else "none", linewidth=0.4)
+                else:
+                    if len(sdf) < MIN_CELLS_FOR_KDE or sdf["xloc"].std() == 0 or sdf["yloc"].std() == 0:
+                        ax.scatter(sdf["xloc"], sdf["yloc"], s=8, color=color, alpha=0.5, linewidth=0)
+                    else:
+                        try:
+                            sns.kdeplot(x=sdf["xloc"], y=sdf["yloc"], ax=ax, fill=True, color=color, alpha=0.45,
+                                        levels=5, thresh=0.15, bw_adjust=1.2, cut=0.5)
+                        except Exception:
+                            ax.scatter(sdf["xloc"], sdf["yloc"], s=8, color=color, alpha=0.5, linewidth=0)
+                    lab = sdf[sdf["labeled"] == "lab"]
+                    if not lab.empty:
+                        ax.scatter(lab["xloc"], lab["yloc"], s=14, color=color, marker="^", edgecolor="black",
+                                   linewidth=0.4, alpha=0.9)
+                    x_pad = max((sdf["xloc"].max() - sdf["xloc"].min()) * 0.05, 1.0)
+                    y_pad = max((sdf["yloc"].max() - sdf["yloc"].min()) * 0.05, 1.0)
+                    # ax.set_xlim(sdf["xloc"].min() - x_pad, sdf["xloc"].max() + x_pad)
+                    # ax.set_ylim(sdf["yloc"].min() - y_pad, sdf["yloc"].max() + y_pad)
+                ax.set_aspect("equal")
+        if kind == "scatter":
+            handles = [plt.Line2D([0], [0], marker=LABEL_MARKERS[l], linestyle="none", markerfacecolor="gray",
+                                  markeredgecolor="black" if l == "lab" else "none", markersize=7, label=l)
+                       for l in DEFAULT_LABEL_ORDER]
+            title = "Cell positions"
+            name = f"3_xy_positions_page{page + 1}"
         else:
-            try:
-                # cut=0.5 (not seaborn's default 3): a KDE naturally
-                # extends several bandwidths past the data it's fit on,
-                # and with the default cut that padding was large enough
-                # to make every panel look "zoomed out" relative to
-                # where the cells actually are -- see the explicit
-                # set_xlim/set_ylim below too, which crops each panel
-                # tightly to that (session, area)'s own real cell
-                # coordinates regardless of how far the fitted contour
-                # extends.
-                sns.kdeplot(x=sdf["xloc"], y=sdf["yloc"], ax=ax, fill=True,
-                            color=AREA_COLORS.get(area, "gray"), alpha=0.45, levels=5,
-                            thresh=0.15, bw_adjust=1.2, cut=0.5)
-            except Exception:
-                ax.scatter(sdf["xloc"], sdf["yloc"], s=8, color=AREA_COLORS.get(area, "gray"),
-                           alpha=0.5, linewidth=0)
+            handles = [plt.Line2D([0], [0], marker="^", linestyle="none", markerfacecolor="gray",
+                                  markeredgecolor="black", markersize=7, label="labeled cell")]
+            title = "Cell density (2D KDE; labeled cells on top)"
+            name = f"3b_xy_density_page{page + 1}"
+        fig.legend(handles=handles, loc="center left", bbox_to_anchor=(1.0, 0.5), fontsize=8, frameon=False)
+        fig.suptitle(f"{title}: one row per session, one column per area (FOV/plane-local coordinates, NOT aligned "
+                     f"across sessions OR areas) -- page {page + 1}/{n_pages}", y=1.0, fontsize=9)
+        fig.tight_layout()
+        save_fig(fig, figdir, name)
+        plt.close(fig)
 
-        lab = sdf[sdf["labeled"] == "lab"]
-        if not lab.empty:
-            ax.scatter(lab["xloc"], lab["yloc"], s=14, color=AREA_COLORS.get(area, "gray"),
-                       marker="^", edgecolor="black", linewidth=0.4, alpha=0.9)
 
-        # Crop to this (session, area)'s actual cell extent (+5% margin)
-        # -- without this, matplotlib auto-scales to the KDE contours'
-        # extent (which always overshoots the real data due to
-        # bandwidth smoothing, even with cut reduced above), making the
-        # whole panel look zoomed out relative to where the cells are.
-        x_span = sdf["xloc"].max() - sdf["xloc"].min()
-        y_span = sdf["yloc"].max() - sdf["yloc"].min()
-        x_pad = max(x_span * 0.05, 1.0)
-        y_pad = max(y_span * 0.05, 1.0)
-        ax.set_xlim(sdf["xloc"].min() - x_pad, sdf["xloc"].max() + x_pad)
-        ax.set_ylim(sdf["yloc"].min() - y_pad, sdf["yloc"].max() + y_pad)
-
-        ax.set_title(f"{session_id}\n{area}", fontsize=7)
-        ax.set_aspect("equal")
-        ax.set_xticks([])
-        ax.set_yticks([])
-    for ax in flat_axes[len(page_panels):]:
-        ax.set_visible(False)
-
-    handles = [plt.Line2D([0], [0], marker="o", linestyle="none", markerfacecolor=AREA_COLORS[a],
-                           markeredgecolor="none", markersize=10, alpha=0.6, label=a) for a in areas_present]
-    handles += [plt.Line2D([0], [0], marker="^", linestyle="none", markerfacecolor="gray",
-                            markeredgecolor="black", markersize=7, label="labeled cell")]
-    fig.legend(handles=handles, loc="center left", bbox_to_anchor=(1.0, 0.5), fontsize=8, frameon=False)
-    fig.suptitle(f"Cell density per (session, area), synthesized (2D KDE; labeled cells still shown "
-                 f"individually on top) -- page {page + 1}/{n_pages}", y=1.01)
-    fig.tight_layout()
-    save_fig(fig, figdir, f"3b_xy_density_page{page + 1}")
+plot_xy_pages("scatter")
+plot_xy_pages("kde")
 
 
 # --------------------------------------------------------------------- #
-# 7. Cell size/shape properties by area/label
+# 7. Cell size/shape properties by group, at the unit of analysis
 # --------------------------------------------------------------------- #
-size_vars = [("radius", "radius (\u03bcm)"), ("npix", "ROI size (pixels)"),
-             ("npix_soma", "soma size (pixels)"), ("skew", "trace skewness"),
-             ("iscell_prob", "iscell probability")]
+size_vars = [("radius", "radius (μm)"), ("npix", "ROI size (pixels)"), ("npix_soma", "soma size (pixels)"),
+             ("skew", "trace skewness"), ("iscell_prob", "iscell probability")]
 size_vars = [(v, lbl) for v, lbl in size_vars if v in analysis_celldata.columns]
-
 if size_vars:
-    fig, axes = plt.subplots(1, len(size_vars), figsize=(4 * len(size_vars), 4), squeeze=False)
+    fig, axes = plt.subplots(1, len(size_vars), figsize=(4.2 * len(size_vars), 4), squeeze=False)
     for ax, (var, lbl) in zip(axes[0], size_vars):
-        sns.violinplot(data=analysis_celldata, x="roi_name", y=var, hue="labeled_grouped",
-                        order=areas_present, hue_order=DEFAULT_LABEL_ORDER, split=True,
-                        palette={"unl": "#cccccc", "lab": "#d62728"}, ax=ax, legend=(var == size_vars[0][0]))
-        ax.set_ylabel(lbl)
-        ax.set_xlabel("")
-    fig.suptitle(f"Cell size/shape properties -- {PROTOCOL}", y=1.02)
+        group_unit_bars(ax, analysis_celldata, var, AGG, mouse_colors=mouse_colors,
+                        min_cells_per_unit=MIN_CELLS_PER_UNIT, ylabel=lbl, tick_size=6)
+    fig.suptitle(f"Cell size/shape properties by group -- {PROTOCOL} (unit = {UNIT})", y=1.02)
     fig.tight_layout()
     save_fig(fig, figdir, "4_cell_size_properties")
 
+# report: everything plotted by group, per unit
+report_vars = ["depth"] + [v for v, _ in size_vars]
+group_unit_table(analysis_celldata, report_vars, AGG).to_csv(
+    table_dir / f"cell_properties_by_unit{AGG_SUFFIX}.csv", index=False)
+
 
 # --------------------------------------------------------------------- #
-# 7b. How many labeled reference cells actually exist per session/area
-#    -- directly explains a 0% proximity-filter pass rate for a given
-#    session/area: is it because there were NO labeled cells that day
-#    (nothing to be near), or because labeled cells existed but were
-#    far from the unlabeled population? Distinguishing these matters
-#    for whether a session should just be excluded outright.
+# 7b. Labeled reference cells per session/area (explains a 0% proximity pass rate)
 # --------------------------------------------------------------------- #
 n_labeled_rows = []
 for session_id in session_order:
     sdf = celldata[celldata["session_id"] == session_id]
     for area in PROXIMITY_AREAS:
         n_labeled_rows.append({"session_id": session_id, "area": area,
-                                "n_labeled": int(((sdf["roi_name"] == area) & (sdf["labeled"] == "lab")).sum())})
+                               "n_labeled": int(((sdf["roi_name"] == area) & (sdf["labeled"] == "lab")).sum())})
 n_labeled_df = pd.DataFrame(n_labeled_rows)
 
 fig, ax = plt.subplots(figsize=(max(8, 0.4 * len(session_order)), 4))
@@ -507,30 +401,23 @@ width = 0.35
 x = np.arange(len(session_order))
 for i, area in enumerate(PROXIMITY_AREAS):
     sub = n_labeled_df[n_labeled_df["area"] == area].set_index("session_id").reindex(session_order)
-    ax.bar(x + (i - 0.5) * width, sub["n_labeled"].to_numpy(), width=width,
-           color=AREA_COLORS.get(area, "gray"), label=area, edgecolor="black", linewidth=0.3)
+    ax.bar(x + (i - 0.5) * width, sub["n_labeled"].to_numpy(), width=width, color=AREA_COLORS.get(area, "gray"),
+           label=area, edgecolor="black", linewidth=0.3)
 ax.axhline(0, color="black", linewidth=0.8)
 ax.set_xticks(x)
 ax.set_xticklabels(session_order, rotation=90, fontsize=6)
 ax.set_ylabel("labeled cells")
-ax.set_title("Labeled reference cells per session (V1/PM) -- context for the pass-rate figure below: "
-             "a session with 0 labeled cells here will show 0% pass rate regardless of geometry")
+ax.set_title("Labeled reference cells per session (V1/PM) -- a session with 0 here will show 0% pass rate")
 ax.legend(fontsize=8, frameon=False)
 fig.tight_layout()
 save_fig(fig, figdir, "5a_labeled_cells_per_session")
 
 
 # --------------------------------------------------------------------- #
-# 7c. Actual distribution of nearest-labeled-cell distances (not just
-#    the binary pass/fail) -- shows whether PROXIMITY_RADIUS_UM sits in
-#    a natural gap or cuts through a smooth continuum, i.e. whether 50um
-#    is actually a meaningful threshold for this data or an arbitrary
-#    one. Pooled across sessions (a distance in microns is comparable
-#    across sessions, unlike raw xloc/yloc -- see module docstring).
+# 7c. Distribution of nearest-labeled-cell distances (is PROXIMITY_RADIUS_UM in a natural gap?)
 # --------------------------------------------------------------------- #
 dist_to_labeled = nearest_labeled_distance(celldata, areas=PROXIMITY_AREAS)
 dist_df = pd.DataFrame({"area": celldata["roi_name"], "distance": dist_to_labeled}).dropna()
-
 if len(dist_df):
     fig, axes = plt.subplots(1, len(PROXIMITY_AREAS), figsize=(5 * len(PROXIMITY_AREAS), 4), squeeze=False)
     for ax, area in zip(axes[0], PROXIMITY_AREAS):
@@ -539,53 +426,43 @@ if len(dist_df):
             continue
         ax.hist(sub, bins=40, color=AREA_COLORS.get(area, "gray"), edgecolor="black", linewidth=0.3)
         ax.axvline(PROXIMITY_RADIUS_UM, color="firebrick", linestyle="--", linewidth=1.5,
-                   label=f"{PROXIMITY_RADIUS_UM:.0f}\u03bcm threshold")
-        frac_below = float((sub <= PROXIMITY_RADIUS_UM).mean())
-        ax.set_xlabel("distance to nearest labeled same-area cell (\u03bcm)")
+                   label=f"{PROXIMITY_RADIUS_UM:.0f}μm threshold")
+        ax.set_xlabel("distance to nearest labeled same-area cell (μm)")
         ax.set_ylabel("unlabeled cells")
-        ax.set_title(f"{area} (n={len(sub)}, {frac_below:.0%} within threshold)")
+        ax.set_title(f"{area} (n={len(sub)}, {float((sub <= PROXIMITY_RADIUS_UM).mean()):.0%} within threshold)")
         ax.legend(fontsize=8, frameon=False)
-    fig.suptitle("How unlabeled V1/PM cells are actually distributed relative to the labeled "
-                 "population\n(sessions with no labeled cells in an area are excluded here, not shown as 0)",
-                 y=1.05)
+    fig.suptitle("Unlabeled V1/PM cells relative to the labeled population\n(sessions with no labeled cells in an "
+                 "area are excluded here, not shown as 0)", y=1.05)
     fig.tight_layout()
     save_fig(fig, figdir, "5b_distance_to_labeled_distribution")
 
 
 # --------------------------------------------------------------------- #
-# 8. Proximity-filter diagnostic: fraction of unlabeled V1/PM cells
-#    passing the filter, per session -- flags sessions where the
-#    labeling was sparse/absent for one area (proximity filter fails
-#    almost everything there) vs. sessions with good coverage.
+# 8. Proximity-filter pass rate per session (unfiltered diagnostic)
 # --------------------------------------------------------------------- #
 prox_rows = []
 for session_id in session_order:
-    sdf = celldata[celldata["session_id"] == session_id]  # unfiltered -- want the diagnostic
-                                                            # regardless of APPLY_PROXIMITY_FILTER
+    sdf = celldata[celldata["session_id"] == session_id]
     for area in PROXIMITY_AREAS:
         unl = sdf[(sdf["roi_name"] == area) & (sdf["labeled"] == "unl")]
         if unl.empty:
             continue
-        frac_pass = float(unl["passes_proximity_filter"].mean())
-        prox_rows.append({"session_id": session_id, "area": area, "frac_pass": frac_pass, "n": len(unl)})
-
+        prox_rows.append({"session_id": session_id, "area": area,
+                          "frac_pass": float(unl["passes_proximity_filter"].mean()), "n": len(unl)})
 if prox_rows:
     prox_df = pd.DataFrame(prox_rows)
     fig, ax = plt.subplots(figsize=(max(8, 0.4 * len(session_order)), 4.5))
-    width = 0.35
-    x = np.arange(len(session_order))
     for i, area in enumerate(PROXIMITY_AREAS):
         sub = prox_df[prox_df["area"] == area].set_index("session_id").reindex(session_order)
-        ax.bar(x + (i - 0.5) * width, sub["frac_pass"].to_numpy(), width=width,
-               color=AREA_COLORS.get(area, "gray"), label=area, edgecolor="black", linewidth=0.3)
+        ax.bar(x + (i - 0.5) * width, sub["frac_pass"].to_numpy(), width=width, color=AREA_COLORS.get(area, "gray"),
+               label=area, edgecolor="black", linewidth=0.3)
     ax.set_xticks(x)
     ax.set_xticklabels(session_order, rotation=90, fontsize=6)
-    ax.set_ylabel(f"fraction of unlabeled cells within {PROXIMITY_RADIUS_UM:.0f}\u03bcm of a labeled cell")
+    ax.set_ylabel(f"fraction of unlabeled cells within {PROXIMITY_RADIUS_UM:.0f}μm of a labeled cell")
     ax.set_ylim(0, 1.05)
-    ax.set_title(f"Proximity-filter pass rate per session (V1/PM, unlabeled cells)")
+    ax.set_title("Proximity-filter pass rate per session (V1/PM, unlabeled cells)")
     ax.legend(fontsize=8, frameon=False)
     fig.tight_layout()
     save_fig(fig, figdir, "5_proximity_filter_pass_rate")
 
-print(f"\nWrote tables to {paths.out}, figures to {figdir}")
-print("Run `python b_progress/make_progress_md.py 2a_cell_distribution` to build a markdown summary.")
+print(f"\nWrote tables to {table_dir}, figures to {figdir}")

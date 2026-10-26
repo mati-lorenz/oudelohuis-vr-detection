@@ -77,7 +77,7 @@ N_FACTORS = 5   # fixed, modest factor count -- a cross-validated choice (compar
 N_SHUFFLES = 20
 RANDOM_STATE = 0
 
-N_JOBS_SESSIONS = 13
+N_JOBS_SESSIONS = -1
 JOBLIB_VERBOSE = 5
 
 parser = argparse.ArgumentParser()
@@ -261,7 +261,7 @@ if len(shuffle_results):
                 continue
             area_order = [a for a in DEFAULT_AREA_ORDER if a in sub["roi_name"].unique()]
             fig, ax = plt.subplots(figsize=(max(6, 1.3 * len(area_order)), 5))
-            sns.violinplot(data=sub, x="roi_name", y="communality", order=area_order, hue="roi_name",
+            sns.boxplot(showfliers=False, data=sub, x="roi_name", y="communality", order=area_order, hue="roi_name",
                             palette=AREA_COLORS, legend=False, ax=ax)
             ax.set_ylim(0, 1)
             ax.set_xlabel("")

@@ -1,6 +1,6 @@
 # 1c_behavior
 
-*Auto-generated from `2_pipeline/1c_behavior/out/` on 2026-09-14 16:47. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/1c_behavior/out/` on 2026-10-16 17:39. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 
@@ -43,6 +43,45 @@
 
 [behavior_mi_vs_linear.csv](../2_pipeline/1c_behavior/out/behavior_mi_vs_linear.csv)
 
+### Behavior mi vs linear  session
+
+| protocol | window | var_x | var_y | n_trials | r | r2 | p_linear | mi_bits_raw | mi_bits_shuffle_mean | mi_bits_corrected | mi_p_value | mi_bits_from_r2 | mi_reference_bits | frac_explained_linearly |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DM | pre_stim | zpos | runspeed | 157 | 0.3511 | 0.1233 | 6.512e-06 | 0.4738 | 0.02093 | 0.4528 | 0 | 0.09492 | 0.4528 | 0.2096 |
+| DM | pre_stim | zpos | lick | 157 | -0.2563 | 0.06571 | 0.001193 | 0.08817 | 0.01409 | 0.07408 | 0 | 0.04903 | 0.07408 | 0.6618 |
+| DM | pre_stim | runspeed | lick | 157 | -0.5885 | 0.3463 | 5.285e-16 | 0.3286 | 0.02411 | 0.3045 | 0 | 0.3067 | 0.3067 | 1 |
+| DM | pre_stim | zpos | runspeed | 122 | -0.001041 | 1.084e-06 | 0.9909 | 0.3102 | 0.0241 | 0.2861 | 0 | 7.821e-07 | 0.2861 | 2.734e-06 |
+| DM | pre_stim | zpos | lick | 122 | -0.1204 | 0.0145 | 0.1865 | 0 | 0.03046 | 0 | 1 | 0.01054 | 0.01054 | 1 |
+| DM | pre_stim | runspeed | lick | 122 | -0.592 | 0.3505 | 6.898e-13 | 0.3271 | 0.02603 | 0.301 | 0 | 0.3113 | 0.3113 | 1 |
+| DM | pre_stim | zpos | runspeed | 104 | 0.4547 | 0.2067 | 1.243e-06 | 0.4961 | 0.02027 | 0.4759 | 0 | 0.1671 | 0.4759 | 0.3511 |
+| DM | pre_stim | zpos | lick | 104 | -0.318 | 0.1011 | 0.001002 | 0.4426 | 0.008619 | 0.434 | 0 | 0.07692 | 0.434 | 0.1772 |
+| DM | pre_stim | runspeed | lick | 104 | -0.3962 | 0.157 | 3.138e-05 | 0.476 | 0.0183 | 0.4577 | 0 | 0.1232 | 0.4577 | 0.2691 |
+| DM | pre_stim | zpos | runspeed | 98 | 0.2348 | 0.05513 | 0.01996 | 0.09219 | 0.02346 | 0.06872 | 0 | 0.0409 | 0.06872 | 0.5952 |
+| DM | pre_stim | zpos | lick | 98 | -0.07215 | 0.005206 | 0.4802 | 0.04855 | 0.02674 | 0.02181 | 0.3 | 0.003765 | 0.02181 | 0.1727 |
+| DM | pre_stim | runspeed | lick | 98 | -0.4114 | 0.1693 | 2.57e-05 | 0.2884 | 0.03234 | 0.2561 | 0 | 0.1338 | 0.2561 | 0.5224 |
+| DM | pre_stim | zpos | runspeed | 147 | 0.3714 | 0.1379 | 3.633e-06 | 0.2217 | 0.01159 | 0.2101 | 0 | 0.1071 | 0.2101 | 0.5096 |
+| DM | pre_stim | zpos | lick | 147 | -0.3966 | 0.1573 | 6.603e-07 | 0.1898 | 0.01283 | 0.177 | 0 | 0.1234 | 0.177 | 0.6975 |
+| DM | pre_stim | zpos | motionenergy | 147 | -0.3487 | 0.1216 | 1.501e-05 | 0.3457 | 0.02106 | 0.3246 | 0 | 0.09353 | 0.3246 | 0.2881 |
+| DM | pre_stim | zpos | videoPC_0 | 147 | -0.1748 | 0.03056 | 0.03421 | 0.558 | 0.01968 | 0.5383 | 0 | 0.02239 | 0.5383 | 0.04159 |
+| DM | pre_stim | zpos | videoPC_1 | 147 | -0.1961 | 0.03844 | 0.01731 | 0.2953 | 0.02895 | 0.2664 | 0 | 0.02828 | 0.2664 | 0.1062 |
+| DM | pre_stim | runspeed | lick | 147 | -0.3074 | 0.0945 | 0.0001522 | 0.06974 | 0.01014 | 0.0596 | 0 | 0.07161 | 0.07161 | 1 |
+| DM | pre_stim | runspeed | motionenergy | 147 | 0.009468 | 8.964e-05 | 0.9094 | 0.2025 | 0.01592 | 0.1865 | 0 | 6.467e-05 | 0.1865 | 0.0003466 |
+| DM | pre_stim | runspeed | videoPC_0 | 147 | 0.3963 | 0.157 | 6.741e-07 | 0.2914 | 0.01617 | 0.2752 | 0 | 0.1232 | 0.2752 | 0.4478 |
+| DM | pre_stim | runspeed | videoPC_1 | 147 | -0.1834 | 0.03365 | 0.02614 | 0 | 0.012 | 0 | 1 | 0.02469 | 0.02469 | 1 |
+| DM | pre_stim | lick | motionenergy | 147 | 0.2548 | 0.06493 | 0.001842 | 0.03997 | 0.002806 | 0.03717 | 0 | 0.04842 | 0.04842 | 1 |
+| DM | pre_stim | lick | videoPC_0 | 147 | -0.03218 | 0.001035 | 0.6988 | 0.04626 | 0.008314 | 0.03794 | 0.05 | 0.0007473 | 0.03794 | 0.0197 |
+| DM | pre_stim | lick | videoPC_1 | 147 | 0.1002 | 0.01004 | 0.2273 | 0.0112 | 0.005675 | 0.005527 | 0.2 | 0.007276 | 0.007276 | 1 |
+| DM | pre_stim | motionenergy | videoPC_0 | 147 | 0.01435 | 0.0002058 | 0.8631 | 0.7651 | 0.0239 | 0.7413 | 0 | 0.0001485 | 0.7413 | 0.0002003 |
+| DM | pre_stim | motionenergy | videoPC_1 | 147 | -0.2564 | 0.06572 | 0.001723 | 0.03748 | 0.02108 | 0.0164 | 0.25 | 0.04904 | 0.04904 | 1 |
+| DM | pre_stim | videoPC_0 | videoPC_1 | 147 | -0.05489 | 0.003013 | 0.509 | 0.09737 | 0.006381 | 0.09099 | 0 | 0.002177 | 0.09099 | 0.02392 |
+| DM | pre_stim | zpos | runspeed | 169 | -0.008763 | 7.679e-05 | 0.91 | 0.1279 | 0.01288 | 0.115 | 0 | 5.539e-05 | 0.115 | 0.0004815 |
+| DM | pre_stim | zpos | lick | 169 | -0.1434 | 0.02056 | 0.06294 | 0.0325 | 0.01129 | 0.02121 | 0.15 | 0.01498 | 0.02121 | 0.7063 |
+| DM | pre_stim | zpos | motionenergy | 169 | 0.06155 | 0.003788 | 0.4267 | 0.07201 | 0.0108 | 0.06121 | 0.05 | 0.002738 | 0.06121 | 0.04473 |
+
+*(showing first 15 of 18 columns; showing first 30 of 4545 rows -- see the linked CSV for the rest)*
+
+[behavior_mi_vs_linear__session.csv](../2_pipeline/1c_behavior/out/behavior_mi_vs_linear__session.csv)
+
 ### Behavior multivariate mi vs linear
 
 | protocol | window | target | predictors | n_predictors | n_trials | r2 | adj_r2 | p_linear | mi_bits_raw | mi_bits_shuffle_mean | mi_bits_corrected | mi_p_value | mi_bits_from_r2 | mi_reference_bits |
@@ -82,6 +121,45 @@
 
 [behavior_multivariate_mi_vs_linear.csv](../2_pipeline/1c_behavior/out/behavior_multivariate_mi_vs_linear.csv)
 
+### Behavior multivariate mi vs linear  session
+
+| protocol | window | target | predictors | n_predictors | n_trials | r2 | adj_r2 | p_linear | mi_bits_raw | mi_bits_shuffle_mean | mi_bits_corrected | mi_p_value | mi_bits_from_r2 | mi_reference_bits |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DM | pre_stim | zpos | runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 87 | 0.7992 | 0.7786 | 3.815e-24 | 0.7084 | 0.02151 | 0.6868 | 0 | 1.158 | 1.158 |
+| DM | pre_stim | runspeed | zpos, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 87 | 0.4992 | 0.4478 | 2.982e-09 | 0.3316 | 0.009636 | 0.3219 | 0 | 0.4989 | 0.4989 |
+| DM | pre_stim | lick | zpos, runspeed, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 87 | 0.8141 | 0.795 | 1.999e-25 | 0.6528 | 0.02528 | 0.6276 | 0 | 1.214 | 1.214 |
+| DM | pre_stim | pupil_area | zpos, runspeed, lick, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 87 | 0.7011 | 0.6704 | 1.438e-17 | 0.6981 | 0.03513 | 0.6629 | 0 | 0.8711 | 0.8711 |
+| DM | pre_stim | pupil_xpos | zpos, runspeed, lick, pupil_area, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 87 | 0.8823 | 0.8702 | 4.64e-33 | 0.7624 | 0.01662 | 0.7458 | 0 | 1.543 | 1.543 |
+| DM | pre_stim | pupil_ypos | zpos, runspeed, lick, pupil_area, pupil_xpos, motionenergy, videoPC_0, videoPC_1 | 8 | 87 | 0.8874 | 0.8758 | 8.426e-34 | 0.8319 | 0.03392 | 0.798 | 0 | 1.575 | 1.575 |
+| DM | pre_stim | motionenergy | zpos, runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, videoPC_0, videoPC_1 | 8 | 87 | 0.8944 | 0.8836 | 6.899e-35 | 0.3674 | 0.01253 | 0.3549 | 0 | 1.622 | 1.622 |
+| DM | pre_stim | videoPC_0 | zpos, runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_1 | 8 | 87 | 0.9379 | 0.9316 | 7.96e-44 | 0.863 | 0.01725 | 0.8458 | 0 | 2.005 | 2.005 |
+| DM | pre_stim | videoPC_1 | zpos, runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0 | 8 | 87 | 0.9533 | 0.9485 | 1.28e-48 | 0.7487 | 0.01455 | 0.7341 | 0 | 2.21 | 2.21 |
+| DM | pre_stim | zpos | runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 117 | 0.5185 | 0.4828 | 3.123e-14 | 0.4478 | 0.01718 | 0.4307 | 0 | 0.5271 | 0.5271 |
+| DM | pre_stim | runspeed | zpos, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 117 | 0.644 | 0.6176 | 4.85e-21 | 0.5351 | 0.02434 | 0.5108 | 0 | 0.745 | 0.745 |
+| DM | pre_stim | lick | zpos, runspeed, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 117 | 0.4475 | 0.4065 | 3.428e-11 | 0.3098 | 0.01975 | 0.29 | 0 | 0.4279 | 0.4279 |
+| DM | pre_stim | pupil_area | zpos, runspeed, lick, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 117 | 0.7748 | 0.7581 | 1.502e-31 | 0.6107 | 0.009231 | 0.6014 | 0 | 1.075 | 1.075 |
+| DM | pre_stim | pupil_xpos | zpos, runspeed, lick, pupil_area, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 117 | 0.8078 | 0.7936 | 3.248e-35 | 0.4768 | 0.02086 | 0.456 | 0 | 1.19 | 1.19 |
+| DM | pre_stim | pupil_ypos | zpos, runspeed, lick, pupil_area, pupil_xpos, motionenergy, videoPC_0, videoPC_1 | 8 | 117 | 0.6156 | 0.5871 | 2.686e-19 | 0.4393 | 0.007594 | 0.4318 | 0 | 0.6896 | 0.6896 |
+| DM | pre_stim | motionenergy | zpos, runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, videoPC_0, videoPC_1 | 8 | 117 | 0.7277 | 0.7076 | 3.545e-27 | 0.5824 | 0.02737 | 0.555 | 0 | 0.9385 | 0.9385 |
+| DM | pre_stim | videoPC_0 | zpos, runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_1 | 8 | 117 | 0.6901 | 0.6672 | 3.281e-24 | 0.4767 | 0.01815 | 0.4585 | 0 | 0.8452 | 0.8452 |
+| DM | pre_stim | videoPC_1 | zpos, runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0 | 8 | 117 | 0.5251 | 0.4899 | 1.539e-14 | 0.4716 | 0.0207 | 0.4509 | 0 | 0.5371 | 0.5371 |
+| DM | pre_stim | zpos | runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 207 | 0.5959 | 0.5796 | 4.044e-35 | 0.5677 | 0.01241 | 0.5553 | 0 | 0.6537 | 0.6537 |
+| DM | pre_stim | runspeed | zpos, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 207 | 0.4565 | 0.4346 | 1.024e-22 | 0.3912 | 0.009846 | 0.3813 | 0 | 0.4399 | 0.4399 |
+| DM | pre_stim | lick | zpos, runspeed, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 207 | 0.8806 | 0.8758 | 4.891e-87 | 0.4527 | 0.00977 | 0.443 | 0 | 1.533 | 1.533 |
+| DM | pre_stim | pupil_area | zpos, runspeed, lick, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 207 | 0.5734 | 0.5562 | 7.74e-33 | 0.488 | 0.01988 | 0.4681 | 0 | 0.6146 | 0.6146 |
+| DM | pre_stim | pupil_xpos | zpos, runspeed, lick, pupil_area, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 207 | 0.2213 | 0.1898 | 3.65e-08 | 0.08568 | 0.0108 | 0.07487 | 0 | 0.1804 | 0.1804 |
+| DM | pre_stim | pupil_ypos | zpos, runspeed, lick, pupil_area, pupil_xpos, motionenergy, videoPC_0, videoPC_1 | 8 | 207 | 0.0947 | 0.05812 | 0.01036 | 0.1629 | 0.01896 | 0.144 | 0 | 0.07177 | 0.144 |
+| DM | pre_stim | motionenergy | zpos, runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, videoPC_0, videoPC_1 | 8 | 207 | 0.5257 | 0.5065 | 2.194e-28 | 0.3601 | 0.01021 | 0.3499 | 0 | 0.538 | 0.538 |
+| DM | pre_stim | videoPC_0 | zpos, runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_1 | 8 | 207 | 0.9079 | 0.9042 | 3.794e-98 | 0.5239 | 0.01652 | 0.5074 | 0 | 1.72 | 1.72 |
+| DM | pre_stim | videoPC_1 | zpos, runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0 | 8 | 207 | 0.638 | 0.6233 | 9.431e-40 | 0.5231 | 0.01667 | 0.5064 | 0 | 0.7329 | 0.7329 |
+| DM | pre_stim | zpos | runspeed, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 149 | 0.8002 | 0.7888 | 3.534e-45 | 0.957 | 0.0151 | 0.9419 | 0 | 1.162 | 1.162 |
+| DM | pre_stim | runspeed | zpos, lick, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 149 | 0.772 | 0.759 | 3.258e-41 | 0.778 | 0.02581 | 0.7522 | 0 | 1.067 | 1.067 |
+| DM | pre_stim | lick | zpos, runspeed, pupil_area, pupil_xpos, pupil_ypos, motionenergy, videoPC_0, videoPC_1 | 8 | 149 | 0.7495 | 0.7352 | 2.173e-38 | 0.1584 | 0.007821 | 0.1506 | 0 | 0.9986 | 0.9986 |
+
+*(showing first 15 of 19 columns; showing first 30 of 999 rows -- see the linked CSV for the rest)*
+
+[behavior_multivariate_mi_vs_linear__session.csv](../2_pipeline/1c_behavior/out/behavior_multivariate_mi_vs_linear__session.csv)
+
 ### Behavior multivariate stepwise
 
 | protocol | window | target | step | predictor_added | cumulative_r2 | cumulative_adj_r2 | delta_r2 | frac_of_full_r2 |
@@ -120,6 +198,45 @@
 *(showing first 30 of 648 rows -- see the linked CSV for the rest)*
 
 [behavior_multivariate_stepwise.csv](../2_pipeline/1c_behavior/out/behavior_multivariate_stepwise.csv)
+
+### Behavior multivariate stepwise  session
+
+| protocol | window | target | step | predictor_added | cumulative_r2 | cumulative_adj_r2 | delta_r2 | frac_of_full_r2 | unit | animal_id |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DM | pre_stim | zpos | 1 | pupil_ypos | 0.6112 | 0.6066 | 0.6112 | 0.7647 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | zpos | 2 | pupil_area | 0.679 | 0.6713 | 0.06779 | 0.8496 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | zpos | 3 | videoPC_0 | 0.7294 | 0.7196 | 0.05038 | 0.9126 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | zpos | 4 | pupil_xpos | 0.7428 | 0.7303 | 0.01345 | 0.9294 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | zpos | 5 | lick | 0.7507 | 0.7353 | 0.007838 | 0.9392 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | zpos | 6 | videoPC_1 | 0.7562 | 0.7379 | 0.005537 | 0.9462 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | zpos | 7 | motionenergy | 0.7859 | 0.7669 | 0.02967 | 0.9833 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | zpos | 8 | runspeed | 0.7992 | 0.7786 | 0.01337 | 1 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | runspeed | 1 | videoPC_1 | 0.3306 | 0.3228 | 0.3306 | 0.6623 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | runspeed | 2 | lick | 0.3613 | 0.346 | 0.03061 | 0.7237 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | runspeed | 3 | videoPC_0 | 0.4394 | 0.4191 | 0.07811 | 0.8801 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | runspeed | 4 | pupil_xpos | 0.4503 | 0.4234 | 0.0109 | 0.902 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | runspeed | 5 | zpos | 0.4704 | 0.4377 | 0.02015 | 0.9423 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | runspeed | 6 | motionenergy | 0.4888 | 0.4504 | 0.01837 | 0.9791 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | runspeed | 7 | pupil_ypos | 0.4961 | 0.4515 | 0.007351 | 0.9938 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | runspeed | 8 | pupil_area | 0.4992 | 0.4478 | 0.003072 | 1 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | lick | 1 | videoPC_0 | 0.7501 | 0.7471 | 0.7501 | 0.9214 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | lick | 2 | runspeed | 0.7781 | 0.7728 | 0.02801 | 0.9558 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | lick | 3 | videoPC_1 | 0.7906 | 0.783 | 0.01249 | 0.9711 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | lick | 4 | pupil_ypos | 0.7949 | 0.7849 | 0.004346 | 0.9765 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | lick | 5 | pupil_area | 0.805 | 0.793 | 0.01006 | 0.9888 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | lick | 6 | pupil_xpos | 0.8112 | 0.797 | 0.006179 | 0.9964 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | lick | 7 | zpos | 0.8131 | 0.7965 | 0.001891 | 0.9987 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | lick | 8 | motionenergy | 0.8141 | 0.795 | 0.001035 | 1 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | pupil_area | 1 | zpos | 0.5867 | 0.5818 | 0.5867 | 0.8368 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | pupil_area | 2 | pupil_ypos | 0.6581 | 0.65 | 0.07141 | 0.9387 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | pupil_area | 3 | videoPC_0 | 0.6708 | 0.6589 | 0.01268 | 0.9568 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | pupil_area | 4 | lick | 0.691 | 0.6759 | 0.02016 | 0.9855 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | pupil_area | 5 | motionenergy | 0.6974 | 0.6788 | 0.006478 | 0.9948 | LPE11623_2024_03_27 | LPE11623 |
+| DM | pre_stim | pupil_area | 6 | pupil_xpos | 0.6989 | 0.6763 | 0.001456 | 0.9969 | LPE11623_2024_03_27 | LPE11623 |
+
+*(showing first 30 of 7992 rows -- see the linked CSV for the rest)*
+
+[behavior_multivariate_stepwise__session.csv](../2_pipeline/1c_behavior/out/behavior_multivariate_stepwise__session.csv)
 
 ## Figures
 

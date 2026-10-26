@@ -1,54 +1,193 @@
 # 3c_pair_information_pid
 
-*Auto-generated from `2_pipeline/3c_pair_information_pid/out/` on 2026-09-14 16:47. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/3c_pair_information_pid/out/` on 2026-10-16 17:39. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 
 ### Pair pid
 
-| session_id | window | roi_name | labeled_grouped | cell_i | cell_j | n_trials | I1 | I2 | I12 | redundancy | unique1 | unique2 | synergy | redundancy_p_value |
+| session_id | animal_id | window | target | roi_name | labeled_grouped | cell_i | cell_j | pair_rank | n_trials | I1 | I2 | I12 | redundancy | unique1 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0046 | LPE10884_2024_01_12_7_0150 | 209 | 0.0322 | 0.02408 | 0.08999 | 0.009281 | 0.02292 | 0.0148 | 0.04299 | 0 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0003 | LPE10884_2024_01_12_7_0178 | 209 | 0.04309 | 0.0225 | 0.1023 | 0.001245 | 0.04185 | 0.02125 | 0.03793 | 0.4333 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0060 | LPE10884_2024_01_12_7_0195 | 209 | 0.03154 | 0.006392 | 0.1082 | -0.004678 | 0.03622 | 0.01107 | 0.06562 | 0.8667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0151 | LPE10884_2024_01_12_7_0192 | 209 | 0.008396 | 0.05411 | 0.1111 | -0.005438 | 0.01383 | 0.05955 | 0.04314 | 0.8667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0014 | LPE10884_2024_01_12_7_0194 | 209 | 0.004224 | 0.02051 | 0.03304 | -0.002309 | 0.006533 | 0.02282 | 0.005999 | 0.7 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0100 | LPE10884_2024_01_12_7_0170 | 209 | 0.0111 | 0.01016 | 0.03458 | 0.0002351 | 0.01086 | 0.009924 | 0.01356 | 0.5 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0005 | LPE10884_2024_01_12_7_0133 | 209 | 0.02477 | 0.01254 | 0.05479 | -0.002272 | 0.02704 | 0.01481 | 0.01521 | 0.5667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0166 | LPE10884_2024_01_12_7_0204 | 209 | 0.01569 | 0.01393 | 0.0576 | 0.001786 | 0.0139 | 0.01214 | 0.02977 | 0.2667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0182 | LPE10884_2024_01_12_7_0390 | 209 | 0.03321 | 0.01174 | 0.11 | 0.002067 | 0.03114 | 0.00967 | 0.06717 | 0.2667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0090 | LPE10884_2024_01_12_7_0140 | 209 | 0.009588 | 0.02356 | 0.0617 | -0.0009207 | 0.01051 | 0.02448 | 0.02764 | 0.4 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0071 | LPE10884_2024_01_12_7_0141 | 209 | 0.01587 | 0.02591 | 0.09179 | 0.005178 | 0.01069 | 0.02073 | 0.05519 | 0.1667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0282 | LPE10884_2024_01_12_7_0334 | 209 | 0.01982 | 0.01835 | 0.0672 | 0.003164 | 0.01665 | 0.01519 | 0.03219 | 0.2333 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0233 | LPE10884_2024_01_12_7_0265 | 209 | 0.03657 | 0.01183 | 0.06651 | 0.001082 | 0.03549 | 0.01075 | 0.01919 | 0.3 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0127 | LPE10884_2024_01_12_7_0273 | 209 | 0.01419 | 0.01617 | 0.0566 | -0.00489 | 0.01908 | 0.02106 | 0.02134 | 0.8 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0004 | LPE10884_2024_01_12_7_0180 | 209 | 0.01073 | 0.01661 | 0.1079 | -0.00434 | 0.01507 | 0.02095 | 0.07621 | 0.8667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0113 | LPE10884_2024_01_12_7_0130 | 209 | 0.006164 | 0.02693 | 0.06681 | -0.006765 | 0.01293 | 0.0337 | 0.02695 | 0.8667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0130 | LPE10884_2024_01_12_7_0244 | 209 | 0.02693 | 0.04324 | 0.1139 | 0.003329 | 0.0236 | 0.03991 | 0.04702 | 0.2333 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0149 | LPE10884_2024_01_12_7_0281 | 209 | 0.02939 | 0.01105 | 0.07569 | 0.0005836 | 0.02881 | 0.01047 | 0.03583 | 0.3667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0104 | LPE10884_2024_01_12_7_0206 | 209 | 0.02955 | 0.006292 | 0.08735 | -0.004295 | 0.03384 | 0.01059 | 0.04721 | 0.7667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0020 | LPE10884_2024_01_12_7_0169 | 209 | 0.04134 | 0.02703 | 0.102 | 0.009697 | 0.03165 | 0.01733 | 0.0433 | 0.03333 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0103 | LPE10884_2024_01_12_7_0421 | 209 | 0.008958 | 0.02149 | 0.08718 | -0.001286 | 0.01024 | 0.02278 | 0.05544 | 0.6333 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0303 | LPE10884_2024_01_12_7_0347 | 209 | 0.0194 | 0.01922 | 0.1029 | 0.001739 | 0.01766 | 0.01749 | 0.06598 | 0.2333 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0101 | LPE10884_2024_01_12_7_0278 | 209 | 0.01398 | 0.02305 | 0.05315 | 0.0001801 | 0.0138 | 0.02287 | 0.0163 | 0.4667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0137 | LPE10884_2024_01_12_7_0273 | 209 | 0.04248 | 0.01617 | 0.08381 | 0.001947 | 0.04053 | 0.01423 | 0.0271 | 0.3333 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0111 | LPE10884_2024_01_12_7_0178 | 209 | 0.01316 | 0.0225 | 0.07233 | 0.002838 | 0.01033 | 0.01966 | 0.03951 | 0.3 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0180 | LPE10884_2024_01_12_7_0204 | 209 | 0.01661 | 0.01393 | 0.0574 | 0.002521 | 0.01409 | 0.0114 | 0.02939 | 0.2667 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0044 | LPE10884_2024_01_12_7_0229 | 209 | 0.005244 | 0.002671 | 0.02004 | -0.001521 | 0.006765 | 0.004192 | 0.0106 | 0.6333 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0045 | LPE10884_2024_01_12_7_0075 | 209 | 0.1284 | 0.05784 | 0.1914 | 0.05242 | 0.07598 | 0.005419 | 0.05761 | 0 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0067 | LPE10884_2024_01_12_7_0394 | 209 | 0.0263 | 0.02023 | 0.0717 | 0.0008057 | 0.02549 | 0.01942 | 0.02598 | 0.3333 |
-| LPE10884_2024_01_12 | pre_stim | AL | unl | LPE10884_2024_01_12_7_0030 | LPE10884_2024_01_12_7_0115 | 209 | 0.021 | 0.03427 | 0.1072 | 0.002743 | 0.01826 | 0.03153 | 0.05466 | 0.2 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | AL | unl | LPE10884_2024_01_12_7_0039 | LPE10884_2024_01_12_7_0198 | 2 | 209 | 0.02916 | 0.009796 | 0.06725 | -0.003131 | 0.0323 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | AL | unl | LPE10884_2024_01_12_7_0061 | LPE10884_2024_01_12_7_0250 | 5 | 209 | 0.005078 | 0.005916 | 0.0251 | -0.002331 | 0.007409 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | AL | unl | LPE10884_2024_01_12_7_0081 | LPE10884_2024_01_12_7_0084 | 7 | 209 | 0.003832 | 0.0042 | 0.01138 | -0.002856 | 0.006688 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | AL | unl | LPE10884_2024_01_12_7_0142 | LPE10884_2024_01_12_7_0278 | 4 | 209 | 0.005775 | 0.007149 | 0.01717 | -0.0001969 | 0.005972 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | AL | unl | LPE10884_2024_01_12_7_0035 | LPE10884_2024_01_12_7_0220 | 1 | 209 | 0.009281 | 0.01407 | 0.05424 | -0.00291 | 0.01219 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | AL | unl | LPE10884_2024_01_12_7_0042 | LPE10884_2024_01_12_7_0361 | 6 | 209 | 0.003832 | 0.02764 | 0.05314 | -0.002359 | 0.006191 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | AL | unl | LPE10884_2024_01_12_7_0116 | LPE10884_2024_01_12_7_0136 | 0 | 209 | 0.02561 | 0.005996 | 0.05399 | -0.000991 | 0.0266 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | AL | unl | LPE10884_2024_01_12_7_0076 | LPE10884_2024_01_12_7_0177 | 3 | 209 | 0.006011 | 1.951e-05 | 0.0394 | -0.004818 | 0.01083 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | RSP | unl | LPE10884_2024_01_12_6_0037 | LPE10884_2024_01_12_6_0064 | 6 | 209 | 0.02083 | 0.009469 | 0.05199 | 0.002376 | 0.01845 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | RSP | unl | LPE10884_2024_01_12_6_0002 | LPE10884_2024_01_12_6_0053 | 0 | 209 | 0.00556 | 0.009389 | 0.06411 | -0.002243 | 0.007803 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | RSP | unl | LPE10884_2024_01_12_6_0032 | LPE10884_2024_01_12_6_0046 | 1 | 209 | 0.002882 | 0.06113 | 0.0896 | -0.0009167 | 0.003799 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | RSP | unl | LPE10884_2024_01_12_6_0024 | LPE10884_2024_01_12_6_0028 | 4 | 209 | 0.0183 | 0.04738 | 0.09313 | -0.002194 | 0.0205 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | RSP | unl | LPE10884_2024_01_12_6_0030 | LPE10884_2024_01_12_6_0031 | 7 | 209 | 0.006288 | 0.02456 | 0.05407 | -0.002995 | 0.009283 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | RSP | unl | LPE10884_2024_01_12_6_0019 | LPE10884_2024_01_12_6_0062 | 3 | 209 | 0.02098 | 0.02201 | 0.07996 | -0.002616 | 0.0236 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | RSP | unl | LPE10884_2024_01_12_6_0012 | LPE10884_2024_01_12_6_0025 | 2 | 209 | 0.01467 | 0.03018 | 0.07362 | 0.007228 | 0.007443 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | zero_to80_above80 | RSP | unl | LPE10884_2024_01_12_6_0023 | LPE10884_2024_01_12_6_0045 | 5 | 209 | 0.04909 | 0.04343 | 0.1346 | 0.02911 | 0.01998 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | AL | unl | LPE10884_2024_01_12_7_0039 | LPE10884_2024_01_12_7_0198 | 2 | 209 | 0.04174 | 0.006605 | 0.06544 | -0.0001664 | 0.04191 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | AL | unl | LPE10884_2024_01_12_7_0061 | LPE10884_2024_01_12_7_0250 | 5 | 209 | 0.004279 | 0.0022 | 0.03432 | -0.004132 | 0.008411 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | AL | unl | LPE10884_2024_01_12_7_0081 | LPE10884_2024_01_12_7_0084 | 7 | 209 | 0.003721 | 0.0009122 | 0.007158 | -0.003223 | 0.006944 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | AL | unl | LPE10884_2024_01_12_7_0142 | LPE10884_2024_01_12_7_0278 | 4 | 209 | 0.002131 | 0.0193 | 0.02465 | -0.001491 | 0.003622 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | AL | unl | LPE10884_2024_01_12_7_0035 | LPE10884_2024_01_12_7_0220 | 1 | 209 | 0.009091 | 0.01534 | 0.03024 | 0.003221 | 0.00587 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | AL | unl | LPE10884_2024_01_12_7_0042 | LPE10884_2024_01_12_7_0361 | 6 | 209 | 0.003862 | 0.006668 | 0.03542 | -0.002339 | 0.006202 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | AL | unl | LPE10884_2024_01_12_7_0116 | LPE10884_2024_01_12_7_0136 | 0 | 209 | 0.01546 | 0.005602 | 0.04215 | -0.0008409 | 0.0163 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | AL | unl | LPE10884_2024_01_12_7_0076 | LPE10884_2024_01_12_7_0177 | 3 | 209 | 0.002229 | 0.003083 | 0.01895 | -0.003268 | 0.005497 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | RSP | unl | LPE10884_2024_01_12_6_0037 | LPE10884_2024_01_12_6_0064 | 6 | 209 | 0.023 | 0.009279 | 0.04212 | 0.0001331 | 0.02287 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | RSP | unl | LPE10884_2024_01_12_6_0002 | LPE10884_2024_01_12_6_0053 | 0 | 209 | 0.003773 | 0.02059 | 0.08925 | -0.002944 | 0.006717 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | RSP | unl | LPE10884_2024_01_12_6_0032 | LPE10884_2024_01_12_6_0046 | 1 | 209 | 0.0115 | 0.06844 | 0.1047 | 0.004861 | 0.006638 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | RSP | unl | LPE10884_2024_01_12_6_0024 | LPE10884_2024_01_12_6_0028 | 4 | 209 | 0.009091 | 0.04674 | 0.06807 | 0.001224 | 0.007867 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | RSP | unl | LPE10884_2024_01_12_6_0030 | LPE10884_2024_01_12_6_0031 | 7 | 209 | 0.003494 | 0.01492 | 0.04494 | -0.002252 | 0.005745 |
+| LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | RSP | unl | LPE10884_2024_01_12_6_0019 | LPE10884_2024_01_12_6_0062 | 3 | 209 | 0.005544 | 0.02392 | 0.06622 | -0.001934 | 0.007478 |
 
-*(showing first 30 of 33522 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 23 columns; showing first 30 of 11568 rows -- see the linked CSV for the rest)*
 
 [pair_pid.csv](../2_pipeline/3c_pair_information_pid/out/pair_pid.csv)
 
+### Pair pid by group  session
+
+| group | unit | animal_id | window | target | n_pairs | I1 | I2 | I12 | redundancy | unique1 | unique2 | synergy | frac_sig_redundancy |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| AL_unl | LPE10884_2024_01_12 | LPE10884 | pre_stim | choice | 8 | 0.003358 | 0.004486 | 0.01799 | 0.0001015 | 0.003256 | 0.004384 | 0.01025 | 0 |
+| AL_unl | LPE10884_2024_01_17 | LPE10884 | pre_stim | choice | 8 | 0.01414 | 0.003432 | 0.03063 | 0.001024 | 0.01312 | 0.002408 | 0.01408 | 0 |
+| AL_unl | LPE11622_2024_02_22 | LPE11622 | pre_stim | choice | 8 | 0.002518 | 0.0002845 | 0.004017 | -0.000292 | 0.00281 | 0.0005766 | 0.0009228 | 0 |
+| AL_unl | LPE11622_2024_02_23 | LPE11622 | pre_stim | choice | 8 | 0.0006502 | 0.002364 | 0.004206 | 4.109e-05 | 0.0006091 | 0.002323 | 0.001233 | 0 |
+| AL_unl | LPE11622_2024_02_26 | LPE11622 | pre_stim | choice | 8 | 0.00145 | 0.001164 | 0.00314 | -0.0002586 | 0.001709 | 0.001423 | 0.0002668 | 0 |
+| AL_unl | LPE11997_2024_04_10 | LPE11997 | pre_stim | choice | 8 | 0.003482 | 0.003914 | 0.01166 | 0.0009265 | 0.002556 | 0.002987 | 0.00519 | 0.125 |
+| AL_unl | LPE11997_2024_04_16 | LPE11997 | pre_stim | choice | 8 | 0.003448 | 0.002386 | 0.009062 | 0.0001736 | 0.003275 | 0.002212 | 0.003401 | 0 |
+| AL_unl | LPE11997_2024_04_17 | LPE11997 | pre_stim | choice | 8 | 0.002451 | 0.00155 | 0.006014 | 0.0002031 | 0.002248 | 0.001347 | 0.002216 | 0.125 |
+| AL_unl | LPE11997_2024_04_18 | LPE11997 | pre_stim | choice | 8 | 0.003878 | 0.0106 | 0.01671 | 0.001924 | 0.001953 | 0.008671 | 0.004162 | 0.125 |
+| AL_unl | LPE11998_2024_04_24 | LPE11998 | pre_stim | choice | 8 | 0.03209 | 0.02888 | 0.09837 | 0.002333 | 0.02976 | 0.02654 | 0.03973 | 0 |
+| AL_unl | LPE11998_2024_04_25 | LPE11998 | pre_stim | choice | 8 | 0.007396 | 0.006417 | 0.03293 | -0.0005003 | 0.007896 | 0.006917 | 0.01862 | 0 |
+| AL_unl | LPE11998_2024_04_29 | LPE11998 | pre_stim | choice | 8 | 0.00931 | 0.01071 | 0.03331 | -0.0002533 | 0.009563 | 0.01096 | 0.01304 | 0.125 |
+| AL_unl | LPE11998_2024_05_01 | LPE11998 | pre_stim | choice | 8 | 0.005963 | 0.009129 | 0.02896 | -3.793e-05 | 0.006001 | 0.009167 | 0.01383 | 0.125 |
+| AL_unl | LPE12013_2024_04_25 | LPE12013 | pre_stim | choice | 8 | 0.003524 | 0.00403 | 0.01169 | -8.317e-05 | 0.003608 | 0.004113 | 0.004049 | 0.125 |
+| AL_unl | LPE12013_2024_04_26 | LPE12013 | pre_stim | choice | 8 | 0.003366 | 0.0041 | 0.01426 | 0.000432 | 0.002934 | 0.003668 | 0.007229 | 0.125 |
+| AL_unl | LPE12013_2024_04_29 | LPE12013 | pre_stim | choice | 8 | 0.001197 | 0.004265 | 0.007456 | -0.0006248 | 0.001822 | 0.00489 | 0.001369 | 0 |
+| AL_unl | LPE12013_2024_04_30 | LPE12013 | pre_stim | choice | 8 | 0.0008875 | 0.002733 | 0.007198 | -0.0003783 | 0.001266 | 0.003111 | 0.0032 | 0 |
+| AL_unl | LPE12385_2024_06_15 | LPE12385 | pre_stim | choice | 8 | 0.007977 | 0.007162 | 0.02885 | -0.0004728 | 0.00845 | 0.007635 | 0.01323 | 0.125 |
+| AL_unl | LPE12385_2024_06_16 | LPE12385 | pre_stim | choice | 8 | 0.005757 | 0.01084 | 0.03307 | 7.934e-06 | 0.005749 | 0.01083 | 0.01648 | 0 |
+| AL_unl | LPE12385_2024_06_17 | LPE12385 | pre_stim | choice | 8 | 0.00594 | 0.00527 | 0.02252 | 0.0007106 | 0.00523 | 0.00456 | 0.01202 | 0.125 |
+| AL_unl | LPE12385_2024_06_27 | LPE12385 | pre_stim | choice | 8 | 0.0164 | 0.01257 | 0.05174 | 0.003785 | 0.01262 | 0.008787 | 0.02655 | 0.125 |
+| AL_unl | LPE10884_2024_01_12 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | 8 | 0.01032 | 0.007463 | 0.03229 | -0.00153 | 0.01185 | 0.008993 | 0.01298 | 0 |
+| AL_unl | LPE10884_2024_01_17 | LPE10884 | pre_stim | pct_0-20_20-80_80-100 | 8 | 0.00815 | 0.007811 | 0.03032 | -0.0002147 | 0.008365 | 0.008026 | 0.01414 | 0.125 |
+| AL_unl | LPE11622_2024_02_22 | LPE11622 | pre_stim | pct_0-20_20-80_80-100 | 8 | 0.003401 | 0.002079 | 0.008546 | -0.0003125 | 0.003713 | 0.002391 | 0.002754 | 0 |
+| AL_unl | LPE11622_2024_02_23 | LPE11622 | pre_stim | pct_0-20_20-80_80-100 | 8 | 0.002765 | 0.003449 | 0.00712 | -0.0001783 | 0.002943 | 0.003627 | 0.0007274 | 0 |
+| AL_unl | LPE11622_2024_02_26 | LPE11622 | pre_stim | pct_0-20_20-80_80-100 | 8 | 0.001086 | 0.003746 | 0.006861 | -0.0002901 | 0.001376 | 0.004036 | 0.00174 | 0 |
+| AL_unl | LPE11997_2024_04_10 | LPE11997 | pre_stim | pct_0-20_20-80_80-100 | 8 | 0.005727 | 0.004154 | 0.01716 | -0.001982 | 0.007709 | 0.006136 | 0.005301 | 0 |
+| AL_unl | LPE11997_2024_04_16 | LPE11997 | pre_stim | pct_0-20_20-80_80-100 | 8 | 0.005392 | 0.007161 | 0.01822 | 0.0007001 | 0.004692 | 0.006461 | 0.006363 | 0.125 |
+| AL_unl | LPE11997_2024_04_17 | LPE11997 | pre_stim | pct_0-20_20-80_80-100 | 8 | 0.005456 | 0.00662 | 0.01885 | 0.0009308 | 0.004525 | 0.005689 | 0.007706 | 0.125 |
+| AL_unl | LPE11997_2024_04_18 | LPE11997 | pre_stim | pct_0-20_20-80_80-100 | 8 | 0.005021 | 0.004495 | 0.021 | -0.0009734 | 0.005994 | 0.005468 | 0.01051 | 0 |
+
+*(showing first 30 of 1464 rows -- see the linked CSV for the rest)*
+
+[pair_pid_by_group__session.csv](../2_pipeline/3c_pair_information_pid/out/pair_pid_by_group__session.csv)
+
 ## Figures
 
-### Pid components by area
+### Redundancy by group
 
-![1_pid_components_by_area](../2_pipeline/3c_pair_information_pid/out/figures/1_pid_components_by_area.png)
+![1_redundancy_by_group](../2_pipeline/3c_pair_information_pid/out/figures/choice/1_redundancy_by_group.png)
+
+### Synergy by group
+
+![1_synergy_by_group](../2_pipeline/3c_pair_information_pid/out/figures/choice/1_synergy_by_group.png)
+
+### Unique1 by group
+
+![1_unique1_by_group](../2_pipeline/3c_pair_information_pid/out/figures/choice/1_unique1_by_group.png)
+
+### Unique2 by group
+
+![1_unique2_by_group](../2_pipeline/3c_pair_information_pid/out/figures/choice/1_unique2_by_group.png)
+
+### Component breakdown
+
+![2_component_breakdown](../2_pipeline/3c_pair_information_pid/out/figures/choice/2_component_breakdown.png)
 
 ### Redundancy vs synergy
 
-![2_redundancy_vs_synergy](../2_pipeline/3c_pair_information_pid/out/figures/2_redundancy_vs_synergy.png)
+![3_redundancy_vs_synergy](../2_pipeline/3c_pair_information_pid/out/figures/choice/3_redundancy_vs_synergy.png)
+
+### Compare targets I12
+
+![compare_targets_I12](../2_pipeline/3c_pair_information_pid/out/figures/compare_targets_I12.png)
+
+### Compare targets redundancy
+
+![compare_targets_redundancy](../2_pipeline/3c_pair_information_pid/out/figures/compare_targets_redundancy.png)
+
+### Compare targets synergy
+
+![compare_targets_synergy](../2_pipeline/3c_pair_information_pid/out/figures/compare_targets_synergy.png)
+
+### Redundancy by group
+
+![1_redundancy_by_group](../2_pipeline/3c_pair_information_pid/out/figures/pct_0-20_20-80_80-100/1_redundancy_by_group.png)
+
+### Synergy by group
+
+![1_synergy_by_group](../2_pipeline/3c_pair_information_pid/out/figures/pct_0-20_20-80_80-100/1_synergy_by_group.png)
+
+### Unique1 by group
+
+![1_unique1_by_group](../2_pipeline/3c_pair_information_pid/out/figures/pct_0-20_20-80_80-100/1_unique1_by_group.png)
+
+### Unique2 by group
+
+![1_unique2_by_group](../2_pipeline/3c_pair_information_pid/out/figures/pct_0-20_20-80_80-100/1_unique2_by_group.png)
+
+### Component breakdown
+
+![2_component_breakdown](../2_pipeline/3c_pair_information_pid/out/figures/pct_0-20_20-80_80-100/2_component_breakdown.png)
+
+### Redundancy vs synergy
+
+![3_redundancy_vs_synergy](../2_pipeline/3c_pair_information_pid/out/figures/pct_0-20_20-80_80-100/3_redundancy_vs_synergy.png)
+
+### Redundancy by group
+
+![1_redundancy_by_group](../2_pipeline/3c_pair_information_pid/out/figures/zero_to80_above80/1_redundancy_by_group.png)
+
+### Synergy by group
+
+![1_synergy_by_group](../2_pipeline/3c_pair_information_pid/out/figures/zero_to80_above80/1_synergy_by_group.png)
+
+### Unique1 by group
+
+![1_unique1_by_group](../2_pipeline/3c_pair_information_pid/out/figures/zero_to80_above80/1_unique1_by_group.png)
+
+### Unique2 by group
+
+![1_unique2_by_group](../2_pipeline/3c_pair_information_pid/out/figures/zero_to80_above80/1_unique2_by_group.png)
+
+### Component breakdown
+
+![2_component_breakdown](../2_pipeline/3c_pair_information_pid/out/figures/zero_to80_above80/2_component_breakdown.png)
+
+### Redundancy vs synergy
+
+![3_redundancy_vs_synergy](../2_pipeline/3c_pair_information_pid/out/figures/zero_to80_above80/3_redundancy_vs_synergy.png)
+
+### Redundancy by group
+
+![1_redundancy_by_group](../2_pipeline/3c_pair_information_pid/out/figures/zero_vs_nonzero/1_redundancy_by_group.png)
+
+### Synergy by group
+
+![1_synergy_by_group](../2_pipeline/3c_pair_information_pid/out/figures/zero_vs_nonzero/1_synergy_by_group.png)
+
+### Unique1 by group
+
+![1_unique1_by_group](../2_pipeline/3c_pair_information_pid/out/figures/zero_vs_nonzero/1_unique1_by_group.png)
+
+### Unique2 by group
+
+![1_unique2_by_group](../2_pipeline/3c_pair_information_pid/out/figures/zero_vs_nonzero/1_unique2_by_group.png)
+
+### Component breakdown
+
+![2_component_breakdown](../2_pipeline/3c_pair_information_pid/out/figures/zero_vs_nonzero/2_component_breakdown.png)
+
+### Redundancy vs synergy
+
+![3_redundancy_vs_synergy](../2_pipeline/3c_pair_information_pid/out/figures/zero_vs_nonzero/3_redundancy_vs_synergy.png)

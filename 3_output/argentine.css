@@ -1,0 +1,152 @@
+/* ===========================================================================
+   argentine.css - style guide for the lab-meeting deck
+   Titles  : Archivo        (Omnibus-Type, Buenos Aires)
+   Body    : Faustina       (Omnibus-Type)
+   Title slide : Unna       (Omnibus-Type)
+   Code    : Chivo Mono     (Omnibus-Type)
+   All SIL Open Font License.
+
+   In the deck's frontmatter (path relative to the vault root):
+     css:
+       - Code/oudelohuis-vr-detection/3_output/argentine.css
+
+   Everything below targets ordinary markdown elements, so the slide file
+   needs no <div>s and no classes - write plain markdown and it is styled.
+   The one exception is the title slide, which asks for a class:
+     <!-- slide bg="#1f2a44" class="title" -->
+   =========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&family=Archivo+Narrow:wght@400..700&family=Faustina:ital,wght@0,300..800;1,300..800&family=Unna:ital,wght@0,400;0,700;1,400&family=Chivo+Mono:wght@300;400;700&display=swap');
+
+:root {
+  --font-title: 'Archivo', 'Helvetica Neue', sans-serif;
+  --font-body: 'Faustina', Georgia, serif;
+  --font-cover: 'Unna', Georgia, serif;
+  --font-mono: 'Chivo Mono', monospace;
+
+  --ink: #1f2430;
+  --ink-soft: #5a6477;
+  --accent: #1f2a44;
+  --rule: #d7dce5;
+  --link: #0072B2;
+}
+
+/* --- body text ----------------------------------------------------------- */
+.reveal {
+  font-family: var(--font-body);
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.reveal .slides section { text-align: left; }
+
+.reveal p,
+.reveal li,
+.reveal td,
+.reveal dd { font-family: var(--font-body); line-height: 1.45; }
+
+.reveal li + li { margin-top: 0.3em; }
+.reveal ul { margin-left: 1em; }
+.reveal ul li::marker { color: var(--ink-soft); }
+
+/* --- titles --------------------------------------------------------------
+   Written at .reveal .slides h1 so they beat the built-in theme, which also
+   styles .reveal h1 and may load after this file.                          */
+.reveal .slides h1,
+.reveal .slides h2,
+.reveal .slides h3,
+.reveal .slides h4 {
+  font-family: var(--font-title);
+  color: var(--accent);
+  text-transform: none !important;
+  letter-spacing: -0.012em;
+  line-height: 1.15;
+  margin-bottom: 0.45em;
+}
+
+.reveal .slides h1 { font-size: 2.1em; font-weight: 700; }
+.reveal .slides h2 { font-size: 1.45em; font-weight: 600; }
+.reveal .slides h3 { font-size: 1.1em;  font-weight: 600; color: var(--ink-soft); }
+
+/* section dividers: "# Part 1" over "## The big picture" */
+.reveal .slides h1 + h2 {
+  font-weight: 400;
+  color: var(--ink-soft);
+  margin-top: -0.2em;
+}
+
+/* --- title slide ---------------------------------------------------------
+   Mark it in the deck with:  <!-- slide bg="#1f2a44" class="title" -->      */
+.reveal .slides section.title { text-align: left; }
+
+.reveal .slides section.title h1 {
+  font-family: var(--font-cover);
+  font-size: 2.6em;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.005em;
+}
+
+.reveal .slides section.title h2,
+.reveal .slides section.title h3 {
+  font-family: var(--font-cover);
+  font-weight: 400;
+  color: #c9d3e8;
+}
+
+.reveal .slides section.title p { color: #c9d3e8; font-size: 0.8em; }
+
+/* any other dark slide (section dividers, the closing slide) */
+.reveal .slides section[data-background-color="#1f2a44"] h1,
+.reveal .slides section[data-background-color="#1f2a44"] h2,
+.reveal .slides section[data-background-color="#1f2a44"] h3 { color: #ffffff; }
+.reveal .slides section[data-background-color="#1f2a44"] p { color: #c9d3e8; }
+
+/* --- tables -------------------------------------------------------------- */
+.reveal table {
+  font-size: 0.72em;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.reveal table th {
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 0.95em;
+  text-align: left;
+  border-bottom: 2px solid var(--rule);
+}
+.reveal table td { border-bottom: 1px solid var(--rule); }
+
+/* --- figures ------------------------------------------------------------- */
+.reveal img { max-height: 58vh; width: auto; }
+.reveal section img { border: none; box-shadow: none; background: none; }
+
+/* --- code ---------------------------------------------------------------- */
+.reveal code,
+.reveal pre code { font-family: var(--font-mono); font-size: 0.72em; }
+
+/* --- links, quotes, small print ------------------------------------------ */
+.reveal a { color: var(--link); text-decoration: none; border-bottom: 1px solid currentColor; }
+
+.reveal blockquote {
+  font-family: var(--font-body);
+  font-style: italic;
+  border-left: 3px solid var(--rule);
+  background: none;
+  box-shadow: none;
+  padding-left: 0.8em;
+}
+
+.reveal .slide-number {
+  font-family: var(--font-title);
+  font-size: 0.5em;
+  color: var(--ink-soft);
+  background: none;
+}
+
+/* --- optional helpers ----------------------------------------------------
+   Use only where you want them; the deck does not need them.               */
+.narrow { font-family: 'Archivo Narrow', sans-serif; }   /* tight labels */
+.soft   { color: var(--ink-soft); }                      /* de-emphasis  */
+.tight  { font-size: 0.8em; }                            /* dense slides */

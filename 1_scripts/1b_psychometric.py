@@ -21,6 +21,18 @@ Session inclusion criteria:
       noise_zmin/noise_zmax straddling zero)
 All four thresholds live in infotheory.criteria, shared with 1a's flags.
 
+Project-wide rules (infotheory/project_config.py) -- what applies to 1b
+    * selection : --animals / --sessions restrict the sessions; a restricted run writes to
+                  out/selection/<tag>/ and NEVER overwrites psychometric_fits.csv in out/ (read by every
+                  later step). The fit and the inclusion criteria are per session, so selecting
+                  sessions does not change any session's result.
+    * memory    : sessions are processed one at a time (trial tables in section 2, behavior for the window
+                  timing in section 7), with per-session caches in store/ (--n-jobs sets the parallelism).
+    * aggregate : --aggregate pooled|session|mouse changes the clean-data overview plots (section 6)
+                  only; the psychometric fits (sections 3-5) and the window-timing histograms (section 7)
+                  are inherently per session / per trial and are not affected.
+    * binning   : not used here.
+
 Reads: 2_pipeline/1a_performance/out/session_summary.csv for the
 engaged-trial d'/FA/engagement stats (Rule #1: read from an earlier
 script's out/, don't recompute what 1a already did).
@@ -40,12 +52,9 @@ Outputs
                                        redone on the clean subset (section
                                        6), and the stim/reward window
                                        timing figure (section 7)
-    store/  engaged_trialdata.pkl     cached engaged-trial data for all
-                                       3 protocols, reused unless
-                                       --recompute is passed
-            window_timing.pkl         cached per-trial window timing
-                                       (section 7), reused unless
-                                       --recompute is passed
+    out/selection/<tag>/...   the same files for a restricted run
+    store/  engaged_trials_<hash>.pkl   per-session cache of engaged trials
+            window_timing_<hash>.pkl    per-session cache of window timing (section 7)
 """
 from __future__ import annotations
 
@@ -63,6 +72,11 @@ from infotheory.behavior import add_trial_outcome
 from infotheory.psth import derive_onset_time
 from infotheory.plotting import set_style, save_fig, clear_figures, OUTCOME_COLORS, PROTOCOL_COLORS
 from infotheory.criteria import MIN_DPRIME, MAX_FA_RATE, MIN_FRAC_ENGAGED
+from infotheory.session import discover_sessions
+from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
+from infotheory.session_jobs import run_sessions
+from infotheory.unit_stats import unit_summary
+from infotheory.unit_plots import unit_bars, mouse_palette, mouse_legend, stacked_outcomes
 
 MAX_PANELS_PER_FIG = 24      # per-session grid: paginate if more sessions than this
 GRID_NCOLS = 4
@@ -71,15 +85,17 @@ STIM_WIDTH_CM = 20.0         # width of the stimulus zone in cm -- trialdata onl
                               # supplied; keep in sync with 1c_behavior.py's MI_WINDOWS stim=(0, 20)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--recompute", action="store_true",
-                     help="Reload sessions from 0_data/ instead of reusing the cached "
-                          "store/engaged_trialdata.pkl")
+add_scope_args(parser)
 args = parser.parse_args()
+scope = scope_from_args(args)
+AGG = scope.aggregate
+UNIT = unit_noun(AGG)
 
 paths = get_pipeline_paths(__file__)
-figdir = paths.out / "figures"
+table_dir, figdir = scoped_dirs(paths, scope)
 clear_figures(figdir)
 set_style()
+print(scope.describe())
 
 
 # --------------------------------------------------------------------- #
@@ -99,27 +115,36 @@ summary_1a = summary_1a.set_index("session_id")
 # 2. Load raw trial data, engaged trials only, all 3 protocols -- or
 #    reuse the cache.
 # --------------------------------------------------------------------- #
-trialdata_cache = paths.store / "engaged_trialdata.pkl"
+all_triples = discover_sessions(PROTOCOLS)
+triples = select_sessions(all_triples, scope)
+session_ids = [f"{a}_{d}" for _, a, d in triples]
+stamps = {f"{a}_{d}": data_stamp(p, a, d) for p, a, d in triples}
+mouse_colors = mouse_palette(a for _, a, _ in all_triples)
+print(f"{len(triples)}/{len(all_triples)} sessions selected")
 
-if not args.recompute and trialdata_cache.exists():
-    print(f"Reusing cached engaged trial data from {paths.store} (pass --recompute to reload 0_data/)")
-    engaged_trialdata = pd.read_pickle(trialdata_cache)
-else:
-    sessions = load_sessions(protocols=PROTOCOLS, load_behaviordata=False, load_videodata=False)
-    rows = []
-    for ses in sessions:
-        if ses.trialdata is None:
-            continue
-        trial = ses.trialdata.copy()
-        if "engaged" in trial.columns:
-            trial = trial[trial["engaged"] == 1]
-        trial["session_id"] = ses.session_id
-        trial["protocol"] = ses.protocol
-        rows.append(trial)
-    if not rows:
-        raise SystemExit("No sessions found under 0_data/.")
-    engaged_trialdata = pd.concat(rows, ignore_index=True)
-    engaged_trialdata.to_pickle(trialdata_cache)
+
+def engaged_trials_of_session(ses, seed):
+    """Engaged trials of ONE session (the only thing section 3 needs from the raw data)."""
+    if ses.trialdata is None:
+        return None
+    trial = ses.trialdata.copy()
+    if "engaged" in trial.columns:
+        trial = trial[trial["engaged"] == 1]
+    trial["session_id"] = ses.session_id
+    trial["animal_id"] = ses.animal_id
+    trial["protocol"] = ses.protocol
+    return trial
+
+
+per_session = run_sessions(
+    session_ids, engaged_trials_of_session, list(PROTOCOLS), paths.store, "engaged_trials",
+    key_params=dict(version="1b-v2"), load_kwargs=dict(load_behaviordata=False, load_videodata=False),
+    n_jobs=scope.n_jobs, recompute=args.recompute, extra_key_by_session=stamps, flatten=False)
+rows = [t for t in per_session if t is not None]
+if not rows:
+    raise SystemExit("No sessions found under 0_data/.")
+engaged_trialdata = pd.concat(rows, ignore_index=True)
+del per_session, rows
 
 
 # --------------------------------------------------------------------- #
@@ -187,9 +212,9 @@ for session_id, trial in engaged_trialdata.groupby("session_id"):
     })
 
 fits_df = pd.DataFrame(records).sort_values(["protocol", "session_id"]).reset_index(drop=True)
-fits_df.to_csv(paths.out / "psychometric_fits.csv", index=False)
+fits_df.to_csv(table_dir / "psychometric_fits.csv", index=False)
 fits_df.loc[~fits_df["included"], ["session_id", "protocol", "exclude_reasons"]].to_csv(
-    paths.out / "excluded_sessions.csv", index=False)
+    table_dir / "excluded_sessions.csv", index=False)
 
 print(f"\nInclusion criteria: d' >= {MIN_DPRIME}, FA <= {MAX_FA_RATE:.0%}, "
       f"engaged fraction >= {MIN_FRAC_ENGAGED:.0%}, threshold within tested range (DN only)")
@@ -296,84 +321,83 @@ else:
     clean_trialdata = add_trial_outcome(
         engaged_trialdata[engaged_trialdata["session_id"].isin(included_ids)].copy())
 
-    clean_summary = (fits_df[fits_df["included"]]
-                      .merge(summary_1a[["animal_id", "sessiondate", "duration_s", "criterion_engaged"]]
-                             .reset_index(),
-                             on="session_id", how="left"))
-
     print(f"\nClean dataset: {len(included_ids)}/{len(fits_df)} sessions, "
           f"{len(clean_trialdata)}/{len(engaged_trialdata)} engaged trials kept after session exclusion")
 
-    # 6a. Dataset overview: sessions per animal, engaged trials/session, duration
-    fig, axes = plt.subplots(1, 3, figsize=(11, 3.2))
-    sns.countplot(data=clean_summary, x="protocol", hue="animal_id", ax=axes[0], legend=False,
-                  order=PROTOCOLS)
-    axes[0].set_title("Sessions per animal (clean)")
+    # Unit table of the clean sessions at the chosen aggregation level. Counts are ENGAGED trials only
+    # (the 1a summary's *_engaged columns are mapped onto the columns unit_stats aggregates), so pooled /
+    # per-mouse d' is recomputed from pooled engaged-trial counts.
+    clean = summary_1a.reset_index()
+    clean = clean[clean["session_id"].isin(included_ids)].copy()
+    clean["n_trials"] = clean["eng_n_engaged"]
+    for o in ("HIT", "MISS", "FA", "CR"):
+        clean[f"n_{o}_all"] = clean[f"n_{o}_engaged"]
+    units = unit_summary(clean, AGG, by=["protocol"])
+    units.to_csv(table_dir / f"clean_unit_summary_{AGG}.csv", index=False)
+    protocols_present = [p for p in PROTOCOLS if p in units["protocol"].unique()]
+    pcol = {p: PROTOCOL_COLORS[p] for p in protocols_present}
+
+    # 6a. Dataset overview: sessions per animal (always per mouse), engaged trials and duration per unit
+    fig, axes = plt.subplots(1, 3, figsize=(13, 3.6))
+    cnt = clean.groupby(["animal_id", "protocol"]).size().unstack(fill_value=0).reindex(columns=protocols_present)
+    cnt.plot(kind="bar", stacked=True, ax=axes[0], color=[PROTOCOL_COLORS[p] for p in cnt.columns], width=0.8)
+    axes[0].set_title("Sessions per mouse (clean)")
     axes[0].set_ylabel("# sessions")
-
-    sns.boxplot(data=clean_summary, x="protocol", y="n_trials_engaged", order=PROTOCOLS, ax=axes[1],
-                hue="protocol", palette=PROTOCOL_COLORS, legend=False)
-    sns.stripplot(data=clean_summary, x="protocol", y="n_trials_engaged", order=PROTOCOLS, ax=axes[1],
-                  color="black", alpha=0.5, size=3)
-    axes[1].set_title("Engaged trials per session (clean)")
-
-    sns.boxplot(data=clean_summary, x="protocol", y=clean_summary["duration_s"] / 60, order=PROTOCOLS,
-                ax=axes[2], hue="protocol", palette=PROTOCOL_COLORS, legend=False)
-    sns.stripplot(data=clean_summary, x="protocol", y=clean_summary["duration_s"] / 60, order=PROTOCOLS,
-                  ax=axes[2], color="black", alpha=0.5, size=3)
-    axes[2].set_ylabel("duration (min)")
-    axes[2].set_title("Session duration (clean)")
+    axes[0].set_xlabel("")
+    axes[0].tick_params(axis="x", labelsize=7, rotation=60)
+    axes[0].legend(title=None, fontsize=7, frameon=False, loc="upper left", bbox_to_anchor=(1.0, 1.0))
+    unit_bars(axes[1], units, "protocol", "n_trials", protocols_present, AGG, colors=pcol, mouse_colors=mouse_colors,
+              ylabel=f"engaged trials per {UNIT}")
+    axes[1].set_title(f"Engaged trials per {UNIT} (clean)")
+    unit_bars(axes[2], units, "protocol", "duration_min", protocols_present, AGG, colors=pcol,
+              mouse_colors=mouse_colors, ylabel=f"duration per {UNIT} (min)")
+    axes[2].set_title(f"Recording time per {UNIT} (clean)")
+    mouse_legend(axes[2], mouse_colors, animals=clean["animal_id"].unique(), loc="upper left", bbox_to_anchor=(1.0, 1.0))
     fig.tight_layout()
     save_fig(fig, figdir, "3_dataset_overview_clean")
+    plt.close(fig)
 
-    # 6b. Trial-outcome distribution (HIT/MISS/FA/CR) per protocol, clean data only
-    catch = clean_trialdata.dropna(subset=["trialOutcome"])
-    outcome_counts = catch.groupby(["protocol", "trialOutcome"]).size().unstack(fill_value=0)
-    pivot = outcome_counts.div(outcome_counts.sum(axis=1), axis=0).reindex(
-        index=[p for p in PROTOCOLS if p in outcome_counts.index], columns=["HIT", "CR", "MISS", "FA"])
-
-    fig, ax = plt.subplots(figsize=(5, 3.2))
-    pivot.plot(kind="bar", stacked=True, ax=ax, color=[OUTCOME_COLORS[c] for c in pivot.columns])
-    ax.set_ylabel("fraction of catch trials")
-    ax.set_title("Trial outcomes (clean)")
-    ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", frameon=False)
+    # 6b. Trial-outcome distribution (HIT/MISS/FA/CR), clean data only, one bar per unit
+    fig, ax = plt.subplots(figsize=(max(5, 0.3 * len(units) + 2), 3.6))
+    stacked_outcomes(ax, units, AGG, protocols_present, OUTCOME_COLORS)
+    ax.set_title(f"Trial outcomes (clean) -- one bar per {UNIT}")
     fig.tight_layout()
     save_fig(fig, figdir, "4_trial_outcomes_clean")
+    plt.close(fig)
 
-    # 6c. d' and criterion distribution across the clean, included sessions
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.2))
-    sns.boxplot(data=clean_summary, x="protocol", y="dprime_engaged", order=PROTOCOLS, ax=axes[0],
-                hue="protocol", palette=PROTOCOL_COLORS, legend=False)
-    sns.stripplot(data=clean_summary, x="protocol", y="dprime_engaged", order=PROTOCOLS, ax=axes[0],
-                  color="black", alpha=0.5, size=4)
-    axes[0].axhline(MIN_DPRIME, color="grey", linestyle="--", linewidth=1)
-    axes[0].set_ylabel("d' (engaged)")
-    axes[0].set_title("d' by protocol (clean)")
-
-    sns.scatterplot(data=clean_summary, x="dprime_engaged", y="criterion_engaged", hue="protocol",
-                     hue_order=PROTOCOLS, palette=PROTOCOL_COLORS, ax=axes[1])
+    # 6c. d' (engaged trials, from the unit's pooled counts) and criterion, clean sessions
+    fig, axes = plt.subplots(1, 2, figsize=(9.5, 3.4))
+    unit_bars(axes[0], units, "protocol", "dprime_all", protocols_present, AGG, colors=pcol, mouse_colors=mouse_colors,
+              ylabel="d' (engaged)", hline=MIN_DPRIME)
+    axes[0].set_title(f"d' per {UNIT} (clean)")
+    for protocol in protocols_present:
+        u = units[units["protocol"] == protocol]
+        axes[1].scatter(u["dprime_all"], u["criterion_all"], s=28, color=PROTOCOL_COLORS[protocol],
+                        edgecolor="black", linewidth=0.3, label=protocol)
     axes[1].axhline(0, color="grey", linewidth=0.8)
-    axes[1].axvline(1, color="grey", linewidth=0.8)
-    axes[1].set_title("Bias vs. sensitivity (clean)")
-    axes[1].legend(fontsize=8)
+    axes[1].axvline(0, color="grey", linewidth=0.8)
+    axes[1].set_xlabel("d'")
+    axes[1].set_ylabel("criterion")
+    axes[1].set_title(f"Bias vs. sensitivity (clean), per {UNIT}", fontsize=9)
+    axes[1].legend(fontsize=8, frameon=False)
     fig.tight_layout()
     save_fig(fig, figdir, "5_dprime_criterion_clean")
+    plt.close(fig)
 
-    # 6d. Signal-strength trial counts per protocol, clean data only
-    fig, axes = plt.subplots(1, len(PROTOCOLS), figsize=(11, 3), sharey=False)
-    for ax, protocol in zip(axes, PROTOCOLS):
-        subset = clean_trialdata[clean_trialdata["protocol"] == protocol]
-        if subset.empty:
-            ax.set_visible(False)
-            continue
-        counts = subset.groupby(["session_id", "signal"]).size().reset_index(name="n_trials")
-        sns.boxplot(data=counts, x="signal", y="n_trials", ax=ax, color=PROTOCOL_COLORS[protocol])
-        sns.stripplot(data=counts, x="signal", y="n_trials", ax=ax, color="black", alpha=0.4, size=3)
+    # 6d. Signal-strength trial counts per unit, clean data only
+    ckeys = ["protocol"] + {"pooled": [], "session": ["animal_id", "session_id"], "mouse": ["animal_id"]}[AGG]
+    counts = clean_trialdata.groupby(ckeys + ["signal"]).size().reset_index(name="n_trials")
+    fig, axes = plt.subplots(1, len(protocols_present), figsize=(3.8 * len(protocols_present), 3.2), squeeze=False)
+    for ax, protocol in zip(axes[0], protocols_present):
+        c = counts[counts["protocol"] == protocol]
+        unit_bars(ax, c, "signal", "n_trials", sorted(c["signal"].unique()), AGG, colors=PROTOCOL_COLORS[protocol],
+                  mouse_colors=mouse_colors, ylabel=f"trials per {UNIT}")
         ax.set_title(protocol)
         ax.set_xlabel("signal strength (%)")
-    fig.suptitle("Trials per signal level, per session (clean)", y=1.03)
+    fig.suptitle(f"Trials per signal level, per {UNIT} (clean)", y=1.03)
     fig.tight_layout()
     save_fig(fig, figdir, "6_signal_level_balance_clean")
+    plt.close(fig)
 
 # --------------------------------------------------------------------- #
 # 7. Stim/reward windows are fixed in SPACE (stimStart/rewardZoneStart/
@@ -388,59 +412,60 @@ else:
 #    a problem for any purely trial-locked, non-overlapping-window
 #    analysis (like 1c_behavior.py's MI_WINDOWS).
 # --------------------------------------------------------------------- #
-timing_cache = paths.store / "window_timing.pkl"
-
 if len(included_ids) == 0:
     print("No included sessions -- skipping the stim/reward timing figure.")
+    timing = pd.DataFrame()
 else:
-    if not args.recompute and timing_cache.exists():
-        print(f"Reusing cached window timing from {paths.store} (pass --recompute to reload 0_data/)")
-        timing = pd.read_pickle(timing_cache)
-    else:
-        sessions_bd = load_sessions(protocols=PROTOCOLS, load_behaviordata=True, load_videodata=False,
-                                     only_session_ids=included_ids)
-        timing_rows = []
-        for ses in sessions_bd:
-            if ses.trialdata is None or ses.behaviordata is None:
-                continue
-            trial = (ses.trialdata[ses.trialdata["engaged"] == 1].copy()
-                      if "engaged" in ses.trialdata.columns else ses.trialdata.copy())
-            if trial.empty:
-                continue
-            trial["_stim_end_pos"] = trial["stimStart"] + STIM_WIDTH_CM
+    def window_timing_of_session(ses, seed):
+        """Window timing of ONE included session (behavior trace is loaded for this session only)."""
+        if ses.trialdata is None or ses.behaviordata is None:
+            return None
+        trial = (ses.trialdata[ses.trialdata["engaged"] == 1].copy()
+                 if "engaged" in ses.trialdata.columns else ses.trialdata.copy())
+        if trial.empty:
+            return None
+        trial["_stim_end_pos"] = trial["stimStart"] + STIM_WIDTH_CM
 
-            continuous = ses.behaviordata.sort_values("ts")
-            trial = derive_onset_time(trial, continuous, position_value_col="stimStart", out_col="stim_start_time")
-            trial = derive_onset_time(trial, continuous, position_value_col="_stim_end_pos", out_col="stim_end_time")
-            trial = derive_onset_time(trial, continuous, position_value_col="rewardZoneStart", out_col="reward_start_time")
-            trial = derive_onset_time(trial, continuous, position_value_col="rewardZoneEnd", out_col="reward_end_time")
+        continuous = ses.behaviordata.sort_values("ts")
+        trial = derive_onset_time(trial, continuous, position_value_col="stimStart", out_col="stim_start_time")
+        trial = derive_onset_time(trial, continuous, position_value_col="_stim_end_pos", out_col="stim_end_time")
+        trial = derive_onset_time(trial, continuous, position_value_col="rewardZoneStart", out_col="reward_start_time")
+        trial = derive_onset_time(trial, continuous, position_value_col="rewardZoneEnd", out_col="reward_end_time")
 
-            trial["stim_duration"] = trial["stim_end_time"] - trial["stim_start_time"]
-            trial["reward_duration"] = trial["reward_end_time"] - trial["reward_start_time"]
-            trial["stim_start_rel_tStart"] = trial["stim_start_time"] - trial["tStart"]
-            trial["reward_start_rel_tStart"] = trial["reward_start_time"] - trial["tStart"]
+        trial["stim_duration"] = trial["stim_end_time"] - trial["stim_start_time"]
+        trial["reward_duration"] = trial["reward_end_time"] - trial["reward_start_time"]
+        trial["stim_start_rel_tStart"] = trial["stim_start_time"] - trial["tStart"]
+        trial["reward_start_rel_tStart"] = trial["reward_start_time"] - trial["tStart"]
 
-            # Gap (s) between this trial's window ending and the NEXT
-            # trial's same window starting -- negative means overlap.
-            # Requires trials sorted by number (== chronological order).
-            trial = trial.sort_values("trialNumber")
-            trial["stim_gap_to_next"] = trial["stim_start_time"].shift(-1) - trial["stim_end_time"]
-            trial["reward_gap_to_next"] = trial["reward_start_time"].shift(-1) - trial["reward_end_time"]
+        # Gap (s) between this trial's window ending and the NEXT trial's same window starting --
+        # negative means overlap. Requires trials sorted by number (== chronological order).
+        trial = trial.sort_values("trialNumber")
+        trial["stim_gap_to_next"] = trial["stim_start_time"].shift(-1) - trial["stim_end_time"]
+        trial["reward_gap_to_next"] = trial["reward_start_time"].shift(-1) - trial["reward_end_time"]
 
-            trial["session_id"] = ses.session_id
-            trial["protocol"] = ses.protocol
-            timing_rows.append(trial[[
-                "session_id", "protocol", "trialNumber",
-                "stim_start_time", "stim_end_time", "stim_duration",
-                "stim_start_rel_tStart", "stim_gap_to_next",
-                "reward_start_time", "reward_end_time", "reward_duration",
-                "reward_start_rel_tStart", "reward_gap_to_next",
-            ]])
-        timing = pd.concat(timing_rows, ignore_index=True) if timing_rows else pd.DataFrame()
-        timing.to_pickle(timing_cache)
+        trial["session_id"] = ses.session_id
+        trial["protocol"] = ses.protocol
+        return trial[[
+            "session_id", "protocol", "trialNumber",
+            "stim_start_time", "stim_end_time", "stim_duration",
+            "stim_start_rel_tStart", "stim_gap_to_next",
+            "reward_start_time", "reward_end_time", "reward_duration",
+            "reward_start_rel_tStart", "reward_gap_to_next",
+        ]]
+
+    timing_ids = [sid for sid in session_ids if sid in set(included_ids)]
+    per_session_timing = run_sessions(
+        timing_ids, window_timing_of_session, list(PROTOCOLS), paths.store, "window_timing",
+        key_params=dict(version="1b-v2", stim_width=STIM_WIDTH_CM),
+        load_kwargs=dict(load_behaviordata=True, load_videodata=False),
+        n_jobs=scope.n_jobs, recompute=args.recompute,
+        extra_key_by_session={k: v for k, v in stamps.items() if k in set(timing_ids)}, flatten=False)
+    parts = [t for t in per_session_timing if t is not None]
+    timing = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame()
+    del per_session_timing, parts
 
     if len(timing):
-        timing.to_csv(paths.out / "window_timing.csv", index=False)
+        timing.to_csv(table_dir / "window_timing.csv", index=False)
 
         n_stim_checked = timing["stim_gap_to_next"].notna().sum()
         n_stim_overlap = (timing["stim_gap_to_next"] < 0).sum()
@@ -461,16 +486,12 @@ else:
                          element="step", stat="density", common_norm=False, legend=(row == 0))
             ax.set_xlabel(f"{window_name} window duration (s)")
             ax.set_title(f"{window_name.capitalize()} duration")
-            ax.set_xscale('log')
-            ax.set_yscale('log')
 
             ax = axes[row][1]
             sns.histplot(data=timing, x=start_col, hue="protocol", palette=PROTOCOL_COLORS, ax=ax,
                          element="step", stat="density", common_norm=False, legend=False)
             ax.set_xlabel(f"{window_name} start, time since trial start (s)")
             ax.set_title(f"{window_name.capitalize()} start time (rel. trial start)")
-            ax.set_xscale('log')
-            ax.set_yscale('log')
 
             ax = axes[row][2]
             gap_vals = timing[gap_col].dropna()
@@ -480,14 +501,12 @@ else:
             ax.set_xlabel(f"gap to next trial's {window_name} window (s)")
             ax.set_title(f"{window_name.capitalize()} overlap check "
                          f"({n_overlap}/{len(gap_vals)} overlap)")
-            ax.set_xscale('log')
-            ax.set_yscale('log')
-            
+
         fig.suptitle("Stim/reward window timing -- windows are fixed in position; "
                      "when do they actually occur in time?", y=1.02)
         fig.tight_layout()
         save_fig(fig, figdir, "7_window_timing")
 
 
-print(f"\nWrote tables to {paths.out}, figures to {figdir}")
+print(f"\nWrote tables to {table_dir}, figures to {figdir}")
 print("Run `python b_progress/make_progress_md.py 1b_psychometric` to build a markdown summary.")

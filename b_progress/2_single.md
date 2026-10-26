@@ -1,6 +1,6 @@
 # 2_single
 
-*Auto-generated from `2_pipeline/2_single/out/` on 2026-09-14 16:47. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/2_single/out/` on 2026-10-16 17:39. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Figures
 

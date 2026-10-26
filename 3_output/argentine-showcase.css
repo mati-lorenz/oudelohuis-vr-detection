@@ -1,0 +1,112 @@
+/* ===========================================================================
+   argentine-showcase.css
+   Stylesheet for the Argentinian typeface showcase deck.
+
+   In the deck's frontmatter, the path is relative to the VAULT ROOT:
+     css: Code/oudelohuis-vr-detection/3_output/argentine-showcase.css
+   =========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&family=Alegreya+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Archivo:ital,wght@0,100..900;1,100..900&family=Archivo+Narrow:wght@400..700&family=Archivo+Black&family=Chivo:ital,wght@0,100..900;1,100..900&family=Chivo+Mono:wght@300;400;700&family=Asap:ital,wght@0,100..900;1,100..900&family=Saira:wght@100..900&family=Bitter:ital,wght@0,100..900;1,100..900&family=Faustina:ital,wght@0,300..800;1,300..800&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:ital,wght@0,100..900;1,100..900&family=MuseoModerno:ital,wght@0,100..900;1,100..900&family=Unna:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root {
+  --ink: #1f2430;
+  --ink-soft: #6a7485;
+  --accent: #1f2a44;
+  --rule: #dfe4ec;
+  --good: #009E73;
+  --bad: #B2442E;
+}
+
+/* --- base ---------------------------------------------------------------- */
+.reveal {
+  font-family: 'Archivo', sans-serif;
+  font-size: 28px;
+  color: var(--ink);
+}
+
+.reveal .slides section { text-align: left; }
+
+/* higher specificity than the built-in themes, which also style .reveal h1 */
+.reveal .slides h1,
+.reveal .slides h2,
+.reveal .slides h3 {
+  font-family: 'Alegreya', serif;
+  text-transform: none !important;
+  color: var(--accent);
+  line-height: 1.15;
+}
+.reveal .slides h1 { font-size: 2.2em; font-weight: 800; }
+.reveal .slides h2 { font-size: 1.5em; margin-bottom: 0.1em; }
+.reveal .slides h3 { font-size: 1.15em; font-weight: 600; }
+
+/* --- one class per family ------------------------------------------------ */
+.f-alegreya       { font-family: 'Alegreya', serif; }
+.f-alegreya-sans  { font-family: 'Alegreya Sans', sans-serif; }
+.f-faustina       { font-family: 'Faustina', serif; }
+.f-bitter         { font-family: 'Bitter', serif; }
+.f-unna           { font-family: 'Unna', serif; }
+.f-baskerville    { font-family: 'Libre Baskerville', serif; }
+.f-archivo        { font-family: 'Archivo', sans-serif; }
+.f-archivo-narrow { font-family: 'Archivo Narrow', sans-serif; }
+.f-archivo-black  { font-family: 'Archivo Black', sans-serif; }
+.f-chivo          { font-family: 'Chivo', sans-serif; }
+.f-chivo-mono     { font-family: 'Chivo Mono', monospace; white-space: pre-wrap; }
+.f-asap           { font-family: 'Asap', sans-serif; }
+.f-saira          { font-family: 'Saira', sans-serif; }
+.f-montserrat     { font-family: 'Montserrat', sans-serif; }
+.f-franklin       { font-family: 'Libre Franklin', sans-serif; }
+.f-museo          { font-family: 'MuseoModerno', sans-serif; }
+
+/* --- specimen blocks ----------------------------------------------------- */
+.spec { text-align: left; }
+
+.spec .display {
+  font-size: 1.9em;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0.1em 0 0.25em 0;
+  color: var(--accent);
+}
+
+.spec .body { font-size: 0.78em; line-height: 1.45; margin-bottom: 0.4em; }
+
+.spec .figures {
+  font-size: 0.78em;
+  font-variant-numeric: tabular-nums lining-nums;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 0.3em 0;
+  margin-bottom: 0.4em;
+}
+
+.meta {
+  font-family: 'Archivo', sans-serif;
+  font-size: 0.52em;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.verdict {
+  font-family: 'Archivo', sans-serif;
+  font-size: 0.6em;
+  border-left: 3px solid var(--good);
+  padding-left: 0.6em;
+  margin-top: 0.5em;
+}
+.verdict .no { color: var(--bad); }
+
+/* --- pairing blocks ------------------------------------------------------ */
+.pair {
+  text-align: left;
+  border: 1px solid var(--rule);
+  padding: 0.6em 0.8em;
+  border-radius: 6px;
+  margin-bottom: 0.5em;
+}
+.pair .ph { font-size: 1.25em; font-weight: 700; color: var(--accent); margin-bottom: 0.15em; }
+.pair .pb { font-size: 0.68em; line-height: 1.4; }
+.pair .pn { font-size: 0.6em; color: var(--ink-soft); margin-top: 0.3em; }
+
+.reveal table { font-size: 0.62em; font-variant-numeric: tabular-nums; }
