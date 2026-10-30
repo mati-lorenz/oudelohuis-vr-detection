@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/1_scripts/3g_pair_hit_miss_correlations.py", line 61, in <module>
+    import numpy as np
+ModuleNotFoundError: No module named 'numpy'

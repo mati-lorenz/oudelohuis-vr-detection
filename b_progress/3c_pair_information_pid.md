@@ -1,6 +1,6 @@
 # 3c_pair_information_pid
 
-*Auto-generated from `2_pipeline/3c_pair_information_pid/out/` on 2026-10-16 17:39. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/3c_pair_information_pid/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 

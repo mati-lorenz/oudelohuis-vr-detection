@@ -31,8 +31,8 @@ a per-neuron summary CSV per variable.
 
 #%%
 import os, sys
-os.chdir('/u/g/glorenz/Documents/Research/Code/external_repos/oudelohuis-vr-detection')
-sys.path.insert(0, '/u/g/glorenz/Documents/Research/Code/external_repos/oudelohuis-vr-detection')
+os.chdir('/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/d_archive')
+sys.path.insert(0, '/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/d_archive')
 
 import numpy as np
 import pandas as pd

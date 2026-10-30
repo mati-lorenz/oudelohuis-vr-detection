@@ -23,7 +23,7 @@ def get_data_folder():
     elif user == 'ULTINTELLIGENCE':
         DATA_FOLDER = 'C:\\Users\\asimo\\Documents\\BCCN\\Lab Rotations\\Petreanu Lab\\molanalysis\\data'
     elif user == 'glorenz':
-        DATA_FOLDER = '/u/g/glorenz/Documents/Research/Code/Detect_analysis/Data/temp_transfer_data_detectiontask'
+        DATA_FOLDER = '/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/0_data'
 
     return DATA_FOLDER
 

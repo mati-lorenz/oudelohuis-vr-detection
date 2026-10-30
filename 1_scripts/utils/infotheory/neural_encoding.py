@@ -45,14 +45,17 @@ def load_cell_inclusion(cell_dist_out, activity_stats_out) -> pd.DataFrame:
 
     Returns
     -------
-    DataFrame with session_id, cell_id, include (bool: passes BOTH
-    2a's proximity filter and 2b's QC)
+    DataFrame with session_id, cell_id, include (bool: passes 2a's proximity filter AND 2a's depth filter
+    (unlabeled V1/PM cells only; when 2a wrote it) AND 2b's QC)
     """
-    celldata = pd.read_csv(cell_dist_out / "celldata_combined.csv", low_memory=False)[
-        ["session_id", "cell_id", "passes_proximity_filter"]]
+    celldata = pd.read_csv(cell_dist_out / "celldata_combined.csv", low_memory=False)
+    celldata = celldata[["session_id", "cell_id", "passes_proximity_filter"]
+                        + (["passes_depth_filter"] if "passes_depth_filter" in celldata.columns else [])]
     qc = pd.read_csv(activity_stats_out / "qc_per_cell.csv")[["session_id", "cell_id", "qc_pass"]]
     merged = celldata.merge(qc, on=["session_id", "cell_id"], how="inner")
     merged["include"] = merged["passes_proximity_filter"] & merged["qc_pass"]
+    if "passes_depth_filter" in merged.columns:        # 2a >= v3: unlabeled V1/PM cells must also be superficial
+        merged["include"] &= merged["passes_depth_filter"].astype(bool)
     return merged[["session_id", "cell_id", "include"]]
 
 

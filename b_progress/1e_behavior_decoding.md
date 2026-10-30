@@ -1,6 +1,6 @@
 # 1e_behavior_decoding
 
-*Auto-generated from `2_pipeline/1e_behavior_decoding/out/` on 2026-10-23 09:54. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/1e_behavior_decoding/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 
@@ -8,38 +8,38 @@
 
 | protocol | unit | animal_id | decoder | axis | binning | window | s_rel | target | feature_set | kind | acc | null_mean | null_sd | n |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | pre_stim | -20 | zero_vs_nonzero | runspeed | single | 0.4968 | 0.5067 | 0.06543 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | logr | position | windows | pre_stim | -20 | zero_vs_nonzero | runspeed | single | 0.4683 | 0.5357 | 0.07519 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | svm | position | windows | pre_stim | -20 | zero_vs_nonzero | runspeed | single | 0.4919 | 0.4903 | 0.06978 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | pre_stim | -20 | zero_vs_nonzero | lick | single | 0.577 | 0.5098 | 0.06846 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | logr | position | windows | pre_stim | -20 | zero_vs_nonzero | lick | single | 0.4861 | 0.4797 | 0.06397 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | svm | position | windows | pre_stim | -20 | zero_vs_nonzero | lick | single | 0.5958 | 0.5094 | 0.048 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | pre_stim | -20 | zero_vs_nonzero | runspeed+lick | cumulative | 0.4933 | 0.4837 | 0.07684 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | logr | position | windows | pre_stim | -20 | zero_vs_nonzero | runspeed+lick | cumulative | 0.5221 | 0.5061 | 0.06954 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | svm | position | windows | pre_stim | -20 | zero_vs_nonzero | runspeed+lick | cumulative | 0.5456 | 0.5111 | 0.06231 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | pre_stim | -20 | choice | runspeed | single | 0.5491 | 0.5072 | 0.08534 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | logr | position | windows | pre_stim | -20 | choice | runspeed | single | 0.5537 | 0.5045 | 0.09418 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | svm | position | windows | pre_stim | -20 | choice | runspeed | single | 0.5642 | 0.4796 | 0.09717 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | pre_stim | -20 | choice | lick | single | 0.5649 | 0.4902 | 0.08144 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | logr | position | windows | pre_stim | -20 | choice | lick | single | 0.5649 | 0.477 | 0.1053 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | svm | position | windows | pre_stim | -20 | choice | lick | single | 0.5649 | 0.4868 | 0.09534 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | pre_stim | -20 | choice | runspeed+lick | cumulative | 0.5797 | 0.5149 | 0.09146 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | logr | position | windows | pre_stim | -20 | choice | runspeed+lick | cumulative | 0.6075 | 0.4738 | 0.07726 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | svm | position | windows | pre_stim | -20 | choice | runspeed+lick | cumulative | 0.5716 | 0.5243 | 0.09088 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | stim | 10 | zero_vs_nonzero | runspeed | single | 0.8824 | 0.5183 | 0.07674 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | logr | position | windows | stim | 10 | zero_vs_nonzero | runspeed | single | 0.8827 | 0.5073 | 0.07423 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | svm | position | windows | stim | 10 | zero_vs_nonzero | runspeed | single | 0.8803 | 0.475 | 0.09407 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | stim | 10 | zero_vs_nonzero | lick | single | 0.8268 | 0.4859 | 0.06076 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | logr | position | windows | stim | 10 | zero_vs_nonzero | lick | single | 0.7918 | 0.4992 | 0.08046 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | svm | position | windows | stim | 10 | zero_vs_nonzero | lick | single | 0.7918 | 0.4921 | 0.06321 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | stim | 10 | zero_vs_nonzero | runspeed+lick | cumulative | 0.874 | 0.4899 | 0.05299 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | logr | position | windows | stim | 10 | zero_vs_nonzero | runspeed+lick | cumulative | 0.8643 | 0.5255 | 0.06234 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | svm | position | windows | stim | 10 | zero_vs_nonzero | runspeed+lick | cumulative | 0.8631 | 0.5194 | 0.06993 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | stim | 10 | choice | runspeed | single | 0.8095 | 0.4948 | 0.09321 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | logr | position | windows | stim | 10 | choice | runspeed | single | 0.806 | 0.4822 | 0.08013 | 157 |
-| DM | LPE10884_2023_11_30 | LPE10884 | svm | position | windows | stim | 10 | choice | runspeed | single | 0.8049 | 0.4893 | 0.08165 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | pre_stim | -20 | zero_vs_nonzero | runspeed | single | 0.4341 | 0.4775 | 0.07549 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | pre_stim | -20 | zero_vs_nonzero | lick | single | 0.5858 | 0.502 | 0.0802 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | pre_stim | -20 | zero_vs_nonzero | runspeed+lick | cumulative | 0.4945 | 0.491 | 0.07471 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | stim | 10 | zero_vs_nonzero | runspeed | single | 0.8936 | 0.489 | 0.07129 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | stim | 10 | zero_vs_nonzero | lick | single | 0.8256 | 0.4885 | 0.0868 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | stim | 10 | zero_vs_nonzero | runspeed+lick | cumulative | 0.8727 | 0.4633 | 0.09703 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | reward | 35 | zero_vs_nonzero | runspeed | single | 0.6927 | 0.5481 | 0.05597 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | reward | 35 | zero_vs_nonzero | lick | single | 0.598 | 0.51 | 0.05314 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | windows | reward | 35 | zero_vs_nonzero | runspeed+lick | cumulative | 0.8145 | 0.5441 | 0.09206 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | -50 | zero_vs_nonzero | runspeed | single | 0.4218 | 0.4973 | 0.07352 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | -50 | zero_vs_nonzero | lick | single | 0.5217 | 0.4916 | 0.06466 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | -50 | zero_vs_nonzero | runspeed+lick | cumulative | 0.4378 | 0.4923 | 0.07015 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | -30 | zero_vs_nonzero | runspeed | single | 0.5267 | 0.5212 | 0.07696 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | -30 | zero_vs_nonzero | lick | single | 0.5504 | 0.4945 | 0.06751 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | -30 | zero_vs_nonzero | runspeed+lick | cumulative | 0.5269 | 0.4811 | 0.09302 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | -10 | zero_vs_nonzero | runspeed | single | 0.4557 | 0.4909 | 0.09079 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | -10 | zero_vs_nonzero | lick | single | 0.3985 | 0.5247 | 0.07053 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | -10 | zero_vs_nonzero | runspeed+lick | cumulative | 0.4233 | 0.5148 | 0.07429 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | 10 | zero_vs_nonzero | runspeed | single | 0.8812 | 0.4729 | 0.08869 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | 10 | zero_vs_nonzero | lick | single | 0.8268 | 0.5107 | 0.06929 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | 10 | zero_vs_nonzero | runspeed+lick | cumulative | 0.8703 | 0.5138 | 0.07909 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | 30 | zero_vs_nonzero | runspeed | single | 0.9507 | 0.5065 | 0.08246 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | 30 | zero_vs_nonzero | lick | single | 0.5779 | 0.4717 | 0.07907 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | 30 | zero_vs_nonzero | runspeed+lick | cumulative | 0.922 | 0.5125 | 0.06967 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | 50 | zero_vs_nonzero | runspeed | single | 0.6643 | 0.4911 | 0.09635 | 101 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | 50 | zero_vs_nonzero | lick | single | 0.5217 | 0.4925 | 0.04134 | 101 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | fixed |  | 50 | zero_vs_nonzero | runspeed+lick | cumulative | 0.6751 | 0.5222 | 0.1058 | 101 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | sliding |  | -50 | zero_vs_nonzero | runspeed | single | 0.4508 | 0.5018 | 0.08827 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | sliding |  | -50 | zero_vs_nonzero | lick | single | 0.4943 | 0.4774 | 0.06864 | 157 |
+| DM | LPE10884_2023_11_30 | LPE10884 | lda | position | sliding |  | -50 | zero_vs_nonzero | runspeed+lick | cumulative | 0.4127 | 0.5158 | 0.06934 | 157 |
 
-*(showing first 15 of 17 columns; showing first 30 of 278439 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 17 columns; showing first 30 of 409146 rows -- see the linked CSV for the rest)*
 
 [behavior_decoding__session.csv](../2_pipeline/1e_behavior_decoding/out/behavior_decoding__session.csv)
 
@@ -47,38 +47,38 @@
 
 | protocol | decoder | axis | binning | window | s_rel | target | feature_set | kind | acc | null_mean | null_sd | chance | acc_sem | n_units |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| DM | lda | position | fixed |  | -55 | choice | all_but_lick | leave_one_out | 0.5377 | 0.4989 | 0.07061 | 0.5 | 0.01903 | 6 |
-| DM | lda | position | fixed |  | -55 | choice | all_but_motionenergy | leave_one_out | 0.5629 | 0.4959 | 0.06524 | 0.5 | 0.008359 | 6 |
-| DM | lda | position | fixed |  | -55 | choice | all_but_pupil_area | leave_one_out | 0.524 | 0.4949 | 0.06134 | 0.5 | 0.007076 | 11 |
-| DM | lda | position | fixed |  | -55 | choice | all_but_runspeed | leave_one_out | 0.5371 | 0.5012 | 0.06357 | 0.5 | 0.02336 | 6 |
-| DM | lda | position | fixed |  | -55 | choice | lick | single | 0.5059 | 0.5031 | 0.05033 | 0.5 | 0.01103 | 18 |
-| DM | lda | position | fixed |  | -55 | choice | motionenergy | single | 0.4924 | 0.5049 | 0.06014 | 0.5 | 0.01547 | 11 |
-| DM | lda | position | fixed |  | -55 | choice | pupil_area | single | 0.5604 | 0.5056 | 0.06144 | 0.5 | 0.02873 | 6 |
-| DM | lda | position | fixed |  | -55 | choice | runspeed | single | 0.509 | 0.5017 | 0.06663 | 0.5 | 0.01307 | 18 |
-| DM | lda | position | fixed |  | -55 | choice | runspeed+lick | cumulative | 0.502 | 0.4997 | 0.06181 | 0.5 | 0.01454 | 18 |
-| DM | lda | position | fixed |  | -55 | choice | runspeed+lick+pupil_area | cumulative | 0.5654 | 0.4914 | 0.06216 | 0.5 | 0.006075 | 6 |
-| DM | lda | position | fixed |  | -55 | choice | runspeed+lick+pupil_area+motionenergy | cumulative | 0.5241 | 0.5127 | 0.06796 | 0.5 | 0.01008 | 6 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | all_but_lick | leave_one_out | 0.4766 | 0.5079 | 0.06685 | 0.5 | 0.02825 | 6 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | all_but_motionenergy | leave_one_out | 0.5099 | 0.4975 | 0.06558 | 0.5 | 0.02753 | 6 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | all_but_pupil_area | leave_one_out | 0.5001 | 0.5048 | 0.06004 | 0.5 | 0.01588 | 11 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | all_but_runspeed | leave_one_out | 0.4734 | 0.5079 | 0.06538 | 0.5 | 0.03018 | 6 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | lick | single | 0.4951 | 0.5049 | 0.05255 | 0.5 | 0.01116 | 18 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | motionenergy | single | 0.5079 | 0.5016 | 0.0605 | 0.5 | 0.01295 | 11 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | pupil_area | single | 0.5091 | 0.5021 | 0.07073 | 0.5 | 0.02321 | 6 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | runspeed | single | 0.5149 | 0.4998 | 0.06153 | 0.5 | 0.0138 | 18 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | runspeed+lick | cumulative | 0.5211 | 0.5041 | 0.0616 | 0.5 | 0.01214 | 18 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | runspeed+lick+pupil_area | cumulative | 0.5183 | 0.5048 | 0.06988 | 0.5 | 0.01979 | 6 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | runspeed+lick+pupil_area+motionenergy | cumulative | 0.4732 | 0.5003 | 0.07177 | 0.5 | 0.02833 | 6 |
-| DM | lda | position | fixed |  | -45 | choice | all_but_lick | leave_one_out | 0.523 | 0.5071 | 0.05606 | 0.5 | 0.01898 | 6 |
-| DM | lda | position | fixed |  | -45 | choice | all_but_motionenergy | leave_one_out | 0.5408 | 0.5014 | 0.05595 | 0.5 | 0.01849 | 6 |
-| DM | lda | position | fixed |  | -45 | choice | all_but_pupil_area | leave_one_out | 0.516 | 0.4982 | 0.05046 | 0.5 | 0.01516 | 10 |
-| DM | lda | position | fixed |  | -45 | choice | all_but_runspeed | leave_one_out | 0.5545 | 0.5038 | 0.05727 | 0.5 | 0.01976 | 6 |
-| DM | lda | position | fixed |  | -45 | choice | lick | single | 0.5056 | 0.4996 | 0.04349 | 0.5 | 0.01376 | 17 |
-| DM | lda | position | fixed |  | -45 | choice | motionenergy | single | 0.5076 | 0.5014 | 0.05099 | 0.5 | 0.012 | 11 |
-| DM | lda | position | fixed |  | -45 | choice | pupil_area | single | 0.5501 | 0.5071 | 0.05379 | 0.5 | 0.02939 | 6 |
-| DM | lda | position | fixed |  | -45 | choice | runspeed | single | 0.5355 | 0.5065 | 0.06227 | 0.5 | 0.01284 | 18 |
+| DM | lda | position | fixed |  | -50 | choice | all_but_lick | leave_one_out | 0.5251 | 0.5003 | 0.06279 | 0.5 | 0.007863 | 6 |
+| DM | lda | position | fixed |  | -50 | choice | all_but_motionenergy | leave_one_out | 0.546 | 0.4963 | 0.05751 | 0.5 | 0.009991 | 6 |
+| DM | lda | position | fixed |  | -50 | choice | all_but_pupil_area | leave_one_out | 0.5344 | 0.4954 | 0.05195 | 0.5 | 0.01338 | 11 |
+| DM | lda | position | fixed |  | -50 | choice | all_but_runspeed | leave_one_out | 0.5291 | 0.4961 | 0.05157 | 0.5 | 0.02355 | 6 |
+| DM | lda | position | fixed |  | -50 | choice | lick | single | 0.5123 | 0.5023 | 0.04878 | 0.5 | 0.0106 | 18 |
+| DM | lda | position | fixed |  | -50 | choice | motionenergy | single | 0.4757 | 0.5037 | 0.05213 | 0.5 | 0.01667 | 11 |
+| DM | lda | position | fixed |  | -50 | choice | pupil_area | single | 0.5386 | 0.5045 | 0.05656 | 0.5 | 0.0307 | 6 |
+| DM | lda | position | fixed |  | -50 | choice | runspeed | single | 0.5213 | 0.4947 | 0.06363 | 0.5 | 0.01232 | 18 |
+| DM | lda | position | fixed |  | -50 | choice | runspeed+lick | cumulative | 0.5218 | 0.5029 | 0.06088 | 0.5 | 0.01443 | 18 |
+| DM | lda | position | fixed |  | -50 | choice | runspeed+lick+pupil_area | cumulative | 0.5544 | 0.4947 | 0.05352 | 0.5 | 0.01535 | 6 |
+| DM | lda | position | fixed |  | -50 | choice | runspeed+lick+pupil_area+motionenergy | cumulative | 0.541 | 0.4929 | 0.06141 | 0.5 | 0.009701 | 6 |
+| DM | lda | position | fixed |  | -50 | correct | all_but_lick | leave_one_out | 0.5348 | 0.489 | 0.08053 | 0.5 | 0.02469 | 6 |
+| DM | lda | position | fixed |  | -50 | correct | all_but_motionenergy | leave_one_out | 0.5208 | 0.5072 | 0.07509 | 0.5 | 0.02015 | 6 |
+| DM | lda | position | fixed |  | -50 | correct | all_but_pupil_area | leave_one_out | 0.5736 | 0.5031 | 0.08365 | 0.5 | 0.01732 | 11 |
+| DM | lda | position | fixed |  | -50 | correct | all_but_runspeed | leave_one_out | 0.5364 | 0.4975 | 0.07848 | 0.5 | 0.02322 | 6 |
+| DM | lda | position | fixed |  | -50 | correct | lick | single | 0.5172 | 0.5044 | 0.06755 | 0.5 | 0.02085 | 18 |
+| DM | lda | position | fixed |  | -50 | correct | motionenergy | single | 0.5534 | 0.4964 | 0.07767 | 0.5 | 0.01942 | 11 |
+| DM | lda | position | fixed |  | -50 | correct | pupil_area | single | 0.5208 | 0.4919 | 0.08186 | 0.5 | 0.03009 | 6 |
+| DM | lda | position | fixed |  | -50 | correct | runspeed | single | 0.563 | 0.496 | 0.0874 | 0.5 | 0.02333 | 18 |
+| DM | lda | position | fixed |  | -50 | correct | runspeed+lick | cumulative | 0.5645 | 0.5064 | 0.08425 | 0.5 | 0.02584 | 18 |
+| DM | lda | position | fixed |  | -50 | correct | runspeed+lick+pupil_area | cumulative | 0.499 | 0.507 | 0.0931 | 0.5 | 0.02001 | 6 |
+| DM | lda | position | fixed |  | -50 | correct | runspeed+lick+pupil_area+motionenergy | cumulative | 0.547 | 0.5051 | 0.08095 | 0.5 | 0.02018 | 6 |
+| DM | lda | position | fixed |  | -50 | outcome | all_but_lick | leave_one_out | 0.3254 | 0.2574 | 0.08125 | 0.25 | 0.0335 | 6 |
+| DM | lda | position | fixed |  | -50 | outcome | all_but_motionenergy | leave_one_out | 0.3048 | 0.2694 | 0.07414 | 0.25 | 0.0401 | 6 |
+| DM | lda | position | fixed |  | -50 | outcome | all_but_pupil_area | leave_one_out | 0.3199 | 0.2493 | 0.07564 | 0.25 | 0.02931 | 11 |
+| DM | lda | position | fixed |  | -50 | outcome | all_but_runspeed | leave_one_out | 0.2894 | 0.2511 | 0.07089 | 0.25 | 0.01251 | 6 |
+| DM | lda | position | fixed |  | -50 | outcome | lick | single | 0.2391 | 0.2462 | 0.06194 | 0.25 | 0.02042 | 16 |
+| DM | lda | position | fixed |  | -50 | outcome | motionenergy | single | 0.3091 | 0.2406 | 0.07192 | 0.25 | 0.01736 | 11 |
+| DM | lda | position | fixed |  | -50 | outcome | pupil_area | single | 0.2977 | 0.2546 | 0.07836 | 0.25 | 0.057 | 6 |
+| DM | lda | position | fixed |  | -50 | outcome | runspeed | single | 0.3066 | 0.2464 | 0.07503 | 0.25 | 0.01884 | 16 |
 
-*(showing first 15 of 16 columns; showing first 30 of 16512 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 16 columns; showing first 30 of 26544 rows -- see the linked CSV for the rest)*
 
 [behavior_decoding_curves__session.csv](../2_pipeline/1e_behavior_decoding/out/behavior_decoding_curves__session.csv)
 
@@ -86,38 +86,38 @@
 
 | protocol | decoder | axis | binning | window | s_rel | target | variable | delta | delta_sem |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| DM | lda | position | fixed |  | -55 | choice | lick | -0.01359 | 0.01743 |
-| DM | lda | position | fixed |  | -55 | choice | motionenergy | -0.03881 | 0.00974 |
-| DM | lda | position | fixed |  | -55 | choice | pupil_area | 0.0003088 | 0.01584 |
-| DM | lda | position | fixed |  | -55 | choice | runspeed | -0.01298 | 0.02734 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | lick | -0.003359 | 0.009526 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | motionenergy | -0.0367 | 0.01289 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | pupil_area | -0.004145 | 0.01689 |
-| DM | lda | position | fixed |  | -55 | zero_vs_nonzero | runspeed | -0.000236 | 0.01466 |
-| DM | lda | position | fixed |  | -45 | choice | lick | 0.02384 | 0.01689 |
-| DM | lda | position | fixed |  | -45 | choice | motionenergy | 0.00611 | 0.01456 |
-| DM | lda | position | fixed |  | -45 | choice | pupil_area | 0.0157 | 0.01828 |
-| DM | lda | position | fixed |  | -45 | choice | runspeed | -0.007629 | 0.01612 |
-| DM | lda | position | fixed |  | -45 | zero_vs_nonzero | lick | -0.01325 | 0.01627 |
-| DM | lda | position | fixed |  | -45 | zero_vs_nonzero | motionenergy | 0.003605 | 0.01298 |
-| DM | lda | position | fixed |  | -45 | zero_vs_nonzero | pupil_area | 0.02546 | 0.02757 |
-| DM | lda | position | fixed |  | -45 | zero_vs_nonzero | runspeed | 0.02144 | 0.02714 |
-| DM | lda | position | fixed |  | -35 | choice | lick | 0.04224 | 0.026 |
-| DM | lda | position | fixed |  | -35 | choice | motionenergy | 0.001544 | 0.0157 |
-| DM | lda | position | fixed |  | -35 | choice | pupil_area | 0.0318 | 0.03004 |
-| DM | lda | position | fixed |  | -35 | choice | runspeed | 0.001369 | 0.01662 |
-| DM | lda | position | fixed |  | -35 | zero_vs_nonzero | lick | 0.02055 | 0.01695 |
-| DM | lda | position | fixed |  | -35 | zero_vs_nonzero | motionenergy | 0.01288 | 0.02255 |
-| DM | lda | position | fixed |  | -35 | zero_vs_nonzero | pupil_area | 0.0109 | 0.007948 |
-| DM | lda | position | fixed |  | -35 | zero_vs_nonzero | runspeed | 0.007027 | 0.01543 |
-| DM | lda | position | fixed |  | -25 | choice | lick | 0.03163 | 0.01585 |
-| DM | lda | position | fixed |  | -25 | choice | motionenergy | 0.01281 | 0.005309 |
-| DM | lda | position | fixed |  | -25 | choice | pupil_area | 0.05107 | 0.02293 |
-| DM | lda | position | fixed |  | -25 | choice | runspeed | -0.009671 | 0.02228 |
-| DM | lda | position | fixed |  | -25 | zero_vs_nonzero | lick | -0.03025 | 0.01512 |
-| DM | lda | position | fixed |  | -25 | zero_vs_nonzero | motionenergy | -0.03259 | 0.02794 |
+| DM | lda | position | fixed |  | -50 | choice | lick | 0.01585 | 0.01364 |
+| DM | lda | position | fixed |  | -50 | choice | motionenergy | -0.005052 | 0.009344 |
+| DM | lda | position | fixed |  | -50 | choice | pupil_area | -0.006734 | 0.01532 |
+| DM | lda | position | fixed |  | -50 | choice | runspeed | 0.01187 | 0.02472 |
+| DM | lda | position | fixed |  | -50 | correct | lick | 0.01223 | 0.009142 |
+| DM | lda | position | fixed |  | -50 | correct | motionenergy | 0.02623 | 0.01698 |
+| DM | lda | position | fixed |  | -50 | correct | pupil_area | 0.0055 | 0.01772 |
+| DM | lda | position | fixed |  | -50 | correct | runspeed | 0.01062 | 0.01997 |
+| DM | lda | position | fixed |  | -50 | outcome | lick | -0.01642 | 0.03167 |
+| DM | lda | position | fixed |  | -50 | outcome | motionenergy | 0.004164 | 0.02881 |
+| DM | lda | position | fixed |  | -50 | outcome | pupil_area | 0.0437 | 0.02525 |
+| DM | lda | position | fixed |  | -50 | outcome | runspeed | 0.01952 | 0.01496 |
+| DM | lda | position | fixed |  | -50 | zero_vs_nonzero | lick | -0.005872 | 0.01884 |
+| DM | lda | position | fixed |  | -50 | zero_vs_nonzero | motionenergy | 1.896e-05 | 0.01908 |
+| DM | lda | position | fixed |  | -50 | zero_vs_nonzero | pupil_area | 0.01879 | 0.02386 |
+| DM | lda | position | fixed |  | -50 | zero_vs_nonzero | runspeed | 0.05093 | 0.02601 |
+| DM | lda | position | fixed |  | -30 | choice | lick | 0.03968 | 0.03419 |
+| DM | lda | position | fixed |  | -30 | choice | motionenergy | -0.007137 | 0.01043 |
+| DM | lda | position | fixed |  | -30 | choice | pupil_area | 0.03098 | 0.01987 |
+| DM | lda | position | fixed |  | -30 | choice | runspeed | 0.008062 | 0.02061 |
+| DM | lda | position | fixed |  | -30 | correct | lick | -0.007646 | 0.02073 |
+| DM | lda | position | fixed |  | -30 | correct | motionenergy | -0.004643 | 0.02673 |
+| DM | lda | position | fixed |  | -30 | correct | pupil_area | -0.002044 | 0.0241 |
+| DM | lda | position | fixed |  | -30 | correct | runspeed | 0.02686 | 0.0307 |
+| DM | lda | position | fixed |  | -30 | outcome | lick | 0.01302 | 0.02106 |
+| DM | lda | position | fixed |  | -30 | outcome | motionenergy | -0.0009565 | 0.01762 |
+| DM | lda | position | fixed |  | -30 | outcome | pupil_area | -0.004054 | 0.02264 |
+| DM | lda | position | fixed |  | -30 | outcome | runspeed | 0.003339 | 0.0223 |
+| DM | lda | position | fixed |  | -30 | zero_vs_nonzero | lick | 0.002399 | 0.01303 |
+| DM | lda | position | fixed |  | -30 | zero_vs_nonzero | motionenergy | -0.005967 | 0.01217 |
 
-*(showing first 30 of 5976 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 9600 rows -- see the linked CSV for the rest)*
 
 [behavior_decoding_leave_one_out__session.csv](../2_pipeline/1e_behavior_decoding/out/behavior_decoding_leave_one_out__session.csv)
 
@@ -162,6 +162,86 @@
 ### Leave one out
 
 ![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/choice/svm/3_leave_one_out.png)
+
+### Decoder comparison
+
+![0_decoder_comparison](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/correct/0_decoder_comparison.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/correct/lda/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/correct/lda/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/correct/lda/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/correct/logr/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/correct/logr/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/correct/logr/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/correct/svm/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/correct/svm/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/correct/svm/3_leave_one_out.png)
+
+### Decoder comparison
+
+![0_decoder_comparison](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/outcome/0_decoder_comparison.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/outcome/lda/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/outcome/lda/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/outcome/lda/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/outcome/logr/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/outcome/logr/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/outcome/logr/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/outcome/svm/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/outcome/svm/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/fixed/outcome/svm/3_leave_one_out.png)
 
 ### Decoder comparison
 
@@ -325,6 +405,86 @@
 
 ### Decoder comparison
 
+![0_decoder_comparison](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/correct/0_decoder_comparison.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/correct/lda/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/correct/lda/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/correct/lda/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/correct/logr/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/correct/logr/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/correct/logr/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/correct/svm/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/correct/svm/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/correct/svm/3_leave_one_out.png)
+
+### Decoder comparison
+
+![0_decoder_comparison](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/outcome/0_decoder_comparison.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/outcome/lda/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/outcome/lda/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/outcome/lda/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/outcome/logr/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/outcome/logr/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/outcome/logr/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/outcome/svm/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/outcome/svm/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/outcome/svm/3_leave_one_out.png)
+
+### Decoder comparison
+
 ![0_decoder_comparison](../2_pipeline/1e_behavior_decoding/out/figures/position/sliding/pct_0-20_20-80_80-100/0_decoder_comparison.png)
 
 ### Single variables
@@ -459,6 +619,38 @@
 
 ![choice_decoders_by_window](../2_pipeline/1e_behavior_decoding/out/figures/position/windows/choice_decoders_by_window.png)
 
+### Correct by window lda
+
+![correct_by_window_lda](../2_pipeline/1e_behavior_decoding/out/figures/position/windows/correct_by_window_lda.png)
+
+### Correct by window logr
+
+![correct_by_window_logr](../2_pipeline/1e_behavior_decoding/out/figures/position/windows/correct_by_window_logr.png)
+
+### Correct by window svm
+
+![correct_by_window_svm](../2_pipeline/1e_behavior_decoding/out/figures/position/windows/correct_by_window_svm.png)
+
+### Correct decoders by window
+
+![correct_decoders_by_window](../2_pipeline/1e_behavior_decoding/out/figures/position/windows/correct_decoders_by_window.png)
+
+### Outcome by window lda
+
+![outcome_by_window_lda](../2_pipeline/1e_behavior_decoding/out/figures/position/windows/outcome_by_window_lda.png)
+
+### Outcome by window logr
+
+![outcome_by_window_logr](../2_pipeline/1e_behavior_decoding/out/figures/position/windows/outcome_by_window_logr.png)
+
+### Outcome by window svm
+
+![outcome_by_window_svm](../2_pipeline/1e_behavior_decoding/out/figures/position/windows/outcome_by_window_svm.png)
+
+### Outcome decoders by window
+
+![outcome_decoders_by_window](../2_pipeline/1e_behavior_decoding/out/figures/position/windows/outcome_decoders_by_window.png)
+
 ### Pct 0-20 20-80 80-100 by window lda
 
 ![pct_0-20_20-80_80-100_by_window_lda](../2_pipeline/1e_behavior_decoding/out/figures/position/windows/pct_0-20_20-80_80-100_by_window_lda.png)
@@ -546,6 +738,86 @@
 ### Leave one out
 
 ![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/choice/svm/3_leave_one_out.png)
+
+### Decoder comparison
+
+![0_decoder_comparison](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/correct/0_decoder_comparison.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/correct/lda/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/correct/lda/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/correct/lda/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/correct/logr/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/correct/logr/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/correct/logr/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/correct/svm/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/correct/svm/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/correct/svm/3_leave_one_out.png)
+
+### Decoder comparison
+
+![0_decoder_comparison](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/outcome/0_decoder_comparison.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/outcome/lda/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/outcome/lda/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/outcome/lda/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/outcome/logr/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/outcome/logr/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/outcome/logr/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/outcome/svm/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/outcome/svm/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/fixed/outcome/svm/3_leave_one_out.png)
 
 ### Decoder comparison
 
@@ -706,6 +978,86 @@
 ### Leave one out
 
 ![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/choice/svm/3_leave_one_out.png)
+
+### Decoder comparison
+
+![0_decoder_comparison](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/correct/0_decoder_comparison.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/correct/lda/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/correct/lda/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/correct/lda/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/correct/logr/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/correct/logr/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/correct/logr/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/correct/svm/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/correct/svm/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/correct/svm/3_leave_one_out.png)
+
+### Decoder comparison
+
+![0_decoder_comparison](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/outcome/0_decoder_comparison.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/outcome/lda/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/outcome/lda/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/outcome/lda/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/outcome/logr/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/outcome/logr/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/outcome/logr/3_leave_one_out.png)
+
+### Single variables
+
+![1_single_variables](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/outcome/svm/1_single_variables.png)
+
+### Cumulative sets
+
+![2_cumulative_sets](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/outcome/svm/2_cumulative_sets.png)
+
+### Leave one out
+
+![3_leave_one_out](../2_pipeline/1e_behavior_decoding/out/figures/time/sliding/outcome/svm/3_leave_one_out.png)
 
 ### Decoder comparison
 

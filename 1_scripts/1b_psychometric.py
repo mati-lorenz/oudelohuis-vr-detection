@@ -19,7 +19,11 @@ Session inclusion criteria:
       than extrapolated -- checked via the z-scored range of those
       stimuli relative to the fit (same check as the old `noise_to_psy`'s
       noise_zmin/noise_zmax straddling zero)
-All four thresholds live in infotheory.criteria, shared with 1a's flags.
+    - DN only: fitted guess rate (floor of the curve) <= MAX_GUESS_RATE
+  BORDERLINE zone: for the two DN fit criteria (threshold range, guess rate) a value within BORDERLINE_Z sigma /
+  BORDERLINE_GUESS of the cutoff is NOT excluded: the session is kept and flagged `borderline` (+ `borderline_reasons`)
+  in psychometric_fits.csv, because a different fit could flip it. Beyond the zone the criterion excludes as usual.
+All five thresholds live in infotheory.criteria, shared with 1a's flags.
 
 Project-wide rules (infotheory/project_config.py) -- what applies to 1b
     * selection : --animals / --sessions restrict the sessions; a restricted run writes to
@@ -59,6 +63,7 @@ Outputs
 from __future__ import annotations
 
 import argparse
+import zlib
 
 import numpy as np
 import pandas as pd
@@ -71,7 +76,7 @@ from infotheory.psychometric import fit_psychometric, psychometric_function
 from infotheory.behavior import add_trial_outcome
 from infotheory.psth import derive_onset_time
 from infotheory.plotting import set_style, save_fig, clear_figures, OUTCOME_COLORS, PROTOCOL_COLORS
-from infotheory.criteria import MIN_DPRIME, MAX_FA_RATE, MIN_FRAC_ENGAGED
+from infotheory.criteria import MIN_DPRIME, MAX_FA_RATE, MIN_FRAC_ENGAGED, MAX_GUESS_RATE, BORDERLINE_Z, BORDERLINE_GUESS
 from infotheory.session import discover_sessions
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
 from infotheory.session_jobs import run_sessions
@@ -84,8 +89,12 @@ STIM_WIDTH_CM = 20.0         # width of the stimulus zone in cm -- trialdata onl
                               # (the zone's start position), not an end position, so this needs to be
                               # supplied; keep in sync with 1c_behavior.py's MI_WINDOWS stim=(0, 20)
 
+N_BOOTSTRAP = 500      # DN psychometric fit: median over this many bootstrap refits (0 = single fit); --n-bootstrap
 parser = argparse.ArgumentParser()
 add_scope_args(parser)
+parser.add_argument("--n-bootstrap", type=int, default=N_BOOTSTRAP,
+                    help="bootstrap resamples for the DN psychometric fit (median of the refits, seeded per session; "
+                         "0 = single fit). Default %(default)s")
 args = parser.parse_args()
 scope = scope_from_args(args)
 AGG = scope.aggregate
@@ -156,6 +165,7 @@ fits = {}  # session_id -> PsychometricFit or None
 for session_id, trial in engaged_trialdata.groupby("session_id"):
     protocol = trial["protocol"].iloc[0]
     reasons = []
+    flags = []   # borderline notes: the session is kept (if reasons is empty) but flagged
 
     if session_id not in summary_1a.index:
         dprime_engaged = fa_rate_engaged = frac_engaged = np.nan
@@ -179,18 +189,32 @@ for session_id, trial in engaged_trialdata.groupby("session_id"):
     fit_status = "not_applicable"  # DM/DP -- expected, not a QC failure
 
     if fit_eligible:
-        fit = fit_psychometric(trial)
+        fit = fit_psychometric(trial, n_bootstrap=args.n_bootstrap,
+                               seed=zlib.crc32(str(session_id).encode()))   # seeded per session: reproducible
         intermediate = trial.loc[(trial["signal"] > 0) & (trial["signal"] < 100), "signal"].to_numpy()
         if fit is None:
             fit_status = "failed_to_converge"
             reasons.append("psychometric fit failed to converge")
-        elif not fit.threshold_in_range(intermediate):
-            zmin, zmax = fit.threshold_z_range(intermediate)
-            fit_status = "threshold_out_of_range"
-            reasons.append(f"threshold (mu={fit.mu:.0f}%) outside tested stimulus range "
-                            f"(z-range [{zmin:.2f}, {zmax:.2f}] doesn't bracket 0)")
         else:
-            fit_status = "ok"
+            # range check: margin = distance (sigma) of the nearer edge of the tested range from the threshold;
+            # >= 0 means the range brackets the threshold, < 0 means it is extrapolated by that much.
+            zmin, zmax = fit.threshold_z_range(intermediate)
+            range_margin = min(-zmin, zmax)
+            if range_margin < -BORDERLINE_Z:
+                fit_status = "threshold_out_of_range"
+                reasons.append(f"threshold (mu={fit.mu:.0f}%) outside tested stimulus range "
+                                f"(z-range [{zmin:.2f}, {zmax:.2f}] doesn't bracket 0)")
+            else:
+                fit_status = "ok"
+                if abs(range_margin) <= BORDERLINE_Z:
+                    flags.append(f"threshold at the edge of the tested range (z-range [{zmin:.2f}, {zmax:.2f}], "
+                                 f"margin {range_margin:+.2f} sigma)")
+            # guess rate: independent of the range check (both reasons are listed when both fail)
+            guess_margin = MAX_GUESS_RATE - fit.guess_rate
+            if guess_margin < -BORDERLINE_GUESS:
+                reasons.append(f"guess rate = {fit.guess_rate:.2f} > {MAX_GUESS_RATE}")
+            elif abs(guess_margin) <= BORDERLINE_GUESS:
+                flags.append(f"guess rate {fit.guess_rate:.3f} next to the {MAX_GUESS_RATE} limit")
 
     fits[session_id] = fit
     records.append({
@@ -209,6 +233,8 @@ for session_id, trial in engaged_trialdata.groupby("session_id"):
         "r2": fit.r2 if fit else np.nan,
         "included": len(reasons) == 0,
         "exclude_reasons": "; ".join(reasons),
+        "borderline": len(reasons) == 0 and len(flags) > 0,   # kept, but a different fit could flip it
+        "borderline_reasons": "; ".join(flags) if len(reasons) == 0 else "",
     })
 
 fits_df = pd.DataFrame(records).sort_values(["protocol", "session_id"]).reset_index(drop=True)
@@ -217,13 +243,17 @@ fits_df.loc[~fits_df["included"], ["session_id", "protocol", "exclude_reasons"]]
     table_dir / "excluded_sessions.csv", index=False)
 
 print(f"\nInclusion criteria: d' >= {MIN_DPRIME}, FA <= {MAX_FA_RATE:.0%}, "
-      f"engaged fraction >= {MIN_FRAC_ENGAGED:.0%}, threshold within tested range (DN only)")
+      f"engaged fraction >= {MIN_FRAC_ENGAGED:.0%}, threshold within tested range and "
+      f"guess rate <= {MAX_GUESS_RATE} (both DN only)")
 for protocol in PROTOCOLS:
     sub = fits_df[fits_df["protocol"] == protocol]
     if len(sub):
         print(f"  {protocol}: {int(sub['included'].sum())}/{len(sub)} sessions included")
 if (~fits_df["included"]).any():
     print(fits_df.loc[~fits_df["included"], ["session_id", "protocol", "exclude_reasons"]].to_string(index=False))
+if fits_df["borderline"].any():
+    print(f"\nBORDERLINE sessions (KEPT, but within {BORDERLINE_Z} sigma / {BORDERLINE_GUESS} guess of a cutoff):")
+    print(fits_df.loc[fits_df["borderline"], ["session_id", "protocol", "borderline_reasons"]].to_string(index=False))
 
 
 # --------------------------------------------------------------------- #

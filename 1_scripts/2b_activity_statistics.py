@@ -544,10 +544,13 @@ def raster_inputs():
         print(f"\nRaster skipped: no selected {PROTOCOL} session passed 1b_psychometric's inclusion criteria.")
         return None
     cd = pd.read_csv(cd_path)
-    # same rule as neural_encoding.load_cell_inclusion: 2a's proximity filter AND this script's QC
-    incl = cd[["session_id", "cell_id", "passes_proximity_filter"]].merge(
+    # same rule as neural_encoding.load_cell_inclusion: 2a's proximity and depth filters AND this script's QC
+    _dcol = ["passes_depth_filter"] if "passes_depth_filter" in cd.columns else []
+    incl = cd[["session_id", "cell_id", "passes_proximity_filter"] + _dcol].merge(
         qc_per_cell[["session_id", "cell_id", "qc_pass"]], on=["session_id", "cell_id"], how="inner")
     incl["include"] = incl["passes_proximity_filter"] & incl["qc_pass"]
+    if _dcol:
+        incl["include"] &= incl["passes_depth_filter"].astype(bool)
     cells_by = {sid: sorted(sub.loc[sub["include"], "cell_id"]) for sid, sub in incl.groupby("session_id")}
     ids = [sid for sid in ids if cells_by.get(sid)]
     print(f"\nRaster: {len(ids)} included {PROTOCOL} sessions, {int(incl['include'].sum())}/{len(incl)} cells pass 2a + QC")

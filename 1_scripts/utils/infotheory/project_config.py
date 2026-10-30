@@ -43,7 +43,7 @@ AGGREGATES = ("pooled", "session", "mouse")
 # 3. Memory: sessions are NEVER all loaded at once. Each worker loads ONE session, computes and
 #    caches its result, and frees it. Peak RAM ~ N_JOBS_SESSIONS x one session (1 = lowest).
 # --------------------------------------------------------------------- #
-N_JOBS_SESSIONS = 14
+N_JOBS_SESSIONS = 10
 
 # --------------------------------------------------------------------- #
 # 4. Shared binning (consumed by 2c, 3a-3f, 4a-4c once migrated; at the moment only 1a follows the

@@ -1,6 +1,6 @@
 # 2a_cell_distribution
 
-*Auto-generated from `2_pipeline/2a_cell_distribution/out/` on 2026-10-16 17:39. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/2a_cell_distribution/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 
@@ -117,9 +117,162 @@
 | 1 | 0.7843 | 2.609 | 5.848 | 107 | 146 | 334 | 218 | 0 | 0 | 0 | 0.4969 | 3 | 0 | 1 |
 | 1 | 0.958 | 2.601 | 5.268 | 86 | 91 | 412.5 | 141.8 | 0 | 0 | 0 | 0.506 | 3 | 0 | 1 |
 
-*(showing first 15 of 43 columns; showing first 30 of 51996 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 45 columns; showing first 30 of 51996 rows -- see the linked CSV for the rest)*
 
 [celldata_combined.csv](../2_pipeline/2a_cell_distribution/out/celldata_combined.csv)
+
+### Depth session summary
+
+| animal_id | session_id | n_cells | median_depth | min_depth | max_depth | n_unl_V1PM | n_unl_V1PM_fail_depth | frac_unl_V1PM_fail_depth | group_median_depth | depth_z | depth_suspect | flag_reason |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LPE10884 | LPE10884_2024_01_12 | 1093 | 152 | 103 | 240 | 710 | 0 | 0 | 185.5 | -0.4128 | False |  |
+| LPE10884 | LPE10884_2024_01_17 | 1565 | 166 | 111 | 200 | 989 | 0 | 0 | 185.5 | -0.2403 | False |  |
+| LPE10884 | LPE10884_2024_01_18 | 938 | 173 | 105 | 263 | 673 | 0 | 0 | 185.5 | -0.154 | False |  |
+| LPE11622 | LPE11622_2024_02_20 | 1830 | 266 | 106 | 425 | 1511 | 636 | 0.4209 | 185.5 | 0.9921 | False |  |
+| LPE11622 | LPE11622_2024_02_21 | 1899 | 230 | 148 | 370 | 1150 | 166 | 0.1443 | 185.5 | 0.5484 | False |  |
+| LPE11622 | LPE11622_2024_02_22 | 2185 | 190 | 140 | 370 | 1367 | 222 | 0.1624 | 185.5 | 0.05546 | False |  |
+| LPE11622 | LPE11622_2024_02_23 | 2143 | 170 | 130 | 324 | 1333 | 215 | 0.1613 | 185.5 | -0.191 | False |  |
+| LPE11622 | LPE11622_2024_02_26 | 2967 | 150 | 0 | 340 | 2008 | 405 | 0.2017 | 185.5 | -0.4375 | False |  |
+| LPE11622 | LPE11622_2024_02_27 | 1582 | 220 | 145 | 410 | 960 | 289 | 0.301 | 185.5 | 0.4252 | False |  |
+| LPE11997 | LPE11997_2024_04_10 | 2548 | 145 | 103 | 387 | 1742 | 693 | 0.3978 | 185.5 | -0.4991 | False |  |
+| LPE11997 | LPE11997_2024_04_12 | 1817 | 181 | 94 | 381 | 1208 | 516 | 0.4272 | 185.5 | -0.05546 | False |  |
+| LPE11997 | LPE11997_2024_04_16 | 1238 | 166 | 71 | 366 | 845 | 296 | 0.3503 | 185.5 | -0.2403 | False |  |
+| LPE11997 | LPE11997_2024_04_17 | 1509 | 163 | 95 | 387 | 921 | 355 | 0.3855 | 185.5 | -0.2773 | False |  |
+| LPE11997 | LPE11997_2024_04_18 | 479 | 210 | 119 | 350 | 408 | 125 | 0.3064 | 185.5 | 0.3019 | False |  |
+| LPE11998 | LPE11998_2024_04_23 | 1254 | 160 | 110 | 445 | 814 | 158 | 0.1941 | 185.5 | -0.3143 | False |  |
+| LPE11998 | LPE11998_2024_04_24 | 952 | 140 | 100 | 445 | 665 | 156 | 0.2346 | 185.5 | -0.5607 | False |  |
+| LPE11998 | LPE11998_2024_04_25 | 951 | 190 | 100 | 385 | 712 | 79 | 0.111 | 185.5 | 0.05546 | False |  |
+| LPE11998 | LPE11998_2024_04_26 | 1261 | 147 | 90 | 395 | 935 | 216 | 0.231 | 185.5 | -0.4745 | False |  |
+| LPE11998 | LPE11998_2024_04_29 | 1183 | 333 | 120 | 468 | 658 | 384 | 0.5836 | 185.5 | 1.818 | False |  |
+| LPE11998 | LPE11998_2024_04_30 | 1197 | 333 | 120 | 468 | 720 | 372 | 0.5167 | 185.5 | 1.818 | False |  |
+| LPE11998 | LPE11998_2024_05_01 | 991 | 165 | 80 | 431 | 631 | 177 | 0.2805 | 185.5 | -0.2526 | False |  |
+| LPE12013 | LPE12013_2024_04_23 | 1187 | 186 | 116 | 326 | 812 | 102 | 0.1256 | 185.5 | 0.006162 | False |  |
+| LPE12013 | LPE12013_2024_04_24 | 1615 | 143 | 100 | 325 | 973 | 135 | 0.1387 | 185.5 | -0.5238 | False |  |
+| LPE12013 | LPE12013_2024_04_25 | 1353 | 171 | 130 | 365 | 858 | 246 | 0.2867 | 185.5 | -0.1787 | False |  |
+| LPE12013 | LPE12013_2024_04_26 | 1576 | 225 | 85 | 330 | 1012 | 331 | 0.3271 | 185.5 | 0.4868 | False |  |
+| LPE12013 | LPE12013_2024_04_29 | 1227 | 247 | 96 | 331 | 578 | 145 | 0.2509 | 185.5 | 0.7579 | False |  |
+| LPE12013 | LPE12013_2024_04_30 | 2082 | 565 | 420 | 650 | 1358 | 1358 | 1 | 185.5 | 4.677 | True | median depth 565.0 um is 4.7 SD from the group median (186.0 um): depth probably badly measured |
+| LPE12385 | LPE12385_2024_06_15 | 2353 | 214 | 125 | 450 | 1850 | 571 | 0.3086 | 185.5 | 0.3512 | False |  |
+| LPE12385 | LPE12385_2024_06_16 | 2551 | 210 | 121 | 408 | 2159 | 727 | 0.3367 | 185.5 | 0.3019 | False |  |
+| LPE12385 | LPE12385_2024_06_17 | 2366 | 228 | 145 | 377 | 1846 | 1009 | 0.5466 | 185.5 | 0.5238 | False |  |
+
+*(showing first 30 of 32 rows -- see the linked CSV for the rest)*
+
+[depth_session_summary.csv](../2_pipeline/2a_cell_distribution/out/depth_session_summary.csv)
+
+### Final cells ours
+
+| session_id | roi_name | labeled | n_cells |
+| --- | --- | --- | --- |
+| LPE10884_2024_01_12 | AL | unl | 320 |
+| LPE10884_2024_01_12 | RSP | unl | 63 |
+| LPE11622_2024_02_20 | PM | lab | 220 |
+| LPE11622_2024_02_20 | PM | unl | 149 |
+| LPE11622_2024_02_20 | V1 | lab | 99 |
+| LPE11622_2024_02_20 | V1 | unl | 495 |
+| LPE11622_2024_02_22 | AL | unl | 105 |
+| LPE11622_2024_02_22 | PM | lab | 120 |
+| LPE11622_2024_02_22 | PM | unl | 392 |
+| LPE11622_2024_02_22 | RSP | unl | 554 |
+| LPE11622_2024_02_22 | V1 | lab | 39 |
+| LPE11622_2024_02_22 | V1 | unl | 312 |
+| LPE11622_2024_02_23 | AL | unl | 264 |
+| LPE11622_2024_02_23 | PM | lab | 76 |
+| LPE11622_2024_02_23 | PM | unl | 268 |
+| LPE11622_2024_02_23 | RSP | unl | 394 |
+| LPE11622_2024_02_23 | V1 | lab | 76 |
+| LPE11622_2024_02_23 | V1 | unl | 373 |
+| LPE11622_2024_02_26 | AL | unl | 139 |
+| LPE11622_2024_02_26 | PM | lab | 164 |
+| LPE11622_2024_02_26 | PM | unl | 380 |
+| LPE11622_2024_02_26 | RSP | unl | 575 |
+| LPE11622_2024_02_26 | V1 | lab | 81 |
+| LPE11622_2024_02_26 | V1 | unl | 516 |
+| LPE11997_2024_04_10 | AL | unl | 151 |
+| LPE11997_2024_04_10 | PM | lab | 175 |
+| LPE11997_2024_04_10 | RSP | unl | 426 |
+| LPE11997_2024_04_10 | V1 | lab | 53 |
+| LPE11997_2024_04_10 | V1 | unl | 611 |
+| LPE11997_2024_04_16 | AL | unl | 75 |
+
+*(showing first 30 of 129 rows -- see the linked CSV for the rest)*
+
+[final_cells_ours.csv](../2_pipeline/2a_cell_distribution/out/final_cells_ours.csv)
+
+### Final selection cells funnel
+
+| step | cells | sessions | mice |
+| --- | --- | --- | --- |
+| recorded cells | 51996 | 32 | 6 |
+| + proximity (unl. V1/PM within 50 um of a labeled cell) | 30095 | 32 | 6 |
+| + depth (unl. V1/PM < 300 um) | 25048 | 32 | 6 |
+| + activity QC (2b) | 25029 | 32 | 6 |
+| + session passed behavior (1b) = FINAL | 19066 | 23 | 6 |
+
+[final_selection_cells_funnel.csv](../2_pipeline/2a_cell_distribution/out/final_selection_cells_funnel.csv)
+
+### Final selection groups
+
+| group | cells | sessions | mice |
+| --- | --- | --- | --- |
+| V1-lab | 680 | 22 | 5 |
+| V1-unl | 5240 | 21 | 5 |
+| PM-lab | 1324 | 22 | 5 |
+| PM-unl | 1992 | 19 | 5 |
+| AL | 5061 | 22 | 6 |
+| RSP | 4769 | 22 | 6 |
+| all | 19066 | 23 | 6 |
+
+[final_selection_groups.csv](../2_pipeline/2a_cell_distribution/out/final_selection_groups.csv)
+
+### Final selection sessions
+
+| protocol | mice recorded | sessions recorded | mice kept | sessions kept | of which borderline | kept sessions with cells | mice with cells |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| DM | 10 | 18 | 10 | 18 | 0 |  |  |
+| DN | 8 | 36 | 8 | 27 | 4 | 23 | 6 |
+| DP | 11 | 21 | 10 | 18 | 0 |  |  |
+
+[final_selection_sessions.csv](../2_pipeline/2a_cell_distribution/out/final_selection_sessions.csv)
+
+### Final sessions ours
+
+| session_id | animal_id | protocol | kept | borderline | borderline_reasons | reason | dprime_engaged | fa_rate_engaged | frac_engaged | mu | sigma | guess_rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LPE10884_2023_11_30 | LPE10884 | DM | True | False |  |  | 2.644 | 0.4211 | 1 |  |  |  |
+| LPE10884_2023_12_10 | LPE10884 | DM | True | False |  |  | 1.086 | 0.4583 | 1 |  |  |  |
+| LPE11081_2023_12_11 | LPE11081 | DM | True | False |  |  | 2.363 | 0.2857 | 1 |  |  |  |
+| LPE11081_2023_12_12 | LPE11081 | DM | True | False |  |  | 2.759 | 0.2105 | 1 |  |  |  |
+| LPE11495_2024_02_14 | LPE11495 | DM | True | False |  |  | 3.211 | 0.1379 | 1 |  |  |  |
+| LPE11495_2024_02_16 | LPE11495 | DM | True | False |  |  | 2.853 | 0.08824 | 1 |  |  |  |
+| LPE11622_2024_02_16 | LPE11622 | DM | True | False |  |  | 2.941 | 0.1286 | 0.9833 |  |  |  |
+| LPE11623_2024_03_27 | LPE11623 | DM | True | False |  |  | 1.285 | 0.2941 | 1 |  |  |  |
+| LPE11623_2024_03_29 | LPE11623 | DM | True | False |  |  | 1.625 | 0.375 | 1 |  |  |  |
+| LPE11997_2024_04_05 | LPE11997 | DM | True | False |  |  | 2.197 | 0.1944 | 1 |  |  |  |
+| LPE11997_2024_04_07 | LPE11997 | DM | True | False |  |  | 2.673 | 0.2143 | 1 |  |  |  |
+| LPE11998_2024_04_11 | LPE11998 | DM | True | False |  |  | 2.936 | 0.06667 | 0.8187 |  |  |  |
+| LPE11998_2024_04_12 | LPE11998 | DM | True | False |  |  | 2.653 | 0.1282 | 0.8858 |  |  |  |
+| LPE12013_2024_04_11 | LPE12013 | DM | True | False |  |  | 2.597 | 0.1522 | 0.9833 |  |  |  |
+| LPE12013_2024_04_12 | LPE12013 | DM | True | False |  |  | 2.442 | 0.1143 | 0.8246 |  |  |  |
+| LPE12223_2024_05_29 | LPE12223 | DM | True | False |  |  | 2.066 | 0.1944 | 0.9362 |  |  |  |
+| LPE12223_2024_05_30 | LPE12223 | DM | True | False |  |  | 3.446 | 0.02381 | 0.9633 |  |  |  |
+| LPE12385_2024_05_30 | LPE12385 | DM | True | False |  |  | 2.222 | 0.1875 | 1 |  |  |  |
+| LPE10884_2024_01_12 | LPE10884 | DN | True | False |  |  | 2.056 | 0.1905 | 0.7207 | 10.84 | 2.551 | 0.2286 |
+| LPE10884_2024_01_17 | LPE10884 | DN | False | False |  | guess rate = 0.46 > 0.4 | 2.175 | 0.4583 | 0.7914 | 10.81 | 4.617 | 0.456 |
+| LPE10884_2024_01_18 | LPE10884 | DN | False | False |  | FA rate (engaged) = 57% > 50%; guess rate = 0.49 > 0.4 | 1.948 | 0.5714 | 0.7157 | 12.26 | 4.301 | 0.4947 |
+| LPE11495_2024_02_22 | LPE11495 | DN | True | False |  |  | 2.487 | 0.4286 | 1 | 6.671 | 6.465 | 0.3329 |
+| LPE11622_2024_02_20 | LPE11622 | DN | True | False |  |  | 1.908 | 0.2889 | 0.6092 | 11.89 | 8.571 | 0.2211 |
+| LPE11622_2024_02_21 | LPE11622 | DN | False | False |  | threshold (mu=21%) outside tested stimulus range (z-range [-1.96, -0.71] doesn't bracket 0) | 2.233 | 0.2245 | 0.5516 | 20.71 | 8.005 | 0.1838 |
+| LPE11622_2024_02_22 | LPE11622 | DN | True | False |  |  | 2.085 | 0.2353 | 0.6596 | 13.5 | 2 | 0.1866 |
+| LPE11622_2024_02_23 | LPE11622 | DN | True | False |  |  | 2.385 | 0.2222 | 0.4409 | 9.489 | 3.607 | 0.2019 |
+| LPE11622_2024_02_26 | LPE11622 | DN | True | False |  |  | 2.129 | 0.2895 | 0.5852 | 14.01 | 6.169 | 0.2587 |
+| LPE11622_2024_02_27 | LPE11622 | DN | False | False |  | threshold (mu=19%) outside tested stimulus range (z-range [-2.44, -0.69] doesn't bracket 0) | 2.3 | 0.1111 | 0.5185 | 18.98 | 5.739 | 0.1191 |
+| LPE11623_2024_04_02 | LPE11623 | DN | True | False |  |  | 2.078 | 0.1875 | 1 | 15.72 | 5.037 | 0.1609 |
+| LPE11997_2024_04_09 | LPE11997 | DN | True | False |  |  | 1.267 | 0.4 | 0.6925 | 9.628 | 6.885 | 0.31 |
+
+*(showing first 30 of 75 rows -- see the linked CSV for the rest)*
+
+[final_sessions_ours.csv](../2_pipeline/2a_cell_distribution/out/final_sessions_ours.csv)
 
 ## Figures
 
@@ -193,4 +346,8 @@
 
 ### 5b distance to labeled distribution
 
-![5b_distance_to_labeled_distribution](../2_pipeline/2a_cell_distribution/out/figures/5b_distance_to_labeled_distribution.png)![5b_distance_to_labeled_distribution](../2_pipeline/2a_cell_distribution/out/figures/5b_distance_to_labeled_distribution.png)
+![5b_distance_to_labeled_distribution](../2_pipeline/2a_cell_distribution/out/figures/5b_distance_to_labeled_distribution.png)
+
+### Final selection summary
+
+![final_selection_summary](../2_pipeline/2a_cell_distribution/out/figures/final_selection_summary.png)

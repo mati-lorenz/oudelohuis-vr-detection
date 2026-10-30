@@ -1,6 +1,6 @@
-+# 3g_pair_hit_miss_correlations
+# 3g_pair_hit_miss_correlations
 
-*Auto-generated from `2_pipeline/3g_pair_hit_miss_correlations/out/` on 2026-10-16 17:40. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/3g_pair_hit_miss_correlations/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 

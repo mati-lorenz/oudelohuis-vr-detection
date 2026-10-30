@@ -1,6 +1,6 @@
 # 2b_activity_statistics
 
-*Auto-generated from `2_pipeline/2b_activity_statistics/out/` on 2026-10-16 17:39. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/2b_activity_statistics/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 
@@ -86,7 +86,6 @@
 
 | group | analysis | window | unit | animal_id | n_cells | mean_auc | frac_sig |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| AL_unl | FA_vs_CR | pre_stim | LPE10884_2024_01_17 | LPE10884 | 417 | 0.5201 | 0.03597 |
 | AL_unl | FA_vs_CR | pre_stim | LPE11622_2024_02_22 | LPE11622 | 105 | 0.4976 | 0.02857 |
 | AL_unl | FA_vs_CR | pre_stim | LPE11622_2024_02_23 | LPE11622 | 264 | 0.5025 | 0.01894 |
 | AL_unl | FA_vs_CR | pre_stim | LPE11622_2024_02_26 | LPE11622 | 139 | 0.5101 | 0.05036 |
@@ -103,8 +102,8 @@
 | AL_unl | FA_vs_CR | pre_stim | LPE12385_2024_06_15 | LPE12385 | 302 | 0.5004 | 0.0596 |
 | AL_unl | FA_vs_CR | pre_stim | LPE12385_2024_06_16 | LPE12385 | 111 | 0.5171 | 0.05405 |
 | AL_unl | FA_vs_CR | pre_stim | LPE12385_2024_06_17 | LPE12385 | 195 | 0.5038 | 0.07692 |
+| AL_unl | FA_vs_CR | pre_stim | LPE12385_2024_06_26 | LPE12385 | 317 | 0.485 | 0.04732 |
 | AL_unl | FA_vs_CR | pre_stim | LPE12385_2024_06_27 | LPE12385 | 227 | 0.5165 | 0.0793 |
-| AL_unl | FA_vs_CR | stim | LPE10884_2024_01_17 | LPE10884 | 417 | 0.5505 | 0.1079 |
 | AL_unl | FA_vs_CR | stim | LPE11622_2024_02_22 | LPE11622 | 105 | 0.5107 | 0.09524 |
 | AL_unl | FA_vs_CR | stim | LPE11622_2024_02_23 | LPE11622 | 264 | 0.4844 | 0.02273 |
 | AL_unl | FA_vs_CR | stim | LPE11622_2024_02_26 | LPE11622 | 139 | 0.4909 | 0.05755 |
@@ -116,8 +115,9 @@
 | AL_unl | FA_vs_CR | stim | LPE11998_2024_04_29 | LPE11998 | 419 | 0.5056 | 0.05012 |
 | AL_unl | FA_vs_CR | stim | LPE11998_2024_05_01 | LPE11998 | 226 | 0.4774 | 0.03982 |
 | AL_unl | FA_vs_CR | stim | LPE12013_2024_04_25 | LPE12013 | 227 | 0.503 | 0.03965 |
+| AL_unl | FA_vs_CR | stim | LPE12013_2024_04_26 | LPE12013 | 312 | 0.5145 | 0.04487 |
 
-*(showing first 30 of 620 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 596 rows -- see the linked CSV for the rest)*
 
 [choice_probability_by_group__session.csv](../2_pipeline/2b_activity_statistics/out/choice_probability_by_group__session.csv)
 
@@ -156,7 +156,7 @@
 | LPE10884_2024_01_12 | LPE10884_2024_01_12_6_0028 | hit_vs_miss_intermediate | pre_stim | 0.558 | 0.116 | 0.5473 | False | 19 | 20 | RSP | unl | RSP | unl | RSP_unl |
 | LPE10884_2024_01_12 | LPE10884_2024_01_12_6_0029 | hit_vs_miss_intermediate | pre_stim | 0.4696 | -0.06077 | 0.791 | False | 19 | 20 | RSP | unl | RSP | unl | RSP_unl |
 
-*(showing first 15 of 18 columns; showing first 30 of 134532 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 18 columns; showing first 30 of 114396 rows -- see the linked CSV for the rest)*
 
 [choice_probability_per_cell.csv](../2_pipeline/2b_activity_statistics/out/choice_probability_per_cell.csv)
 
@@ -192,10 +192,10 @@
 | AL_unl | LPE10884_2024_01_12 | LPE10884 | hit_vs_miss_intermediate | 47.5 | 0.5058 | 320 |
 | AL_unl | LPE10884_2024_01_12 | LPE10884 | hit_vs_miss_intermediate | 52.5 | 0.5165 | 320 |
 | AL_unl | LPE10884_2024_01_12 | LPE10884 | hit_vs_miss_intermediate | 57.5 | 0.4858 | 320 |
-| AL_unl | LPE10884_2024_01_17 | LPE10884 | hit_vs_miss_intermediate | -77.5 |  | 417 |
-| AL_unl | LPE10884_2024_01_17 | LPE10884 | hit_vs_miss_intermediate | -72.5 |  | 417 |
+| AL_unl | LPE11622_2024_02_22 | LPE11622 | hit_vs_miss_intermediate | -77.5 |  | 105 |
+| AL_unl | LPE11622_2024_02_22 | LPE11622 | hit_vs_miss_intermediate | -72.5 |  | 105 |
 
-*(showing first 30 of 6832 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 7168 rows -- see the linked CSV for the rest)*
 
 [choice_probability_trace__session.csv](../2_pipeline/2b_activity_statistics/out/choice_probability_trace__session.csv)
 
@@ -203,38 +203,38 @@
 
 | session_id | cell_id | n_CR | n_FA | pre_CR | pre_FA | resp_CR | resp_FA | roi_name | labeled | area | label | group | group_name | animal_id |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0000 | 13 | 11 | 0.4477 | 0.1237 | -0.4397 | 0.00986 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0001 | 13 | 11 | 0.1204 | -0.03026 | 0.2303 | -0.07955 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0002 | 13 | 11 | -0.3076 | 0.1239 | 0.1029 | -0.08745 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0003 | 13 | 11 | 0.01861 | -0.1644 | -0.08352 | 1.331 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0005 | 13 | 11 | -0.2224 | -0.1443 | 0.006972 | -0.03791 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0006 | 13 | 11 | -0.391 | -0.4265 | -0.00654 | 0.03154 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0007 | 13 | 11 | -0.3138 | -0.1324 | 0.1114 | -0.0847 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0008 | 13 | 11 | -0.301 | -0.3605 | 0.01095 | 0.2355 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0009 | 13 | 11 | 0.07079 | 0.1334 | -0.1441 | -0.04889 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0010 | 13 | 11 | 0.668 | 0.2024 | -0.2643 | -0.162 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0011 | 13 | 11 | 0.3173 | 0.4425 | -0.2026 | -0.2889 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0012 | 13 | 11 | -0.1912 | -0.09311 | -0.03836 | -0.1025 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0013 | 13 | 11 | -0.1887 | -0.1162 | 0.08388 | -0.05142 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0014 | 13 | 11 | -0.2308 | -0.2488 | -0.01351 | 0.03043 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0015 | 13 | 11 | 0.4675 | 0.2343 | -0.05172 | -0.07121 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0016 | 13 | 11 | -0.3496 | -0.3248 | 0.05641 | 0.1162 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0017 | 13 | 11 | 0.04094 | 0.3384 | -0.2736 | -0.01164 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0018 | 13 | 11 | -0.07672 | 0.351 | -0.02649 | -0.4564 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0019 | 13 | 11 | 0.02895 | -0.2062 | -0.0524 | 0.06363 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0020 | 13 | 11 | -0.1395 | 0.01084 | -0.05972 | 0.1591 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0021 | 13 | 11 | -0.1749 | 0.02054 | 0.174 | -0.2493 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0022 | 13 | 11 | -0.0879 | -0.255 | 0.01286 | 0.2391 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0023 | 13 | 11 | -0.02722 | -0.1588 | -0.02476 | 0.09635 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0024 | 13 | 11 | -0.1516 | -0.1471 | -0.0135 | -0.05008 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0025 | 13 | 11 | -0.1799 | -0.1104 | 0.1282 | 0.07949 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0026 | 13 | 11 | -0.0369 | -0.1509 | -0.06477 | 0.002167 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0027 | 13 | 11 | 0.03865 | -0.115 | -0.07211 | -0.03036 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0028 | 13 | 11 | -0.2203 | -0.1133 | -0.01496 | -0.09641 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0029 | 13 | 11 | -0.3087 | -0.08142 | -0.008803 | -0.2553 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
-| LPE10884_2024_01_17 | LPE10884_2024_01_17_6_0030 | 13 | 11 | 0.2382 | 0.5179 | 0.1519 | -0.518 | RSP | unl | RSP | unl | RSP_unl | RSP | LPE10884 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0000 | 32 | 13 | -0.04012 | -0.2104 | -0.02692 | 0.1816 | V1 | lab | V1 | lab | V1_lab | V1-lab | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0001 | 32 | 13 | 0.1785 | -0.1658 | -0.04854 | 0.3386 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0002 | 32 | 13 | -0.1249 | 0.1448 | 0.01802 | -0.3939 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0003 | 32 | 13 | -0.01802 | -0.1757 | -0.05049 | -0.06279 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0004 | 32 | 13 | -0.1394 | 0.1913 | 0.03447 | 0.03886 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0005 | 32 | 13 | 0.06077 | 0.06476 | -0.0774 | 0.2847 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0006 | 32 | 13 | 0.004286 | -0.2167 | -0.1597 | 0.3144 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0008 | 32 | 13 | -0.02958 | 0.383 | 0.02503 | -0.2868 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0009 | 32 | 13 | 0.05699 | 0.1782 | 0.2788 | 0.4449 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0010 | 32 | 13 | -0.055 | -0.0161 | -0.01071 | -0.2064 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0011 | 32 | 13 | -0.1036 | 0.2319 | 0.04665 | -0.5027 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0012 | 32 | 13 | -0.1028 | -0.09721 | -0.03793 | 0.01622 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0014 | 32 | 13 | -0.1408 | 0.1011 | 0.05576 | -0.1095 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0015 | 32 | 13 | -0.0856 | 0.2755 | -0.2043 | -0.378 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0016 | 32 | 13 | 0.2987 | 0.4174 | 0.06943 | -0.2755 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0017 | 32 | 13 | 0.2938 | 0.5196 | -0.1027 | -0.1754 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0018 | 32 | 13 | -0.1219 | -0.1293 | -0.09995 | 0.06044 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0021 | 32 | 13 | 0.1729 | 0.03977 | 0.113 | -0.1403 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0022 | 32 | 13 | -0.04679 | -0.01087 | 0.127 | 0.1184 | V1 | lab | V1 | lab | V1_lab | V1-lab | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0023 | 32 | 13 | 0.03838 | -0.0132 | -0.09156 | -0.09647 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0024 | 32 | 13 | -0.1772 | 0.05356 | 0.07846 | -0.2303 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0025 | 32 | 13 | -0.1056 | -0.1159 | -0.08328 | 0.242 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0027 | 32 | 13 | -0.04126 | 0.03178 | 0.06854 | -0.2138 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0028 | 32 | 13 | 0.0412 | 0.03688 | -0.07049 | -0.236 | V1 | lab | V1 | lab | V1_lab | V1-lab | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0029 | 32 | 13 | -0.004272 | 0.05771 | -0.157 | 0.05259 | V1 | lab | V1 | lab | V1_lab | V1-lab | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0030 | 32 | 13 | -0.08635 | -0.1257 | -0.05973 | 0.05937 | V1 | lab | V1 | lab | V1_lab | V1-lab | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0031 | 32 | 13 | -0.1175 | -0.04394 | 0.06569 | 0.06777 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0034 | 32 | 13 | 0.1316 | 0.8185 | -0.06488 | 0.01859 | V1 | lab | V1 | lab | V1_lab | V1-lab | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0035 | 32 | 13 | 0.06775 | 0.07207 | -0.1702 | 0.2831 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
+| LPE11622_2024_02_20 | LPE11622_2024_02_20_0_0036 | 32 | 13 | -0.1571 | -0.003689 | 0.02181 | -0.1218 | V1 | unl | V1 | unl | V1_unl | V1-unl | LPE11622 |
 
-*(showing first 15 of 16 columns; showing first 30 of 20469 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 16 columns; showing first 30 of 16524 rows -- see the linked CSV for the rest)*
 
 [false_alarm_vs_cr_per_cell.csv](../2_pipeline/2b_activity_statistics/out/false_alarm_vs_cr_per_cell.csv)
 
@@ -242,12 +242,9 @@
 
 | marker | group | unit | bin | hit_probability | n_trials | animal_id |
 | --- | --- | --- | --- | --- | --- | --- |
-| popmean | AL_unl | LPE10884_2024_01_12 | 1 | 0.6071 | 28 | LPE10884 |
-| popmean | AL_unl | LPE10884_2024_01_12 | 2 | 0.5556 | 27 | LPE10884 |
-| popmean | AL_unl | LPE10884_2024_01_12 | 3 | 0.5185 | 27 | LPE10884 |
-| popmean | AL_unl | LPE10884_2024_01_17 | 1 | 0.717 | 53 | LPE10884 |
-| popmean | AL_unl | LPE10884_2024_01_17 | 2 | 0.6923 | 52 | LPE10884 |
-| popmean | AL_unl | LPE10884_2024_01_17 | 3 | 0.7692 | 52 | LPE10884 |
+| popmean | AL_unl | LPE10884_2024_01_12 | 1 | 0.5455 | 22 | LPE10884 |
+| popmean | AL_unl | LPE10884_2024_01_12 | 2 | 0.5238 | 21 | LPE10884 |
+| popmean | AL_unl | LPE10884_2024_01_12 | 3 | 0.4286 | 21 | LPE10884 |
 | popmean | AL_unl | LPE11622_2024_02_22 | 1 | 0.4762 | 21 | LPE11622 |
 | popmean | AL_unl | LPE11622_2024_02_22 | 2 | 0.4762 | 21 | LPE11622 |
 | popmean | AL_unl | LPE11622_2024_02_22 | 3 | 0.5714 | 21 | LPE11622 |
@@ -266,6 +263,9 @@
 | popmean | AL_unl | LPE11997_2024_04_17 | 1 | 0.5926 | 54 | LPE11997 |
 | popmean | AL_unl | LPE11997_2024_04_17 | 2 | 0.6415 | 53 | LPE11997 |
 | popmean | AL_unl | LPE11997_2024_04_17 | 3 | 0.4717 | 53 | LPE11997 |
+| popmean | AL_unl | LPE11998_2024_04_23 | 1 | 0.4615 | 13 | LPE11998 |
+| popmean | AL_unl | LPE11998_2024_04_23 | 2 | 0.6154 | 13 | LPE11998 |
+| popmean | AL_unl | LPE11998_2024_04_23 | 3 | 0.2308 | 13 | LPE11998 |
 | popmean | AL_unl | LPE11998_2024_04_24 | 1 | 0.5 | 10 | LPE11998 |
 | popmean | AL_unl | LPE11998_2024_04_24 | 2 | 0.6667 | 9 | LPE11998 |
 | popmean | AL_unl | LPE11998_2024_04_24 | 3 | 0.3333 | 9 | LPE11998 |
@@ -273,7 +273,7 @@
 | popmean | AL_unl | LPE11998_2024_04_25 | 2 | 0.75 | 16 | LPE11998 |
 | popmean | AL_unl | LPE11998_2024_04_25 | 3 | 0.5 | 16 | LPE11998 |
 
-*(showing first 30 of 690 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 726 rows -- see the linked CSV for the rest)*
 
 [hit_probability_by_prestim_marker__session.csv](../2_pipeline/2b_activity_statistics/out/hit_probability_by_prestim_marker__session.csv)
 
@@ -282,18 +282,19 @@
 | group | category | unit | animal_id | n_cells | activity_hit | activity_miss | miss_fraction_pct |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | AL_unl | difficult | LPE10884_2024_01_12 | LPE10884 | 320 | 0.03657 | 0.006714 | 18.36 |
-| AL_unl | difficult | LPE10884_2024_01_17 | LPE10884 | 417 | 0.01968 | -0.05465 | -277.7 |
 | AL_unl | difficult | LPE11622_2024_02_22 | LPE11622 | 105 | 0.02366 | 0.01337 | 56.51 |
 | AL_unl | difficult | LPE11622_2024_02_26 | LPE11622 | 139 | -0.03053 | 0.004246 |  |
 | AL_unl | difficult | LPE11997_2024_04_16 | LPE11997 | 75 | 0.1414 | 0.1501 | 106.2 |
 | AL_unl | difficult | LPE11997_2024_04_18 | LPE11997 | 10 | 0.0007588 | -0.001917 | -252.6 |
+| AL_unl | difficult | LPE11998_2024_04_23 | LPE11998 | 322 | 0.01019 | 0.03784 | 371.6 |
 | AL_unl | difficult | LPE11998_2024_04_29 | LPE11998 | 419 | 0.008859 | 0.02301 | 259.7 |
+| AL_unl | difficult | LPE12013_2024_04_25 | LPE12013 | 227 | 0.1073 | -0.01584 | -14.76 |
 | AL_unl | difficult | LPE12013_2024_04_26 | LPE12013 | 312 | 0.02067 | 0.025 | 121 |
 | AL_unl | difficult | LPE12013_2024_04_29 | LPE12013 | 442 | 0.02054 | 0.02812 | 136.9 |
 | AL_unl | difficult | LPE12013_2024_04_30 | LPE12013 | 465 | 0.1271 | 0.02911 | 22.91 |
 | AL_unl | difficult | LPE12385_2024_06_15 | LPE12385 | 302 | -0.04047 | 0.01064 |  |
 | AL_unl | difficult | LPE12385_2024_06_27 | LPE12385 | 227 | 0.0176 | 0.004844 | 27.53 |
-| AL_unl | easy | LPE10884_2024_01_12 | LPE10884 | 320 | -0.01105 | 0.03134 |  |
+| AL_unl | easy | LPE10884_2024_01_12 | LPE10884 | 320 | -0.009191 | 0.01807 |  |
 | AL_unl | easy | LPE11622_2024_02_22 | LPE11622 | 105 | 0.07888 | 0.2101 | 266.4 |
 | AL_unl | easy | LPE11622_2024_02_23 | LPE11622 | 264 | 0.04046 | 0.01771 | 43.78 |
 | AL_unl | easy | LPE11622_2024_02_26 | LPE11622 | 139 | 0.04965 | 0.0708 | 142.6 |
@@ -303,16 +304,15 @@
 | AL_unl | easy | LPE12013_2024_04_29 | LPE12013 | 442 | 0.09733 | 0.07292 | 74.92 |
 | AL_unl | easy | LPE12385_2024_06_15 | LPE12385 | 302 | -0.04359 | -0.06099 |  |
 | AL_unl | easy | LPE12385_2024_06_16 | LPE12385 | 111 | 0.04459 | 0.06165 | 138.3 |
-| AL_unl | easy | LPE12385_2024_06_17 | LPE12385 | 195 | 0.06947 | -0.03197 | -46.03 |
+| AL_unl | easy | LPE12385_2024_06_17 | LPE12385 | 195 | 0.06412 | 0.01395 | 21.76 |
+| AL_unl | easy | LPE12385_2024_06_26 | LPE12385 | 317 | -0.0475 | -0.01999 |  |
 | AL_unl | easy | LPE12385_2024_06_27 | LPE12385 | 227 | -0.01177 | 0.03046 |  |
-| AL_unl | intermediate | LPE10884_2024_01_12 | LPE10884 | 320 | 0.03262 | 0.01295 | 39.71 |
-| AL_unl | intermediate | LPE10884_2024_01_17 | LPE10884 | 417 | 0.03986 | -0.03265 | -81.91 |
+| AL_unl | intermediate | LPE10884_2024_01_12 | LPE10884 | 320 | 0.03726 | 0.01646 | 44.18 |
 | AL_unl | intermediate | LPE11622_2024_02_22 | LPE11622 | 105 | -0.0009813 | 0.01947 |  |
 | AL_unl | intermediate | LPE11622_2024_02_23 | LPE11622 | 264 | 0.039 | 0.02328 | 59.68 |
 | AL_unl | intermediate | LPE11622_2024_02_26 | LPE11622 | 139 | -0.007522 | 0.01181 |  |
-| AL_unl | intermediate | LPE11997_2024_04_10 | LPE11997 | 151 | 0.01236 | -0.01302 | -105.3 |
 
-*(showing first 30 of 254 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 273 rows -- see the linked CSV for the rest)*
 
 [miss_fraction__session.csv](../2_pipeline/2b_activity_statistics/out/miss_fraction__session.csv)
 
@@ -324,18 +324,10 @@
 | LPE10884_2024_01_12 | no stimulus | CR | 17 |
 | LPE10884_2024_01_12 | difficult | HIT | 15 |
 | LPE10884_2024_01_12 | difficult | MISS | 29 |
-| LPE10884_2024_01_12 | intermediate | HIT | 46 |
-| LPE10884_2024_01_12 | intermediate | MISS | 36 |
-| LPE10884_2024_01_12 | easy | HIT | 52 |
-| LPE10884_2024_01_12 | easy | MISS | 10 |
-| LPE10884_2024_01_17 | no stimulus | FA | 11 |
-| LPE10884_2024_01_17 | no stimulus | CR | 13 |
-| LPE10884_2024_01_17 | difficult | HIT | 13 |
-| LPE10884_2024_01_17 | difficult | MISS | 12 |
-| LPE10884_2024_01_17 | intermediate | HIT | 114 |
-| LPE10884_2024_01_17 | intermediate | MISS | 43 |
-| LPE10884_2024_01_17 | easy | HIT | 51 |
-| LPE10884_2024_01_17 | easy | MISS | 1 |
+| LPE10884_2024_01_12 | intermediate | HIT | 32 |
+| LPE10884_2024_01_12 | intermediate | MISS | 32 |
+| LPE10884_2024_01_12 | easy | HIT | 66 |
+| LPE10884_2024_01_12 | easy | MISS | 14 |
 | LPE11622_2024_02_20 | no stimulus | FA | 13 |
 | LPE11622_2024_02_20 | no stimulus | CR | 32 |
 | LPE11622_2024_02_20 | difficult | HIT | 0 |
@@ -350,8 +342,16 @@
 | LPE11622_2024_02_22 | difficult | MISS | 101 |
 | LPE11622_2024_02_22 | intermediate | HIT | 32 |
 | LPE11622_2024_02_22 | intermediate | MISS | 31 |
+| LPE11622_2024_02_22 | easy | HIT | 180 |
+| LPE11622_2024_02_22 | easy | MISS | 17 |
+| LPE11622_2024_02_23 | no stimulus | FA | 6 |
+| LPE11622_2024_02_23 | no stimulus | CR | 21 |
+| LPE11622_2024_02_23 | difficult | HIT | 4 |
+| LPE11622_2024_02_23 | difficult | MISS | 9 |
+| LPE11622_2024_02_23 | intermediate | HIT | 36 |
+| LPE11622_2024_02_23 | intermediate | MISS | 27 |
 
-*(showing first 30 of 176 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 184 rows -- see the linked CSV for the rest)*
 
 [outcome_counts_by_session.csv](../2_pipeline/2b_activity_statistics/out/outcome_counts_by_session.csv)
 
@@ -390,7 +390,7 @@
 | LPE10884_2024_01_12 | LPE10884_2024_01_12_6_0028 | difficult | 15 | 29 | -0.03874 | 0.009354 | -0.1634 | -0.0992 | RSP | unl | RSP | unl | RSP_unl | RSP |
 | LPE10884_2024_01_12 | LPE10884_2024_01_12_6_0029 | difficult | 15 | 29 | 0.1401 | -0.005314 | -0.144 | -0.1836 | RSP | unl | RSP | unl | RSP_unl | RSP |
 
-*(showing first 15 of 17 columns; showing first 30 of 49573 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 17 columns; showing first 30 of 42903 rows -- see the linked CSV for the rest)*
 
 [outcome_scalars_per_cell.csv](../2_pipeline/2b_activity_statistics/out/outcome_scalars_per_cell.csv)
 
@@ -426,10 +426,10 @@
 | AL_unl | LPE10884_2024_01_12 | LPE10884 | 47.5 | 0.178 | 320 | difficult | HIT |
 | AL_unl | LPE10884_2024_01_12 | LPE10884 | 52.5 | 0.1085 | 320 | difficult | HIT |
 | AL_unl | LPE10884_2024_01_12 | LPE10884 | 57.5 | 0.1211 | 320 | difficult | HIT |
-| AL_unl | LPE10884_2024_01_17 | LPE10884 | -77.5 |  | 417 | difficult | HIT |
-| AL_unl | LPE10884_2024_01_17 | LPE10884 | -72.5 |  | 417 | difficult | HIT |
+| AL_unl | LPE11622_2024_02_22 | LPE11622 | -77.5 | -0.03179 | 105 | difficult | HIT |
+| AL_unl | LPE11622_2024_02_22 | LPE11622 | -72.5 | 0.01865 | 105 | difficult | HIT |
 
-*(showing first 30 of 27328 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 28672 rows -- see the linked CSV for the rest)*
 
 [outcome_traces_by_group__session.csv](../2_pipeline/2b_activity_statistics/out/outcome_traces_by_group__session.csv)
 
@@ -444,29 +444,29 @@
 | V1 | LPE11997_2024_04_10 | LPE11997 | 53 | 611 | 12.5 | 12.5 | 0 |
 | V1 | LPE11997_2024_04_16 | LPE11997 | 13 | 85 | -17.5 | 17.5 | -35 |
 | V1 | LPE11997_2024_04_17 | LPE11997 | 19 | 133 | 17.5 | 17.5 | 0 |
+| V1 | LPE11998_2024_04_23 | LPE11998 | 36 | 268 | 2.5 | 2.5 | 0 |
 | V1 | LPE11998_2024_04_24 | LPE11998 | 40 | 275 | 7.5 | 2.5 | 5 |
 | V1 | LPE11998_2024_04_25 | LPE11998 | 30 | 224 | -22.5 | 12.5 | -35 |
 | V1 | LPE11998_2024_05_01 | LPE11998 | 40 | 292 | 12.5 | 12.5 | 0 |
 | V1 | LPE12013_2024_04_25 | LPE12013 | 24 | 177 | 17.5 | 12.5 | 5 |
 | V1 | LPE12013_2024_04_26 | LPE12013 | 17 | 179 | 7.5 | 12.5 | -5 |
 | V1 | LPE12013_2024_04_29 | LPE12013 | 21 | 106 | 7.5 | 17.5 | -10 |
-| V1 | LPE12013_2024_04_30 | LPE12013 | 18 | 151 | 15 | 17.5 | -2.5 |
 | V1 | LPE12385_2024_06_15 | LPE12385 | 16 | 267 | 0 | 2.5 | -2.5 |
 | V1 | LPE12385_2024_06_16 | LPE12385 | 18 | 339 | 7.5 | 12.5 | -5 |
-| V1 | LPE12385_2024_06_17 | LPE12385 | 10 | 213 | -17.5 | 7.5 | -25 |
+| V1 | LPE12385_2024_06_17 | LPE12385 | 10 | 163 | -17.5 | 7.5 | -25 |
+| V1 | LPE12385_2024_06_26 | LPE12385 | 12 | 233 | -5 | 2.5 | -7.5 |
 | V1 | LPE12385_2024_06_27 | LPE12385 | 13 | 162 | 2.5 | 2.5 | 0 |
-| PM | LPE11622_2024_02_20 | LPE11622 | 220 | 740 | 7.5 | 7.5 | 0 |
-| PM | LPE11622_2024_02_22 | LPE11622 | 120 | 582 | 12.5 | 12.5 | 0 |
-| PM | LPE11622_2024_02_23 | LPE11622 | 76 | 456 | 2.5 | 7.5 | -5 |
-| PM | LPE11622_2024_02_26 | LPE11622 | 164 | 700 | -2.5 | 7.5 | -10 |
-| PM | LPE11997_2024_04_10 | LPE11997 | 175 | 667 | -2.5 | 7.5 | -10 |
-| PM | LPE11997_2024_04_16 | LPE11997 | 89 | 369 | 12.5 | 2.5 | 10 |
-| PM | LPE11997_2024_04_17 | LPE11997 | 110 | 424 | 12.5 | 12.5 | 0 |
-| PM | LPE11997_2024_04_18 | LPE11997 | 32 | 123 | -50 | 2.5 | -52.5 |
-| PM | LPE11998_2024_04_24 | LPE11998 | 41 | 155 | -12.5 | -12.5 | 0 |
-| PM | LPE11998_2024_04_25 | LPE11998 | 27 | 122 | -2.5 | 7.5 | -10 |
-| PM | LPE11998_2024_04_29 | LPE11998 | 32 | 92 | 7.5 | 7.5 | 0 |
-| PM | LPE11998_2024_05_01 | LPE11998 | 41 | 99 | 2.5 | 7.5 | -5 |
+| PM | LPE11622_2024_02_20 | LPE11622 | 220 | 149 | 7.5 | 2.5 | 5 |
+| PM | LPE11622_2024_02_22 | LPE11622 | 120 | 392 | 12.5 | 17.5 | -5 |
+| PM | LPE11622_2024_02_23 | LPE11622 | 76 | 268 | 2.5 | 7.5 | -5 |
+| PM | LPE11622_2024_02_26 | LPE11622 | 164 | 380 | -2.5 | 2.5 | -5 |
+| PM | LPE11997_2024_04_16 | LPE11997 | 89 | 125 | 12.5 | 2.5 | 10 |
+| PM | LPE11997_2024_04_17 | LPE11997 | 110 | 137 | 12.5 | 12.5 | 0 |
+| PM | LPE11997_2024_04_18 | LPE11997 | 32 | 45 | -50 | 7.5 | -57.5 |
+| PM | LPE11998_2024_04_23 | LPE11998 | 29 | 35 | -2.5 | 2.5 | -5 |
+| PM | LPE11998_2024_04_24 | LPE11998 | 41 | 51 | -12.5 | -17.5 | 5 |
+| PM | LPE11998_2024_04_25 | LPE11998 | 27 | 84 | -2.5 | 12.5 | -15 |
+| PM | LPE11998_2024_04_29 | LPE11998 | 32 | 21 | 7.5 | -12.5 | 20 |
 
 *(showing first 30 of 38 rows -- see the linked CSV for the rest)*
 
@@ -476,10 +476,10 @@
 
 | area | subset | n_lab | n_unl | median_lab | median_unl | median_diff | p_perm_within_session | ks_stat | p_ks_cells_independent |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| V1 | all cells | 632 | 4943 | 12.5 | 12.5 | 0 | 1 | 0.02767 | 0.7722 |
-| V1 | reliable (r>=0.3) | 313 | 2408 | 17.5 | 17.5 | 0 | 1 | 0.03766 | 0.811 |
-| PM | all cells | 1288 | 6061 | 7.5 | 7.5 | 0 | 1 | 0.02916 | 0.3197 |
-| PM | reliable (r>=0.3) | 720 | 3260 | 12.5 | 12.5 | 0 | 1 | 0.05012 | 0.09942 |
+| V1 | all cells | 680 | 5240 | 10 | 12.5 | -2.5 | 0.2593 | 0.02646 | 0.7821 |
+| V1 | reliable (r>=0.3) | 329 | 2526 | 17.5 | 17.5 | 0 | 1 | 0.03652 | 0.8169 |
+| PM | all cells | 1324 | 1992 | 7.5 | 7.5 | 0 | 1 | 0.02698 | 0.5961 |
+| PM | reliable (r>=0.3) | 736 | 1006 | 12.5 | 12.5 | 0 | 1 | 0.05256 | 0.1825 |
 
 [peak_position_lab_vs_unl_test.csv](../2_pipeline/2b_activity_statistics/out/peak_position_lab_vs_unl_test.csv)
 
@@ -487,7 +487,6 @@
 
 | comparison | label | marker | group | unit | auc | n_sessions | pairs | animal_id |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| FA_vs_CR | iti | iti |  | LPE10884_2024_01_17 | 0.5 | 1 | 143 | LPE10884 |
 | FA_vs_CR | iti | iti |  | LPE11622_2024_02_20 | 0.5 | 1 | 416 | LPE11622 |
 | FA_vs_CR | iti | iti |  | LPE11622_2024_02_22 | 0.5 | 1 | 468 | LPE11622 |
 | FA_vs_CR | iti | iti |  | LPE11622_2024_02_23 | 0.5 | 1 | 126 | LPE11622 |
@@ -505,20 +504,21 @@
 | FA_vs_CR | iti | iti |  | LPE12385_2024_06_15 | 0.5 | 1 | 174 | LPE12385 |
 | FA_vs_CR | iti | iti |  | LPE12385_2024_06_16 | 0.5 | 1 | 442 | LPE12385 |
 | FA_vs_CR | iti | iti |  | LPE12385_2024_06_17 | 0.5 | 1 | 675 | LPE12385 |
+| FA_vs_CR | iti | iti |  | LPE12385_2024_06_26 | 0.5 | 1 | 112 | LPE12385 |
 | FA_vs_CR | iti | iti |  | LPE12385_2024_06_27 | 0.5 | 1 | 105 | LPE12385 |
-| FA_vs_CR | lick | lick |  | LPE10884_2024_01_17 | 0.542 | 1 | 143 | LPE10884 |
 | FA_vs_CR | lick | lick |  | LPE11622_2024_02_20 | 0.53 | 1 | 416 | LPE11622 |
 | FA_vs_CR | lick | lick |  | LPE11622_2024_02_22 | 0.4882 | 1 | 468 | LPE11622 |
 | FA_vs_CR | lick | lick |  | LPE11622_2024_02_23 | 0.4643 | 1 | 126 | LPE11622 |
-| FA_vs_CR | lick | lick |  | LPE11622_2024_02_26 | 0.5084 | 1 | 297 | LPE11622 |
+| FA_vs_CR | lick | lick |  | LPE11622_2024_02_26 | 0.5286 | 1 | 297 | LPE11622 |
 | FA_vs_CR | lick | lick |  | LPE11997_2024_04_10 | 0.5295 | 1 | 288 | LPE11997 |
 | FA_vs_CR | lick | lick |  | LPE11997_2024_04_16 | 0.46 | 1 | 750 | LPE11997 |
-| FA_vs_CR | lick | lick |  | LPE11997_2024_04_17 | 0.4323 | 1 | 731 | LPE11997 |
+| FA_vs_CR | lick | lick |  | LPE11997_2024_04_17 | 0.4439 | 1 | 731 | LPE11997 |
 | FA_vs_CR | lick | lick |  | LPE11997_2024_04_18 | 0.4138 | 1 | 203 | LPE11997 |
 | FA_vs_CR | lick | lick |  | LPE11998_2024_04_25 | 0.5398 | 1 | 264 | LPE11998 |
 | FA_vs_CR | lick | lick |  | LPE11998_2024_04_29 | 0.595 | 1 | 300 | LPE11998 |
+| FA_vs_CR | lick | lick |  | LPE11998_2024_05_01 | 0.3125 | 1 | 264 | LPE11998 |
 
-*(showing first 30 of 602 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 585 rows -- see the linked CSV for the rest)*
 
 [prestim_marker_auroc__session.csv](../2_pipeline/2b_activity_statistics/out/prestim_marker_auroc__session.csv)
 
@@ -535,29 +535,29 @@
 | LPE10884_2024_01_12 | hit_vs_miss | motionenergy |  | 0.5356 | 76 | 48 | 6 | LPE10884 | LPE10884_2024_01_12 | motionenergy | 3648 |
 | LPE10884_2024_01_12 | hit_vs_miss | lick |  | 0.5375 | 76 | 48 | 6 | LPE10884 | LPE10884_2024_01_12 | lick | 3648 |
 | LPE10884_2024_01_12 | hit_vs_miss | iti |  | 0.5 | 75 | 48 | 6 | LPE10884 | LPE10884_2024_01_12 | iti | 3600 |
-| LPE10884_2024_01_17 | hit_vs_miss | popmean | AL_unl | 0.4559 | 79 | 42 | 6 | LPE10884 | LPE10884_2024_01_17 | popmean AL-unl | 3318 |
-| LPE10884_2024_01_17 | hit_vs_miss | popvar | AL_unl | 0.4991 | 79 | 42 | 6 | LPE10884 | LPE10884_2024_01_17 | popvar AL-unl | 3318 |
-| LPE10884_2024_01_17 | hit_vs_miss | popmean | RSP_unl | 0.5207 | 79 | 42 | 6 | LPE10884 | LPE10884_2024_01_17 | popmean RSP-unl | 3318 |
-| LPE10884_2024_01_17 | hit_vs_miss | popvar | RSP_unl | 0.5045 | 79 | 42 | 6 | LPE10884 | LPE10884_2024_01_17 | popvar RSP-unl | 3318 |
-| LPE10884_2024_01_17 | hit_vs_miss | runspeed |  | 0.5495 | 79 | 42 | 6 | LPE10884 | LPE10884_2024_01_17 | runspeed | 3318 |
-| LPE10884_2024_01_17 | hit_vs_miss | pupil_area |  | 0.5387 | 79 | 42 | 6 | LPE10884 | LPE10884_2024_01_17 | pupil_area | 3318 |
-| LPE10884_2024_01_17 | hit_vs_miss | motionenergy |  | 0.5045 | 79 | 42 | 6 | LPE10884 | LPE10884_2024_01_17 | motionenergy | 3318 |
-| LPE10884_2024_01_17 | hit_vs_miss | lick |  | 0.5261 | 79 | 42 | 6 | LPE10884 | LPE10884_2024_01_17 | lick | 3318 |
-| LPE10884_2024_01_17 | hit_vs_miss | iti |  | 0.5 | 79 | 42 | 6 | LPE10884 | LPE10884_2024_01_17 | iti | 3318 |
-| LPE10884_2024_01_17 | FA_vs_CR | popmean | AL_unl | 0.5035 | 11 | 13 | 1 | LPE10884 | LPE10884_2024_01_17 | popmean AL-unl | 143 |
-| LPE10884_2024_01_17 | FA_vs_CR | popvar | AL_unl | 0.3706 | 11 | 13 | 1 | LPE10884 | LPE10884_2024_01_17 | popvar AL-unl | 143 |
-| LPE10884_2024_01_17 | FA_vs_CR | popmean | RSP_unl | 0.6084 | 11 | 13 | 1 | LPE10884 | LPE10884_2024_01_17 | popmean RSP-unl | 143 |
-| LPE10884_2024_01_17 | FA_vs_CR | popvar | RSP_unl | 0.6014 | 11 | 13 | 1 | LPE10884 | LPE10884_2024_01_17 | popvar RSP-unl | 143 |
-| LPE10884_2024_01_17 | FA_vs_CR | runspeed |  | 0.3706 | 11 | 13 | 1 | LPE10884 | LPE10884_2024_01_17 | runspeed | 143 |
-| LPE10884_2024_01_17 | FA_vs_CR | pupil_area |  | 0.4126 | 11 | 13 | 1 | LPE10884 | LPE10884_2024_01_17 | pupil_area | 143 |
-| LPE10884_2024_01_17 | FA_vs_CR | motionenergy |  | 0.5105 | 11 | 13 | 1 | LPE10884 | LPE10884_2024_01_17 | motionenergy | 143 |
-| LPE10884_2024_01_17 | FA_vs_CR | lick |  | 0.542 | 11 | 13 | 1 | LPE10884 | LPE10884_2024_01_17 | lick | 143 |
-| LPE10884_2024_01_17 | FA_vs_CR | iti |  | 0.5 | 11 | 13 | 1 | LPE10884 | LPE10884_2024_01_17 | iti | 143 |
 | LPE11622_2024_02_20 | hit_vs_miss | popmean | PM_lab | 0.501 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | popmean PM-lab | 22230 |
 | LPE11622_2024_02_20 | hit_vs_miss | popvar | PM_lab | 0.4916 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | popvar PM-lab | 22230 |
-| LPE11622_2024_02_20 | hit_vs_miss | popmean | PM_unl | 0.5221 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | popmean PM-unl | 22230 |
+| LPE11622_2024_02_20 | hit_vs_miss | popmean | PM_unl | 0.501 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | popmean PM-unl | 22230 |
+| LPE11622_2024_02_20 | hit_vs_miss | popvar | PM_unl | 0.4946 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | popvar PM-unl | 22230 |
+| LPE11622_2024_02_20 | hit_vs_miss | popmean | V1_lab | 0.5064 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | popmean V1-lab | 22230 |
+| LPE11622_2024_02_20 | hit_vs_miss | popvar | V1_lab | 0.4314 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | popvar V1-lab | 22230 |
+| LPE11622_2024_02_20 | hit_vs_miss | popmean | V1_unl | 0.5492 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | popmean V1-unl | 22230 |
+| LPE11622_2024_02_20 | hit_vs_miss | popvar | V1_unl | 0.5261 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | popvar V1-unl | 22230 |
+| LPE11622_2024_02_20 | hit_vs_miss | runspeed |  | 0.5632 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | runspeed | 22230 |
+| LPE11622_2024_02_20 | hit_vs_miss | pupil_area |  | 0.2259 | 233 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | pupil_area | 22135 |
+| LPE11622_2024_02_20 | hit_vs_miss | motionenergy |  | 0.7054 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | motionenergy | 22230 |
+| LPE11622_2024_02_20 | hit_vs_miss | lick |  | 0.601 | 234 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | lick | 22230 |
+| LPE11622_2024_02_20 | hit_vs_miss | iti |  | 0.5 | 233 | 95 | 10 | LPE11622 | LPE11622_2024_02_20 | iti | 22135 |
+| LPE11622_2024_02_20 | FA_vs_CR | popmean | PM_lab | 0.5048 | 13 | 32 | 1 | LPE11622 | LPE11622_2024_02_20 | popmean PM-lab | 416 |
+| LPE11622_2024_02_20 | FA_vs_CR | popvar | PM_lab | 0.4615 | 13 | 32 | 1 | LPE11622 | LPE11622_2024_02_20 | popvar PM-lab | 416 |
+| LPE11622_2024_02_20 | FA_vs_CR | popmean | PM_unl | 0.5433 | 13 | 32 | 1 | LPE11622 | LPE11622_2024_02_20 | popmean PM-unl | 416 |
+| LPE11622_2024_02_20 | FA_vs_CR | popvar | PM_unl | 0.5529 | 13 | 32 | 1 | LPE11622 | LPE11622_2024_02_20 | popvar PM-unl | 416 |
+| LPE11622_2024_02_20 | FA_vs_CR | popmean | V1_lab | 0.6106 | 13 | 32 | 1 | LPE11622 | LPE11622_2024_02_20 | popmean V1-lab | 416 |
+| LPE11622_2024_02_20 | FA_vs_CR | popvar | V1_lab | 0.613 | 13 | 32 | 1 | LPE11622 | LPE11622_2024_02_20 | popvar V1-lab | 416 |
+| LPE11622_2024_02_20 | FA_vs_CR | popmean | V1_unl | 0.5649 | 13 | 32 | 1 | LPE11622 | LPE11622_2024_02_20 | popmean V1-unl | 416 |
+| LPE11622_2024_02_20 | FA_vs_CR | popvar | V1_unl | 0.5312 | 13 | 32 | 1 | LPE11622 | LPE11622_2024_02_20 | popvar V1-unl | 416 |
 
-*(showing first 30 of 602 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 585 rows -- see the linked CSV for the rest)*
 
 [prestim_marker_auroc_per_session.csv](../2_pipeline/2b_activity_statistics/out/prestim_marker_auroc_per_session.csv)
 
@@ -643,38 +643,38 @@
 
 | session_id | animal_id | cell_id | roi_name | labeled | area | label | group | group_name | class | peak_position_all | peak_position_odd | peak_position_even | peak_z_all | reliability |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0000 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -52.5 | -52.5 | 37.5 | 2.446 | -0.08785 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0001 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 42.5 | 42.5 | -47.5 | 1.978 | 0.533 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0002 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 12.5 | 12.5 | 12.5 | 2.905 | 0.9381 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0003 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 32.5 | 32.5 | 27.5 | 1.951 | 0.8334 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0004 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -22.5 | -42.5 | -12.5 | 1.721 | 0.6484 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0005 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 32.5 | 32.5 | 32.5 | 2.712 | 0.6633 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0006 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -2.5 | -2.5 | 2.5 | 2.631 | 0.8893 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0007 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 37.5 | -72.5 | -47.5 | 2.628 | 0.1449 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0008 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -37.5 | -42.5 | -37.5 | 2.131 | 0.4005 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0009 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 32.5 | 27.5 | 32.5 | 2.623 | 0.5493 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0010 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -67.5 | -72.5 | -42.5 | 1.746 | 0.1659 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0011 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 57.5 | 57.5 | 27.5 | 2.56 | 0.3823 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0012 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -17.5 | -2.5 | -67.5 | 1.768 | -0.06978 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0000 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | -52.5 | -52.5 | 37.5 | 2.446 | -0.08785 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0001 | RSP | unl | RSP | unl | RSP_unl | RSP | mixed | 42.5 | 42.5 | -47.5 | 1.978 | 0.533 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0002 | RSP | unl | RSP | unl | RSP_unl | RSP | lick | 12.5 | 12.5 | 12.5 | 2.905 | 0.9381 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0003 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | 32.5 | 32.5 | 27.5 | 1.951 | 0.8334 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0004 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | -22.5 | -42.5 | -12.5 | 1.721 | 0.6484 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0005 | RSP | unl | RSP | unl | RSP_unl | RSP | mixed | 32.5 | 32.5 | 32.5 | 2.712 | 0.6633 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0006 | RSP | unl | RSP | unl | RSP_unl | RSP | pupil_area | -2.5 | -2.5 | 2.5 | 2.631 | 0.8893 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0007 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | 37.5 | -72.5 | -47.5 | 2.628 | 0.1449 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0008 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | -37.5 | -42.5 | -37.5 | 2.131 | 0.4005 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0009 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | 32.5 | 27.5 | 32.5 | 2.623 | 0.5493 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0010 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | -67.5 | -72.5 | -42.5 | 1.746 | 0.1659 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0011 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | 57.5 | 57.5 | 27.5 | 2.56 | 0.3823 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0012 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | -17.5 | -2.5 | -67.5 | 1.768 | -0.06978 |
 | LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0013 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -17.5 | -17.5 | -17.5 | 2.993 | 0.1049 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0014 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -67.5 | 17.5 | -67.5 | 2.423 | 0.08304 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0015 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 7.5 | 7.5 | 7.5 | 2.765 | 0.8684 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0016 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -2.5 | -2.5 | -2.5 | 3.219 | 0.831 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0017 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -7.5 | 52.5 | 42.5 | 1.961 | 0.1962 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0014 | RSP | unl | RSP | unl | RSP_unl | RSP | pupil_area | -67.5 | 17.5 | -67.5 | 2.423 | 0.08304 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0015 | RSP | unl | RSP | unl | RSP_unl | RSP | mixed | 7.5 | 7.5 | 7.5 | 2.765 | 0.8684 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0016 | RSP | unl | RSP | unl | RSP_unl | RSP | mixed | -2.5 | -2.5 | -2.5 | 3.219 | 0.831 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0017 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | -7.5 | 52.5 | 42.5 | 1.961 | 0.1962 |
 | LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0018 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -67.5 | -67.5 | 12.5 | 2.424 | 0.006412 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0019 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 57.5 | 57.5 | 27.5 | 2.726 | 0.1047 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0020 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -37.5 | -37.5 | -17.5 | 2.489 | -0.0243 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0021 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 12.5 | 12.5 | 7.5 | 2.559 | 0.9356 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0022 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -32.5 | -32.5 | -52.5 | 1.959 | 0.1189 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0023 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -2.5 | 2.5 | -2.5 | 2.918 | 0.9203 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0024 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -52.5 | -22.5 | 57.5 | 2.185 | -0.2012 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0025 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -67.5 | 7.5 | -67.5 | 2.709 | 0.006825 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0026 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 27.5 | 27.5 | 27.5 | 3.677 | 0.5415 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0027 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -72.5 | -52.5 | -72.5 | 2.347 | 0.1729 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0028 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | -2.5 | -2.5 | -2.5 | 2.766 | 0.7844 |
-| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0029 | RSP | unl | RSP | unl | RSP_unl | RSP | unclassified | 2.5 | 2.5 | 2.5 | 3.225 | 0.906 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0019 | RSP | unl | RSP | unl | RSP_unl | RSP | mixed | 57.5 | 57.5 | 27.5 | 2.726 | 0.1047 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0020 | RSP | unl | RSP | unl | RSP_unl | RSP | pupil_area | -37.5 | -37.5 | -17.5 | 2.489 | -0.0243 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0021 | RSP | unl | RSP | unl | RSP_unl | RSP | lick | 12.5 | 12.5 | 7.5 | 2.559 | 0.9356 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0022 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | -32.5 | -32.5 | -52.5 | 1.959 | 0.1189 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0023 | RSP | unl | RSP | unl | RSP_unl | RSP | pupil_area | -2.5 | 2.5 | -2.5 | 2.918 | 0.9203 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0024 | RSP | unl | RSP | unl | RSP_unl | RSP | mixed | -52.5 | -22.5 | 57.5 | 2.185 | -0.2012 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0025 | RSP | unl | RSP | unl | RSP_unl | RSP | pupil_area | -67.5 | 7.5 | -67.5 | 2.709 | 0.006825 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0026 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | 27.5 | 27.5 | 27.5 | 3.677 | 0.5415 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0027 | RSP | unl | RSP | unl | RSP_unl | RSP | runspeed | -72.5 | -52.5 | -72.5 | 2.347 | 0.1729 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0028 | RSP | unl | RSP | unl | RSP_unl | RSP | pupil_area | -2.5 | -2.5 | -2.5 | 2.766 | 0.7844 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0029 | RSP | unl | RSP | unl | RSP_unl | RSP | pupil_area | 2.5 | 2.5 | 2.5 | 3.225 | 0.906 |
 
-*(showing first 30 of 22422 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 19066 rows -- see the linked CSV for the rest)*
 
 [raster_cells.csv](../2_pipeline/2b_activity_statistics/out/raster_cells.csv)
 
@@ -683,7 +683,6 @@
 | group | unit | animal_id | n_cells | reliability | peak_z_all | frac_reliable |
 | --- | --- | --- | --- | --- | --- | --- |
 | AL_unl | LPE10884_2024_01_12 | LPE10884 | 320 | 0.2125 | 2.428 | 0.3656 |
-| AL_unl | LPE10884_2024_01_17 | LPE10884 | 417 | 0.265 | 2.546 | 0.4508 |
 | AL_unl | LPE11622_2024_02_22 | LPE11622 | 105 | 0.3049 | 2.558 | 0.4952 |
 | AL_unl | LPE11622_2024_02_23 | LPE11622 | 264 | 0.288 | 2.589 | 0.4318 |
 | AL_unl | LPE11622_2024_02_26 | LPE11622 | 139 | 0.2672 | 2.593 | 0.4101 |
@@ -691,6 +690,7 @@
 | AL_unl | LPE11997_2024_04_16 | LPE11997 | 75 | 0.4593 | 2.527 | 0.6533 |
 | AL_unl | LPE11997_2024_04_17 | LPE11997 | 146 | 0.3938 | 2.564 | 0.5479 |
 | AL_unl | LPE11997_2024_04_18 | LPE11997 | 10 | 0.1048 | 2.329 | 0.2 |
+| AL_unl | LPE11998_2024_04_23 | LPE11998 | 322 | 0.1794 | 2.713 | 0.3261 |
 | AL_unl | LPE11998_2024_04_24 | LPE11998 | 148 | 0.1993 | 2.703 | 0.3378 |
 | AL_unl | LPE11998_2024_04_25 | LPE11998 | 138 | 0.3489 | 2.594 | 0.5362 |
 | AL_unl | LPE11998_2024_04_29 | LPE11998 | 419 | 0.3753 | 2.528 | 0.5704 |
@@ -702,6 +702,7 @@
 | AL_unl | LPE12385_2024_06_15 | LPE12385 | 302 | 0.06618 | 2.49 | 0.1656 |
 | AL_unl | LPE12385_2024_06_16 | LPE12385 | 111 | 0.3755 | 2.59 | 0.5135 |
 | AL_unl | LPE12385_2024_06_17 | LPE12385 | 195 | 0.4317 | 2.454 | 0.6513 |
+| AL_unl | LPE12385_2024_06_26 | LPE12385 | 317 | 0.1047 | 2.473 | 0.205 |
 | AL_unl | LPE12385_2024_06_27 | LPE12385 | 227 | 0.1125 | 2.541 | 0.2379 |
 | PM_lab | LPE11622_2024_02_20 | LPE11622 | 220 | 0.3471 | 2.43 | 0.5227 |
 | PM_lab | LPE11622_2024_02_22 | LPE11622 | 120 | 0.4227 | 2.491 | 0.6417 |
@@ -711,9 +712,8 @@
 | PM_lab | LPE11997_2024_04_16 | LPE11997 | 89 | 0.3708 | 2.418 | 0.5618 |
 | PM_lab | LPE11997_2024_04_17 | LPE11997 | 110 | 0.4573 | 2.391 | 0.6727 |
 | PM_lab | LPE11997_2024_04_18 | LPE11997 | 32 | 0.339 | 2.464 | 0.4688 |
-| PM_lab | LPE11998_2024_04_24 | LPE11998 | 41 | 0.2115 | 2.49 | 0.3902 |
 
-*(showing first 30 of 122 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 128 rows -- see the linked CSV for the rest)*
 
 [raster_reliability_by_unit__session.csv](../2_pipeline/2b_activity_statistics/out/raster_reliability_by_unit__session.csv)
 
@@ -726,10 +726,6 @@
 ### Raster session LPE10884 2024 01 12
 
 ![11_raster_session_LPE10884_2024_01_12](../2_pipeline/2b_activity_statistics/out/figures/11_raster_session_LPE10884_2024_01_12.png)
-
-### Raster session LPE10884 2024 01 17
-
-![11_raster_session_LPE10884_2024_01_17](../2_pipeline/2b_activity_statistics/out/figures/11_raster_session_LPE10884_2024_01_17.png)
 
 ### Raster session LPE11622 2024 02 20
 
@@ -762,6 +758,10 @@
 ### Raster session LPE11997 2024 04 18
 
 ![11_raster_session_LPE11997_2024_04_18](../2_pipeline/2b_activity_statistics/out/figures/11_raster_session_LPE11997_2024_04_18.png)
+
+### Raster session LPE11998 2024 04 23
+
+![11_raster_session_LPE11998_2024_04_23](../2_pipeline/2b_activity_statistics/out/figures/11_raster_session_LPE11998_2024_04_23.png)
 
 ### Raster session LPE11998 2024 04 24
 
@@ -806,6 +806,10 @@
 ### Raster session LPE12385 2024 06 17
 
 ![11_raster_session_LPE12385_2024_06_17](../2_pipeline/2b_activity_statistics/out/figures/11_raster_session_LPE12385_2024_06_17.png)
+
+### Raster session LPE12385 2024 06 26
+
+![11_raster_session_LPE12385_2024_06_26](../2_pipeline/2b_activity_statistics/out/figures/11_raster_session_LPE12385_2024_06_26.png)
 
 ### Raster session LPE12385 2024 06 27
 

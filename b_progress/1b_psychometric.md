@@ -1,6 +1,6 @@
 # 1b_psychometric
 
-*Auto-generated from `2_pipeline/1b_psychometric/out/` on 2026-10-16 17:39. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/1b_psychometric/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 
@@ -27,7 +27,6 @@
 | DM | LPE12223 | LPE12223_2024_05_30 | 210 | 49.11 | 210 | 156 | 12 | 1 | 41 | 156 | 12 | 1 | 41 | 1 |
 | DM | LPE12385 | LPE12385_2024_05_30 | 164 | 68.08 | 164 | 120 | 12 | 6 | 26 | 120 | 12 | 6 | 26 | 1 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 209 | 59.91 | 209 | 113 | 75 | 4 | 17 | 113 | 75 | 4 | 17 | 1 |
-| DN | LPE10884 | LPE10884_2024_01_17 | 258 | 60.61 | 258 | 178 | 56 | 11 | 13 | 178 | 56 | 11 | 13 | 1 |
 | DN | LPE11495 | LPE11495_2024_02_22 | 204 | 88.15 | 204 | 163 | 20 | 9 | 12 | 163 | 20 | 9 | 12 | 1 |
 | DN | LPE11622 | LPE11622_2024_02_20 | 396 | 66.99 | 396 | 247 | 104 | 13 | 32 | 247 | 104 | 13 | 32 | 1 |
 | DN | LPE11622 | LPE11622_2024_02_22 | 438 | 59.25 | 438 | 238 | 149 | 12 | 39 | 238 | 149 | 12 | 39 | 1 |
@@ -38,8 +37,9 @@
 | DN | LPE11997 | LPE11997_2024_04_10 | 254 | 65.7 | 254 | 144 | 69 | 9 | 32 | 144 | 69 | 9 | 32 | 1 |
 | DN | LPE11997 | LPE11997_2024_04_16 | 359 | 61.01 | 359 | 190 | 104 | 15 | 50 | 190 | 104 | 15 | 50 | 1 |
 | DN | LPE11997 | LPE11997_2024_04_17 | 345 | 62.45 | 345 | 205 | 80 | 17 | 43 | 205 | 80 | 17 | 43 | 1 |
+| DN | LPE11997 | LPE11997_2024_04_18 | 229 | 42.8 | 229 | 117 | 76 | 7 | 29 | 117 | 76 | 7 | 29 | 1 |
 
-*(showing first 15 of 21 columns; showing first 30 of 62 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 21 columns; showing first 30 of 63 rows -- see the linked CSV for the rest)*
 
 [clean_unit_summary_session.csv](../2_pipeline/1b_psychometric/out/clean_unit_summary_session.csv)
 
@@ -47,16 +47,15 @@
 
 | session_id | protocol | exclude_reasons |
 | --- | --- | --- |
-| LPE10884_2024_01_18 | DN | FA rate (engaged) = 57% > 50% |
-| LPE11622_2024_02_21 | DN | threshold (mu=22%) outside tested stimulus range (z-range [-1.93, -0.82] doesn't bracket 0) |
-| LPE11622_2024_02_27 | DN | threshold (mu=17%) outside tested stimulus range (z-range [-4.28, -0.59] doesn't bracket 0) |
-| LPE11997_2024_04_12 | DN | threshold (mu=16%) outside tested stimulus range (z-range [-5.32, -0.32] doesn't bracket 0) |
-| LPE11998_2024_04_23 | DN | threshold (mu=16%) outside tested stimulus range (z-range [-0.85, -0.08] doesn't bracket 0) |
-| LPE11998_2024_04_26 | DN | FA rate (engaged) = 64% > 50%; threshold (mu=9%) outside tested stimulus range (z-range [0.09, 1.76] doesn't bracket 0) |
-| LPE11998_2024_04_30 | DN | FA rate (engaged) = 56% > 50% |
-| LPE12013_2024_04_23 | DN | threshold (mu=28%) outside tested stimulus range (z-range [-1.23, -0.54] doesn't bracket 0) |
-| LPE12013_2024_04_24 | DN | threshold (mu=33%) outside tested stimulus range (z-range [-1.83, -1.04] doesn't bracket 0) |
-| LPE12385_2024_06_26 | DN | threshold (mu=6%) outside tested stimulus range (z-range [0.22, 2.20] doesn't bracket 0) |
+| LPE10884_2024_01_17 | DN | guess rate = 0.46 > 0.4 |
+| LPE10884_2024_01_18 | DN | FA rate (engaged) = 57% > 50%; guess rate = 0.49 > 0.4 |
+| LPE11622_2024_02_21 | DN | threshold (mu=21%) outside tested stimulus range (z-range [-1.96, -0.71] doesn't bracket 0) |
+| LPE11622_2024_02_27 | DN | threshold (mu=19%) outside tested stimulus range (z-range [-2.44, -0.69] doesn't bracket 0) |
+| LPE11997_2024_04_12 | DN | threshold (mu=16%) outside tested stimulus range (z-range [-5.35, -0.35] doesn't bracket 0); guess rate = 0.43 > 0.4 |
+| LPE11998_2024_04_26 | DN | FA rate (engaged) = 64% > 50%; guess rate = 0.60 > 0.4 |
+| LPE11998_2024_04_30 | DN | FA rate (engaged) = 56% > 50%; guess rate = 0.52 > 0.4 |
+| LPE12013_2024_04_23 | DN | threshold (mu=27%) outside tested stimulus range (z-range [-1.36, -0.56] doesn't bracket 0) |
+| LPE12013_2024_04_24 | DN | threshold (mu=32%) outside tested stimulus range (z-range [-1.91, -1.03] doesn't bracket 0) |
 | LPE11495_2024_02_21 | DP | FA rate (engaged) = 64% > 50% |
 | LPE11623_2024_04_01 | DP | d' (engaged) = 0.71 < 1.0 |
 | LPE11997_2024_04_08 | DP | FA rate (engaged) = 56% > 50% |
@@ -85,20 +84,20 @@
 | LPE12223_2024_05_29 | DM | 176 | 2.066 | 0.1944 | 0.9362 | 2 | not_applicable |  |  |  |  |  | True |  |
 | LPE12223_2024_05_30 | DM | 210 | 3.446 | 0.02381 | 0.9633 | 2 | not_applicable |  |  |  |  |  | True |  |
 | LPE12385_2024_05_30 | DM | 164 | 2.222 | 0.1875 | 1 | 2 | not_applicable |  |  |  |  |  | True |  |
-| LPE10884_2024_01_12 | DN | 209 | 2.056 | 0.1905 | 0.7207 | 13 | ok | 10.97 | 2.48 | 0.1213 | 0.2286 | 0.8028 | True |  |
-| LPE10884_2024_01_17 | DN | 258 | 2.175 | 0.4583 | 0.7914 | 13 | ok | 11 | 5.078 | 0.01538 | 0.4675 | 0.733 | True |  |
-| LPE10884_2024_01_18 | DN | 146 | 1.948 | 0.5714 | 0.7157 | 13 | ok | 12.53 | 4.906 | 0.005372 | 0.523 | 0.4945 | False | FA rate (engaged) = 57% > 50% |
-| LPE11495_2024_02_22 | DN | 204 | 2.487 | 0.4286 | 1 | 13 | ok | 6.348 | 7.039 | 0.01699 | 0.3329 | 0.4519 | True |  |
-| LPE11622_2024_02_20 | DN | 396 | 1.908 | 0.2889 | 0.6092 | 13 | ok | 11.81 | 9.77 | 0.08918 | 0.2211 | 0.4007 | True |  |
-| LPE11622_2024_02_21 | DN | 438 | 2.233 | 0.2245 | 0.5516 | 13 | threshold_out_of_range | 22.43 | 9.034 | 0.07001 | 0.2008 | 0.7157 | False | threshold (mu=22%) outside tested stimulus range (z-range [-1.93, -0.82] doesn't bracket 0) |
-| LPE11622_2024_02_22 | DN | 438 | 2.085 | 0.2353 | 0.6596 | 13 | ok | 13.43 | 2 | 0.08546 | 0.1925 | 0.9396 | True |  |
-| LPE11622_2024_02_23 | DN | 246 | 2.385 | 0.2222 | 0.4409 | 13 | ok | 9.687 | 3.799 | 0.0507 | 0.223 | 0.8195 | True |  |
-| LPE11622_2024_02_26 | DN | 340 | 2.129 | 0.2895 | 0.5852 | 13 | ok | 14.35 | 6.484 | 0.05734 | 0.2812 | 0.7214 | True |  |
-| LPE11622_2024_02_27 | DN | 336 | 2.3 | 0.1111 | 0.5185 | 13 | threshold_out_of_range | 16.61 | 2.714 | 0.1402 | 0.1333 | 0.8724 | False | threshold (mu=17%) outside tested stimulus range (z-range [-4.28, -0.59] doesn't bracket 0) |
-| LPE11623_2024_04_02 | DN | 160 | 2.078 | 0.1875 | 1 | 13 | ok | 15.73 | 5.144 | 0.1156 | 0.1827 | 0.6393 | True |  |
-| LPE11997_2024_04_09 | DN | 277 | 1.267 | 0.4 | 0.6925 | 13 | ok | 8.594 | 9.315 | 0.1559 | 0.31 | 0.6246 | True |  |
+| LPE10884_2024_01_12 | DN | 209 | 2.056 | 0.1905 | 0.7207 | 13 | ok | 10.84 | 2.551 | 0.1137 | 0.2286 | 0.8033 | True |  |
+| LPE10884_2024_01_17 | DN | 258 | 2.175 | 0.4583 | 0.7914 | 13 | ok | 10.81 | 4.617 | 0.01538 | 0.456 | 0.7275 | False | guess rate = 0.46 > 0.4 |
+| LPE10884_2024_01_18 | DN | 146 | 1.948 | 0.5714 | 0.7157 | 13 | ok | 12.26 | 4.301 | 0.005297 | 0.4947 | 0.5135 | False | FA rate (engaged) = 57% > 50%; guess rate = 0.49 > 0.4 |
+| LPE11495_2024_02_22 | DN | 204 | 2.487 | 0.4286 | 1 | 13 | ok | 6.671 | 6.465 | 0.01845 | 0.3329 | 0.4577 | True |  |
+| LPE11622_2024_02_20 | DN | 396 | 1.908 | 0.2889 | 0.6092 | 13 | ok | 11.89 | 8.571 | 0.08615 | 0.2211 | 0.3749 | True |  |
+| LPE11622_2024_02_21 | DN | 438 | 2.233 | 0.2245 | 0.5516 | 13 | threshold_out_of_range | 20.71 | 8.005 | 0.06823 | 0.1838 | 0.7165 | False | threshold (mu=21%) outside tested stimulus range (z-range [-1.96, -0.71] doesn't bracket 0) |
+| LPE11622_2024_02_22 | DN | 438 | 2.085 | 0.2353 | 0.6596 | 13 | ok | 13.5 | 2 | 0.08055 | 0.1866 | 0.9395 | True |  |
+| LPE11622_2024_02_23 | DN | 246 | 2.385 | 0.2222 | 0.4409 | 13 | ok | 9.489 | 3.607 | 0.05098 | 0.2019 | 0.8128 | True |  |
+| LPE11622_2024_02_26 | DN | 340 | 2.129 | 0.2895 | 0.5852 | 13 | ok | 14.01 | 6.169 | 0.05732 | 0.2587 | 0.721 | True |  |
+| LPE11622_2024_02_27 | DN | 336 | 2.3 | 0.1111 | 0.5185 | 13 | threshold_out_of_range | 18.98 | 5.739 | 0.1321 | 0.1191 | 0.8735 | False | threshold (mu=19%) outside tested stimulus range (z-range [-2.44, -0.69] doesn't bracket 0) |
+| LPE11623_2024_04_02 | DN | 160 | 2.078 | 0.1875 | 1 | 13 | ok | 15.72 | 5.037 | 0.116 | 0.1609 | 0.6465 | True |  |
+| LPE11997_2024_04_09 | DN | 277 | 1.267 | 0.4 | 0.6925 | 13 | ok | 9.628 | 6.885 | 0.1564 | 0.31 | 0.5648 | True |  |
 
-*(showing first 30 of 75 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 17 columns; showing first 30 of 75 rows -- see the linked CSV for the rest)*
 
 [psychometric_fits.csv](../2_pipeline/1b_psychometric/out/psychometric_fits.csv)
 
@@ -137,7 +136,7 @@
 | LPE10884_2023_11_30 | DM | 29 | 8.631e+05 | 8.631e+05 | 0.97 | 4.696 | 8.36 | 8.631e+05 | 8.631e+05 | 1.87 | 5.346 | 7.85 |
 | LPE10884_2023_11_30 | DM | 30 | 8.631e+05 | 8.631e+05 | 1.84 | 6.624 | 7.62 | 8.631e+05 | 8.631e+05 | 5.3 | 7.664 | 4.52 |
 
-*(showing first 30 of 12937 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 12915 rows -- see the linked CSV for the rest)*
 
 [window_timing.csv](../2_pipeline/1b_psychometric/out/window_timing.csv)
 

@@ -18,7 +18,9 @@ sliding = POSITION_WINDOW cm moved by POSITION_STEP (TIME_* likewise).
 FEATURES: the trial mean of each behavioral variable in the window (runspeed, pupil_area, motionenergy, lick; 1d's variables, the
 engaged trials, each sample inside its own trial), z-scored within session and window. A trial needs finite values of all the
 features of the set. Lick: mean of the 0/1 lick channel over the window's samples (proportional to the lick rate).
-TARGETS: the stimulus strategies of stim_binning (DEFAULT_STRATEGIES; those defined on the psychometric curve exist only for
+TARGETS (performance added): `outcome` = HIT / MISS / CR / FA (4 classes, chance 0.25; defined only on the 0 % and 100 %
+signal trials, as 1a / behavior.add_trial_outcome) and `correct` (error / correct, every signal level, 1d's definition). The outcome
+is partly choice x stimulus, so read it next to `choice`: what decoding it adds beyond choice is the stimulus part. The stimulus strategies of stim_binning (DEFAULT_STRATEGIES; those defined on the psychometric curve exist only for
 sessions with a 1b fit, i.e. mainly DN) and `choice` (lick / no lick).
 FEATURE SETS (STAGE 1 -> 2):
     single          each behavioral variable alone
@@ -52,10 +54,13 @@ Outputs
             figures/position/windows/<target>_by_window_<decoder>.png, <target>_decoders_by_window.png
     out/selection/<tag>/...                            the same for a restricted run
     store/  behavior_windows_<hash>.pkl                per-session window tables
+            decode_<hash>.pkl                          decoding results per (protocol, unit, decoder, target): a rerun, a new
+                                                       decoder / target or a figure-only change reuses them (--recompute forces)
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 
 import numpy as np
 import pandas as pd
@@ -69,7 +74,9 @@ from infotheory.plotting import set_style, save_fig, clear_figures, PROTOCOL_COL
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
 from infotheory.session_jobs import run_sessions
 from infotheory.unit_stats import stable_seed
-from infotheory.decoder import decode, DECODERS
+from infotheory.decoder import decode, DECODERS, DECODER_VERSION, C_REG, RIDGE_LDA
+from infotheory.cache import cache_path
+from infotheory.behavior import add_trial_outcome
 from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, CHOICE_TARGET, psychometric_pct, bin_stimulus,
                                      target_signature, target_bin_names)
 from infotheory.behavior_pairs import BehaviorWindows, BEHAVIOR_VARS, AXES_DEF, WINDOWS, BINNINGS
@@ -78,7 +85,7 @@ ADD_ORDER = ["runspeed", "lick", "pupil_area", "motionenergy"]    # order in whi
 STIM_STRATEGIES = list(DEFAULT_STRATEGIES)
 N_FOLDS, N_REPEATS, N_PERM = 5, 3, 20
 # --- bins of this script (position in cm, time in s); edit here -------------------------------------------------------
-POSITION_BIN, POSITION_WINDOW, POSITION_STEP = 10.0, 20.0, 5.0     # fixed bin; sliding window and its step
+POSITION_BIN, POSITION_WINDOW, POSITION_STEP = 20.0, 20.0, 5.0     # fixed bin; sliding window and its step
 TIME_BIN, TIME_WINDOW, TIME_STEP = 1.0, 2.0, 0.5
 BIN_DEFAULTS = {"position": (POSITION_BIN, POSITION_WINDOW, POSITION_STEP), "time": (TIME_BIN, TIME_WINDOW, TIME_STEP)}
 DECODER_COLORS = {"lda": "tab:blue", "logr": "tab:orange", "svm": "tab:green"}
@@ -114,7 +121,13 @@ AGG_SUFFIX = "" if AGG == "pooled" else f"__{AGG}"
 agg_note = {"pooled": "one decoder per protocol (pooled trials)", "session": "mean +- SEM over sessions",
             "mouse": "mean +- SEM over mice"}[AGG]
 STRATS = args.strategies or STIM_STRATEGIES
-TARGETS = STRATS + [CHOICE_TARGET]
+OUTCOME_TARGET, CORRECT_TARGET = "outcome", "correct"
+EXTRA_NAMES = {OUTCOME_TARGET: ["HIT", "MISS", "CR", "FA"], CORRECT_TARGET: ["error", "correct"]}
+TARGETS = STRATS + [CHOICE_TARGET, OUTCOME_TARGET, CORRECT_TARGET]
+
+
+def bin_names(target):
+    return EXTRA_NAMES[target] if target in EXTRA_NAMES else target_bin_names(target)
 AXES, BINS_RUN, DEC_RUN = list(args.axes), list(args.binnings), list(args.decoders)
 assert set(ADD_ORDER) == set(BEHAVIOR_VARS), "ADD_ORDER must list every behavioral variable once"
 
@@ -170,6 +183,11 @@ def process_session(ses, seed):
     for s in STRATS:
         labels[s] = np.asarray(bin_stimulus(tr["signal"], pct, STIM_BINNING_STRATEGIES[s]), float)
     labels[CHOICE_TARGET] = tr["lickResponse"].to_numpy(float)
+    oc = add_trial_outcome(tr.drop(columns="trialOutcome", errors="ignore"))["trialOutcome"]
+    labels[OUTCOME_TARGET] = oc.map({"HIT": 0, "MISS": 1, "CR": 2, "FA": 3}).to_numpy(float)       # 0% / 100% trials only
+    lick = tr["lickResponse"].to_numpy(float)
+    sig = tr["signal"].to_numpy(float)
+    labels[CORRECT_TARGET] = np.where(sig > 0, lick, 1.0 - lick)                                    # 1d's definition, every level
     wins = []
     for w in bw.windows():
         tmb = np.full((bw.nt, len(BEHAVIOR_VARS)), np.nan, dtype=np.float32)
@@ -184,7 +202,7 @@ def process_session(ses, seed):
 tables = run_sessions(
     session_ids, process_session, list(PROTOCOLS), paths.store, "behavior_windows",
     key_params=dict(axes_def={a: axes_def[a] for a in AXES}, axes=AXES, binnings=BINS_RUN, strategies=target_signature(STRATS),
-                    behaviors=BEHAVIOR_VARS, windows=WINDOWS, version="1e-v1"),
+                    behaviors=BEHAVIOR_VARS, windows=WINDOWS, version="1e-v2"),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True), n_jobs=scope.n_jobs, recompute=args.recompute,
     verbose=JOBLIB_VERBOSE, extra_key_by_session={s: f"{data_stamp(*triple_of[s])}|{mu_sigma.get(s)}" for s in session_ids},
     flatten=False)
@@ -202,7 +220,8 @@ def zscore_cols(X):
     return (X - mu) / np.where(sd > 1e-12, sd, np.nan)
 
 
-def decode_unit(protocol, unit, animal, sess_tables, n_perm, seed):
+def decode_unit(protocol, unit, animal, sess_tables, n_perm, seed, decs, targets, path=None):
+    """All decoders in `decs` for one analysis unit; rows are saved to `path` (a per-(unit, decoder) cache file when given)."""
     rng = np.random.default_rng(seed)
     keys = {}
     for t in sess_tables:
@@ -212,7 +231,7 @@ def decode_unit(protocol, unit, animal, sess_tables, n_perm, seed):
     for (axis, binning, window, s_rel), items in keys.items():
         X = np.vstack([zscore_cols(w["X"].astype(float)) for _, w in items])
         grp = np.concatenate([np.full(len(w["X"]), i) for i, (_, w) in enumerate(items)])
-        for target in TARGETS:
+        for target in targets:
             y = np.concatenate([t["labels"][target] for t, _ in items])
             for name, (kind, vars_) in SETS.items():
                 cols = [BEHAVIOR_VARS.index(v) for v in vars_]
@@ -225,15 +244,30 @@ def decode_unit(protocol, unit, animal, sess_tables, n_perm, seed):
                     ok &= ~np.isin(y, small)
                 if ok.sum() < cfg.MIN_TRIALS_ANALYSIS or len(np.unique(y[ok])) < 2:
                     continue
-                for dec in DEC_RUN:
+                for dec in decs:
                     res = decode(X[ok][:, cols], y[ok], groups=grp[ok], n_folds=N_FOLDS, n_repeats=N_REPEATS, n_perm=n_perm,
                                  rng=rng, method=dec)
                     if res is None:
                         continue
                     rows.append(dict(protocol=protocol, unit=unit, animal_id=animal, decoder=dec, axis=axis, binning=binning,
                                      window=window, s_rel=s_rel, target=target, feature_set=name, kind=kind, **res))
-    print(f"  [{protocol} {unit}] {len(rows)} decoders")
+    print(f"  [{protocol} {unit} {','.join(decs)} {','.join(targets)}] {len(rows)} decoders")
+    if path is not None:
+        pd.DataFrame(rows).to_pickle(path)
     return rows
+
+
+def tables_fingerprint(sess_tables, target):
+    """Hash of the data a unit's decoders see (labels and window tables), so a change in stage 1 invalidates the cache."""
+    h = hashlib.sha1()
+    for t in sess_tables:
+        h.update(t["session_id"].encode())
+        h.update(target.encode())
+        h.update(np.ascontiguousarray(t["labels"][target]).tobytes())
+        for w in t["windows"]:
+            h.update(f"{w['axis']}|{w['binning']}|{w['window']}|{w['s_rel']}".encode())
+            h.update(np.ascontiguousarray(w["X"]).tobytes())
+    return h.hexdigest()[:16]
 
 
 units = []
@@ -248,9 +282,24 @@ for p in PROTOCOLS:
     else:
         for a in sorted({t["animal_id"] for t in pt_}):
             units.append((p, a, a, [t for t in pt_ if t["animal_id"] == a]))
-print(f"\n{len(units)} decoding units ({UNIT}); every decoder: {N_REPEATS} CV repeats + {args.n_perm} permutations")
-nested = Parallel(n_jobs=scope.n_jobs, backend="loky", verbose=JOBLIB_VERBOSE)(
-    delayed(decode_unit)(p, u, a, st, args.n_perm, stable_seed("1e", p, u, base=RANDOM_STATE)) for p, u, a, st in units)
+print(f"\n{len(units)} decoding units ({UNIT}) x {len(DEC_RUN)} decoders; every decoder: {N_REPEATS} CV repeats + "
+      f"{args.n_perm} permutations")
+# one cache file per (unit, decoder): a rerun, a new decoder or a change of figures only computes what is missing
+decode_key = dict(version="1e-v3", decoder_version=DECODER_VERSION, c_reg=C_REG, ridge=RIDGE_LDA, folds=N_FOLDS,
+                  repeats=N_REPEATS, n_perm=args.n_perm, sets={k: v for k, v in SETS.items()},
+                  min_trials=cfg.MIN_TRIALS_ANALYSIS, min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, seed=RANDOM_STATE)
+jobs, cached = [], []
+for p, u, a, st in units:
+    for target in TARGETS:
+        fp = tables_fingerprint(st, target)
+        for dec in DEC_RUN:
+            path = cache_path(paths.store, "decode", protocol=p, unit=u, decoder=dec, target=target, data=fp, **decode_key)
+            (cached if path.exists() and not args.recompute else jobs).append((p, u, a, st, dec, target, path))
+print(f"{len(cached)}/{len(cached) + len(jobs)} (unit, decoder, target) results cached; computing {len(jobs)}")
+Parallel(n_jobs=scope.n_jobs, backend="loky", verbose=JOBLIB_VERBOSE)(
+    delayed(decode_unit)(p, u, a, st, args.n_perm, stable_seed("1e", p, u, dec, target, base=RANDOM_STATE), [dec], [target], path)
+    for p, u, a, st, dec, target, path in jobs)
+nested = [pd.read_pickle(path).to_dict("records") for *_, path in cached + jobs]
 res = pd.DataFrame([r for g in nested for r in g])
 if res.empty:
     raise SystemExit("No window had enough trials for any decoder.")
@@ -336,7 +385,7 @@ for axis in AXES:
             ct_all = cb[cb["target"] == target]
             if ct_all.empty:
                 continue
-            tag = f"{target} [{' | '.join(target_bin_names(target))}]"
+            tag = f"{target} [{' | '.join(bin_names(target))}]"
             prots = [p for p in protocols_present if (ct_all["protocol"] == p).any()]
             tdir = figdir / axis / binning / target
             tdir.mkdir(parents=True, exist_ok=True)

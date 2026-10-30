@@ -31,6 +31,8 @@ def _lda_predict(Xtr, ytr, Xte, n_cls, ridge):
 
 DECODERS = ["lda", "logr", "svm"]
 C_REG = 1.0
+RIDGE_LDA = 1e-2
+DECODER_VERSION = "dec-v2"            # bump when a decoder's maths changes (part of 1e's cache key)
 
 
 def _balanced_weights(ytr, n_cls):

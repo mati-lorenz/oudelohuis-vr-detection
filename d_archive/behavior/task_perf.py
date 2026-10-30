@@ -13,15 +13,15 @@ import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import medfilt
-os.chdir('/u/g/glorenz/Documents/Research/Code/external_repos/oudelohuis-vr-detection')
-sys.path.insert(0, '/u/g/glorenz/Documents/Research/Code/external_repos/oudelohuis-vr-detection')
+os.chdir('/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/d_archive')
+sys.path.insert(0, '/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/d_archive')
 from loaddata.get_data_folder import get_local_drive
 from loaddata.session_info import filter_sessions,load_sessions,report_sessions
 from utils.psth import compute_tensor_space,compute_respmat_space
 from utils.plot_lib import * #get all the plotting functions
 from utils.behaviorlib import * # get support functions for beh analysis 
 
-savedir = '/u/g/glorenz/Documents/Research/Code/external_repos/oudelohuis-vr-detection/Figures'
+savedir = '/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/'
 os.makedirs(savedir, exist_ok=True)
 
 def save_fig(fig, path, **kwargs):
@@ -184,3 +184,99 @@ plt.yticks(rotation=0)
 plt.tight_layout()
 plt.title('Correlation between psy fit parameters')
 my_savefig(fig,savedir,'Corrmat_params_%danimals' % nanimals)
+#%% ===== FINAL SESSIONS + CELLS (THEIR PIPELINE), v2 -- append at the END of task_perf.py =====
+# Writes (same layout as our snippet, so they can be diffed):
+#   final_sessions_theirs.csv : session_id, animal_id, protocol, kept, kept_frac, reason, ...
+#   final_cells_theirs.csv    : session_id, roi_name, labeled, n_cells
+#
+# What the previous run showed:
+#  * DP sessions have no noise trials -> noise_zmin/zmax are NaN -> the performance filter is meaningless for DP.
+#    filter_sessions applies it to DN ONLY, so DP (like DM) is simply kept.
+#  * The real DN filter is the one INSIDE filter_sessions (defaults zmin_thr=0, zmax_thr=0, guess_thr=0.4; strict, no 0.5
+#    tolerance). The 0.5/-0.5 call in task_perf.py runs on the already-filtered list, so it removes nothing.
+#  * That filter uses an UNSEEDED bootstrap: the same 36 DN sessions gave 23 kept in one call and 25 in another.
+#    Here we repeat the fit with several seeds and report, per DN session, in what fraction of fits it passes.
+from utils.cellselection_lib import filter_nearlabeled_layer23
+from utils.behaviorlib import noise_to_psy, get_idx_performing_sessions
+
+N_SEEDS = 500                                   # bootstrap repeats for DN (each = 100 curve fits per session)
+ZMIN_THR, ZMAX_THR, GUESS_THR = 0, 0, 0.4      # the defaults filter_sessions really uses
+RADIUS_UM, DEPTH_THR, LATERAL_ONLY = 50, 300, True
+
+# ---------- sessions: load EVERYTHING that passes the non-performance criteria (filter_performing=False) ----------
+all_ses, _ = filter_sessions(['DM', 'DP', 'DN'], load_behaviordata=False, filter_performing=False)
+dn_idx = [i for i, s in enumerate(all_ses) if s.sessiondata['protocol'][0] == 'DN']
+dn_ses = [all_ses[i] for i in dn_idx]
+
+import io, contextlib, warnings
+passes = np.zeros((N_SEEDS, len(dn_ses)), dtype=bool)
+last = None
+for seed in range(N_SEEDS):
+    np.random.seed(seed)
+    with warnings.catch_warnings(), contextlib.redirect_stdout(io.StringIO()):
+        warnings.simplefilter('ignore')
+        noise_to_psy(dn_ses, filter_engaged=True, bootstrap=True)
+        passes[seed] = get_idx_performing_sessions(dn_ses, zmin_thr=ZMIN_THR, zmax_thr=ZMAX_THR, guess_thr=GUESS_THR)
+    if seed == 0:
+        last = pd.concat([s.sessiondata for s in dn_ses]).reset_index(drop=True)[
+            ['noise_zmin', 'noise_zmax', 'guess_rate', 'mu', 'sigma']]
+frac = passes.mean(axis=0)
+print("DN sessions kept per seed:", passes.sum(axis=1).tolist(), "of", len(dn_ses))
+
+rows = []
+for ses in all_ses:
+    r = ses.sessiondata.iloc[0]
+    rows.append(dict(session_id=r['session_id'], animal_id=r['animal_id'], protocol=r['protocol'],
+                     kept=True, kept_frac=np.nan, reason=''))
+final_sessions = pd.DataFrame(rows)
+for k, i in enumerate(dn_idx):
+    final_sessions.loc[i, 'kept_frac'] = frac[k]
+    final_sessions.loc[i, 'kept'] = bool(frac[k] >= 0.5)
+    why = []
+    if not last.loc[k, 'noise_zmin'] <= ZMIN_THR: why.append("zmin %.2f > %g" % (last.loc[k, 'noise_zmin'], ZMIN_THR))
+    if not last.loc[k, 'noise_zmax'] >= ZMAX_THR: why.append("zmax %.2f < %g" % (last.loc[k, 'noise_zmax'], ZMAX_THR))
+    if not last.loc[k, 'guess_rate'] <= GUESS_THR: why.append("guess %.2f > %g" % (last.loc[k, 'guess_rate'], GUESS_THR))
+    final_sessions.loc[i, 'reason'] = "; ".join(why) + ("" if frac[k] in (0, 1) else "  [UNSTABLE across bootstrap seeds]")
+    for c in last.columns:
+        final_sessions.loc[i, c + '_seed0'] = last.loc[k, c]
+final_sessions = final_sessions.sort_values(['protocol', 'session_id']).reset_index(drop=True)
+final_sessions.to_csv(os.path.join(savedir, 'final_sessions_theirs.csv'), index=False)
+
+print("\n===== FINAL SESSIONS (their filter) =====")
+for proto, g in final_sessions.groupby('protocol'):
+    print("%s: %d/%d kept" % (proto, g['kept'].sum(), len(g)))
+unst = final_sessions[(final_sessions['kept_frac'] > 0) & (final_sessions['kept_frac'] < 1)]
+print("\nDN sessions whose fate depends on the bootstrap seed:")
+print(unst[['session_id', 'kept_frac']].to_string(index=False) if len(unst) else "  none")
+print("\nDropped DN:")
+print(final_sessions.loc[~final_sessions['kept'], ['protocol', 'session_id', 'kept_frac', 'reason']].to_string(index=False))
+print("\nKept:")
+print(final_sessions.loc[final_sessions['kept'], ['protocol', 'session_id']].to_string(index=False))
+
+# ---------- cells of the kept sessions ----------
+# celldata is loaded by load_data whenever celldata.csv exists; a session without it has no .celldata attribute
+# (that was the AttributeError) -> it is listed and skipped.
+kept_ids = final_sessions.loc[final_sessions['kept'], 'session_id'].tolist()
+cell_sessions, _ = filter_sessions(['DM', 'DP', 'DN'], load_behaviordata=False, filter_performing=False,
+                                   only_session_id=kept_ids)
+crow, no_cells = [], []
+for ses in cell_sessions:
+    sid = ses.sessiondata['session_id'][0]
+    if not hasattr(ses, 'celldata'):
+        no_cells.append(sid)
+        continue
+    cd = ses.celldata.copy()
+    cd['final'] = filter_nearlabeled_layer23(ses, radius=RADIUS_UM, depth_thr=DEPTH_THR, lateral_only=LATERAL_ONLY)
+    # OPTIONAL QC -- adapt to your load_qc_pass signature, then uncomment:
+    # cd['final'] &= load_qc_pass(ses)
+    # cd['final'] &= (cd['noise_level'] < 20)            # filter_noiselevel
+    cd = cd[cd['final']].copy()
+    cd['labeled'] = np.where(cd['redcell'].astype(bool), 'lab', 'unl')
+    for (area, lab), n in cd.groupby(['roi_name', 'labeled']).size().items():
+        crow.append(dict(session_id=sid, roi_name=area, labeled=lab, n_cells=int(n)))
+if no_cells:
+    print("\nSessions WITHOUT celldata (skipped):", no_cells)
+final_cells = pd.DataFrame(crow)
+final_cells.to_csv(os.path.join(savedir, 'final_cells_theirs.csv'), index=False)
+print("\n===== FINAL CELLS (their filter: proximity + layer 2/3 only unless QC lines are enabled) =====")
+print(final_cells.pivot_table(index='roi_name', columns='labeled', values='n_cells', aggfunc='sum', fill_value=0))

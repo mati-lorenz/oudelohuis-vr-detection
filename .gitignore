@@ -26,18 +26,28 @@ var/
 # Data
 0_data/
 
-# 2_pipeline/ is ignored by default (store/ caches and out/ tables can be
-# large and are fully regenerable by re-running the scripts) EXCEPT the
-# figure PNGs under each script's out/figures/, which the b_progress/*.md
-# reports embed directly -- git won't apply a later `!` re-inclusion to
-# anything whose parent directory was already excluded by an earlier
-# pattern, so each directory level has to be re-included explicitly
-# before the files inside it can be:
+# 2_pipeline/ is ignored by default (store/ caches are large and are fully
+# regenerable by re-running the scripts) EXCEPT the .csv tables and .png
+# figures under each script's out/ folder, which the b_progress/*.md reports
+# embed and refer to.
+#
+# git won't apply a later `!` re-inclusion to anything whose parent directory
+# was already excluded by an earlier pattern, so every directory level has to
+# be re-included explicitly before the files inside it can be. That is what
+# the `!...../` lines (trailing slash = directories only) are doing.
 2_pipeline/*
 !2_pipeline/*/
 2_pipeline/*/*
 !2_pipeline/*/out/
-2_pipeline/*/out/*
-!2_pipeline/*/out/figures/
-2_pipeline/*/out/figures/*
-!2_pipeline/*/out/figures/*.png
+
+# Inside out/: ignore everything, then allow back the directories and the two
+# file types we keep. .pkl, .npz and anything else stays out at any depth.
+2_pipeline/*/out/**
+!2_pipeline/*/out/**/
+!2_pipeline/*/out/**/*.csv
+!2_pipeline/*/out/**/*.png
+
+# pipeline outputs / caches (large, regenerable)
+2_pipeline/**/*.csv
+2_pipeline/**/store/
+2_pipeline/**/tmp/

@@ -71,11 +71,17 @@ class PsychometricFit:
 
 def fit_psychometric(trialdata: pd.DataFrame, signal_col: str = "signal",
                       response_col: str = "lickResponse", mu_bounds=(0, 100),
-                      sigma_bounds=(2, 40)) -> PsychometricFit | None:
+                      sigma_bounds=(2, 40), n_bootstrap: int = 0,
+                      seed: int | None = None) -> PsychometricFit | None:
     """Fit on trial-by-trial responses (not condition means -- more
     data-efficient, and the original scripts' convention). Returns None
     if there aren't enough distinct signal levels to constrain the
-    4-parameter fit, or the optimizer doesn't converge."""
+    4-parameter fit, or the optimizer doesn't converge.
+
+    n_bootstrap > 0: like the other lab pipeline's `fit_psycurve(bootstrap=True)`, the reported parameters are
+    the MEDIAN over `n_bootstrap` fits to trials resampled with replacement (same bounds and start values, which
+    come from the original data). Unlike theirs it is SEEDED (`seed`), so the result is reproducible, and a
+    resample whose fit does not converge is skipped (None is returned if fewer than half converge)."""
     psydata = trialdata.groupby(signal_col)[response_col].mean()
     x = psydata.index.to_numpy(dtype=float)
     y = psydata.to_numpy()
@@ -108,6 +114,20 @@ def fit_psychometric(trialdata: pd.DataFrame, signal_col: str = "signal",
         params, _ = curve_fit(psychometric_function, X, Y, p0=initial_guess, bounds=bounds)
     except (RuntimeError, ValueError):
         return None
+
+    if n_bootstrap and n_bootstrap > 0:
+        rng = np.random.default_rng(seed)
+        boots = []
+        for _ in range(int(n_bootstrap)):
+            idx = rng.integers(0, len(X), len(X))
+            try:
+                p, _ = curve_fit(psychometric_function, X[idx], Y[idx], p0=initial_guess, bounds=bounds)
+                boots.append(p)
+            except (RuntimeError, ValueError):
+                continue
+        if len(boots) < n_bootstrap / 2:
+            return None
+        params = np.median(np.asarray(boots), axis=0)
 
     r2 = _r2_score(y, psychometric_function(x, *params))
     return PsychometricFit(*params, r2=r2, n_trials=len(trialdata), x=x, y=y)

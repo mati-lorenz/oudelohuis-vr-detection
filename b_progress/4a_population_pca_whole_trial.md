@@ -1,6 +1,6 @@
 # 4a_population_pca_whole_trial
 
-*Auto-generated from `2_pipeline/4a_population_pca_whole_trial/out/` on 2026-10-16 17:40. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/4a_population_pca_whole_trial/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 

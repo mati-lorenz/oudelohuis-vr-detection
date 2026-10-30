@@ -1,6 +1,6 @@
 # 3k_pair_behavior_breakdown
 
-*Auto-generated from `2_pipeline/3k_pair_behavior_breakdown/out/` on 2026-10-16 17:54. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/3k_pair_behavior_breakdown/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Tables
 
