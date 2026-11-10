@@ -29,6 +29,8 @@ class Scope:
     sessions: tuple | None = None
     aggregate: str = cfg.AGGREGATE_BY
     n_jobs: int = cfg.N_JOBS_SESSIONS
+    max_cells: int | None = None        # cap on cells per session (see session_jobs.run_sessions_units)
+    max_pairs: int | None = None        # cap on cell pairs per session (pair-level scripts)
 
     def __post_init__(self):
         if self.aggregate not in cfg.AGGREGATES:
@@ -36,7 +38,7 @@ class Scope:
 
     @property
     def is_full(self) -> bool:
-        return self.animals is None and self.sessions is None
+        return (self.animals is None and self.sessions is None and self.max_cells is None and self.max_pairs is None)
 
     @property
     def tag(self) -> str:
@@ -44,6 +46,10 @@ class Scope:
         if self.is_full:
             return "full"
         parts = []
+        if self.max_cells:
+            parts.append(f"maxcells-{self.max_cells}")
+        if self.max_pairs:
+            parts.append(f"maxpairs-{self.max_pairs}")
         if self.animals:
             parts.append("animals-" + "+".join(self.animals))
         if self.sessions:
@@ -53,7 +59,7 @@ class Scope:
         return "_".join(parts)
 
     def describe(self) -> str:
-        sel = "all sessions" if self.is_full else self.tag
+        sel = "all sessions, all cells" if self.is_full else self.tag
         return f"scope: {sel}; aggregate by {self.aggregate}; n_jobs={self.n_jobs}"
 
 
@@ -66,6 +72,13 @@ def add_scope_args(parser):
                         help="unit of analysis for plots/reports (default: project_config.AGGREGATE_BY)")
     parser.add_argument("--n-jobs", type=int, default=None,
                         help="sessions processed in parallel (default: project_config.N_JOBS_SESSIONS)")
+    parser.add_argument("--max-cells", type=int, default=None, metavar="N",
+                        help="analyse at most N cells PER GROUP (V1-lab, V1-unl, PM-lab ...) per session (a fixed pseudo-random, nested subset; default: "
+                             "project_config.MAX_CELLS_PER_SESSION). Raising N later computes only the added cells, "
+                             "lowering it reads the stored results. Writes to out/selection/<tag>/")
+    parser.add_argument("--max-pairs", type=int, default=None, metavar="N",
+                        help="pair-level scripts: at most N cell pairs per PAIR OF GROUPS per session (nested subset; default: "
+                             "project_config.MAX_PAIRS_PER_SESSION)")
     parser.add_argument("--recompute", action="store_true",
                         help="ignore the per-session caches in store/ and recompute")
     return parser
@@ -77,7 +90,9 @@ def scope_from_args(args) -> Scope:
     return Scope(animals=tuple(animals) if animals else None,
                  sessions=tuple(sessions) if sessions else None,
                  aggregate=args.aggregate or cfg.AGGREGATE_BY,
-                 n_jobs=args.n_jobs or cfg.N_JOBS_SESSIONS)
+                 n_jobs=args.n_jobs or cfg.N_JOBS_SESSIONS,
+                 max_cells=args.max_cells or cfg.MAX_CELLS_PER_SESSION,
+                 max_pairs=args.max_pairs or cfg.MAX_PAIRS_PER_SESSION)
 
 
 def select_sessions(triples, scope: Scope):

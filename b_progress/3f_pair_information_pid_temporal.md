@@ -1,6 +1,88 @@
 # 3f_pair_information_pid_temporal
 
-*Auto-generated from `2_pipeline/3f_pair_information_pid_temporal/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/3f_pair_information_pid_temporal/out/` on 2026-11-10 17:48. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Pid vs position
+
+![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/choice/1_pid_vs_position.png)
+
+### Group comparison
+
+![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/choice/2_group_comparison.png)
+
+### Compare targets I12
+
+![compare_targets_I12](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/compare_targets_I12.png)
+
+### Compare targets synergy
+
+![compare_targets_synergy](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/compare_targets_synergy.png)
+
+### Pid vs position
+
+![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/pct_0-20_20-80_80-100/1_pid_vs_position.png)
+
+### Group comparison
+
+![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/pct_0-20_20-80_80-100/2_group_comparison.png)
+
+### Pid vs position
+
+![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/zero_to80_above80/1_pid_vs_position.png)
+
+### Group comparison
+
+![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/zero_to80_above80/2_group_comparison.png)
+
+### Pid vs position
+
+![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/zero_vs_nonzero/1_pid_vs_position.png)
+
+### Group comparison
+
+![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/zero_vs_nonzero/2_group_comparison.png)
+
+### Pid vs position
+
+![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/choice/1_pid_vs_position.png)
+
+### Group comparison
+
+![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/choice/2_group_comparison.png)
+
+### Compare targets I12
+
+![compare_targets_I12](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/compare_targets_I12.png)
+
+### Compare targets synergy
+
+![compare_targets_synergy](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/compare_targets_synergy.png)
+
+### Pid vs position
+
+![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/pct_0-20_20-80_80-100/1_pid_vs_position.png)
+
+### Group comparison
+
+![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/pct_0-20_20-80_80-100/2_group_comparison.png)
+
+### Pid vs position
+
+![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/zero_to80_above80/1_pid_vs_position.png)
+
+### Group comparison
+
+![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/zero_to80_above80/2_group_comparison.png)
+
+### Pid vs position
+
+![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/zero_vs_nonzero/1_pid_vs_position.png)
+
+### Group comparison
+
+![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/zero_vs_nonzero/2_group_comparison.png)
 
 ## Tables
 
@@ -159,85 +241,3 @@
 *(showing first 30 of 47600 rows -- see the linked CSV for the rest)*
 
 [pid_temporal.csv](../2_pipeline/3f_pair_information_pid_temporal/out/pid_temporal.csv)
-
-## Figures
-
-### Pid vs position
-
-![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/choice/1_pid_vs_position.png)
-
-### Group comparison
-
-![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/choice/2_group_comparison.png)
-
-### Compare targets I12
-
-![compare_targets_I12](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/compare_targets_I12.png)
-
-### Compare targets synergy
-
-![compare_targets_synergy](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/compare_targets_synergy.png)
-
-### Pid vs position
-
-![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/pct_0-20_20-80_80-100/1_pid_vs_position.png)
-
-### Group comparison
-
-![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/pct_0-20_20-80_80-100/2_group_comparison.png)
-
-### Pid vs position
-
-![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/zero_to80_above80/1_pid_vs_position.png)
-
-### Group comparison
-
-![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/zero_to80_above80/2_group_comparison.png)
-
-### Pid vs position
-
-![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/zero_vs_nonzero/1_pid_vs_position.png)
-
-### Group comparison
-
-![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/fixed/zero_vs_nonzero/2_group_comparison.png)
-
-### Pid vs position
-
-![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/choice/1_pid_vs_position.png)
-
-### Group comparison
-
-![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/choice/2_group_comparison.png)
-
-### Compare targets I12
-
-![compare_targets_I12](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/compare_targets_I12.png)
-
-### Compare targets synergy
-
-![compare_targets_synergy](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/compare_targets_synergy.png)
-
-### Pid vs position
-
-![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/pct_0-20_20-80_80-100/1_pid_vs_position.png)
-
-### Group comparison
-
-![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/pct_0-20_20-80_80-100/2_group_comparison.png)
-
-### Pid vs position
-
-![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/zero_to80_above80/1_pid_vs_position.png)
-
-### Group comparison
-
-![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/zero_to80_above80/2_group_comparison.png)
-
-### Pid vs position
-
-![1_pid_vs_position](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/zero_vs_nonzero/1_pid_vs_position.png)
-
-### Group comparison
-
-![2_group_comparison](../2_pipeline/3f_pair_information_pid_temporal/out/figures/sliding/zero_vs_nonzero/2_group_comparison.png)

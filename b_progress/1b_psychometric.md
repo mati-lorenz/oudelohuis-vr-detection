@@ -1,6 +1,48 @@
 # 1b_psychometric
 
-*Auto-generated from `2_pipeline/1b_psychometric/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/1b_psychometric/out/` on 2026-11-10 17:48. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Psychometric fits DM
+
+![1_psychometric_fits_DM](../2_pipeline/1b_psychometric/out/figures/1_psychometric_fits_DM.png)
+
+### Psychometric fits DN page1
+
+![1_psychometric_fits_DN_page1](../2_pipeline/1b_psychometric/out/figures/1_psychometric_fits_DN_page1.png)
+
+### Psychometric fits DN page2
+
+![1_psychometric_fits_DN_page2](../2_pipeline/1b_psychometric/out/figures/1_psychometric_fits_DN_page2.png)
+
+### Psychometric fits DP
+
+![1_psychometric_fits_DP](../2_pipeline/1b_psychometric/out/figures/1_psychometric_fits_DP.png)
+
+### Psychometric population DN
+
+![2_psychometric_population_DN](../2_pipeline/1b_psychometric/out/figures/2_psychometric_population_DN.png)
+
+### Dataset overview clean
+
+![3_dataset_overview_clean](../2_pipeline/1b_psychometric/out/figures/3_dataset_overview_clean.png)
+
+### Trial outcomes clean
+
+![4_trial_outcomes_clean](../2_pipeline/1b_psychometric/out/figures/4_trial_outcomes_clean.png)
+
+### Dprime criterion clean
+
+![5_dprime_criterion_clean](../2_pipeline/1b_psychometric/out/figures/5_dprime_criterion_clean.png)
+
+### Signal level balance clean
+
+![6_signal_level_balance_clean](../2_pipeline/1b_psychometric/out/figures/6_signal_level_balance_clean.png)
+
+### Window timing
+
+![7_window_timing](../2_pipeline/1b_psychometric/out/figures/7_window_timing.png)
 
 ## Tables
 
@@ -139,45 +181,3 @@
 *(showing first 30 of 12915 rows -- see the linked CSV for the rest)*
 
 [window_timing.csv](../2_pipeline/1b_psychometric/out/window_timing.csv)
-
-## Figures
-
-### Psychometric fits DM
-
-![1_psychometric_fits_DM](../2_pipeline/1b_psychometric/out/figures/1_psychometric_fits_DM.png)
-
-### Psychometric fits DN page1
-
-![1_psychometric_fits_DN_page1](../2_pipeline/1b_psychometric/out/figures/1_psychometric_fits_DN_page1.png)
-
-### Psychometric fits DN page2
-
-![1_psychometric_fits_DN_page2](../2_pipeline/1b_psychometric/out/figures/1_psychometric_fits_DN_page2.png)
-
-### Psychometric fits DP
-
-![1_psychometric_fits_DP](../2_pipeline/1b_psychometric/out/figures/1_psychometric_fits_DP.png)
-
-### Psychometric population DN
-
-![2_psychometric_population_DN](../2_pipeline/1b_psychometric/out/figures/2_psychometric_population_DN.png)
-
-### Dataset overview clean
-
-![3_dataset_overview_clean](../2_pipeline/1b_psychometric/out/figures/3_dataset_overview_clean.png)
-
-### Trial outcomes clean
-
-![4_trial_outcomes_clean](../2_pipeline/1b_psychometric/out/figures/4_trial_outcomes_clean.png)
-
-### Dprime criterion clean
-
-![5_dprime_criterion_clean](../2_pipeline/1b_psychometric/out/figures/5_dprime_criterion_clean.png)
-
-### Signal level balance clean
-
-![6_signal_level_balance_clean](../2_pipeline/1b_psychometric/out/figures/6_signal_level_balance_clean.png)
-
-### Window timing
-
-![7_window_timing](../2_pipeline/1b_psychometric/out/figures/7_window_timing.png)

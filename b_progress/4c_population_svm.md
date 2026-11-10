@@ -1,6 +1,44 @@
 # 4c_population_svm
 
-*Auto-generated from `2_pipeline/4c_population_svm/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/4c_population_svm/out/` on 2026-11-10 17:49. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Shuffle comparison linear pre stim
+
+![1_shuffle_comparison_linear_pre_stim](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_linear_pre_stim.png)
+
+### Shuffle comparison linear reward
+
+![1_shuffle_comparison_linear_reward](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_linear_reward.png)
+
+### Shuffle comparison linear stim
+
+![1_shuffle_comparison_linear_stim](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_linear_stim.png)
+
+### Shuffle comparison rbf pre stim
+
+![1_shuffle_comparison_rbf_pre_stim](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_rbf_pre_stim.png)
+
+### Shuffle comparison rbf reward
+
+![1_shuffle_comparison_rbf_reward](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_rbf_reward.png)
+
+### Shuffle comparison rbf stim
+
+![1_shuffle_comparison_rbf_stim](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_rbf_stim.png)
+
+### Accuracy vs size linear
+
+![2_accuracy_vs_size_linear](../2_pipeline/4c_population_svm/out/figures/2_accuracy_vs_size_linear.png)
+
+### Accuracy vs size rbf
+
+![2_accuracy_vs_size_rbf](../2_pipeline/4c_population_svm/out/figures/2_accuracy_vs_size_rbf.png)
+
+### Linear vs rbf
+
+![3_linear_vs_rbf](../2_pipeline/4c_population_svm/out/figures/3_linear_vs_rbf.png)
 
 ## Tables
 
@@ -120,41 +158,3 @@
 *(showing first 30 of 678 rows -- see the linked CSV for the rest)*
 
 [svm_stim_decoding.csv](../2_pipeline/4c_population_svm/out/svm_stim_decoding.csv)
-
-## Figures
-
-### Shuffle comparison linear pre stim
-
-![1_shuffle_comparison_linear_pre_stim](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_linear_pre_stim.png)
-
-### Shuffle comparison linear reward
-
-![1_shuffle_comparison_linear_reward](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_linear_reward.png)
-
-### Shuffle comparison linear stim
-
-![1_shuffle_comparison_linear_stim](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_linear_stim.png)
-
-### Shuffle comparison rbf pre stim
-
-![1_shuffle_comparison_rbf_pre_stim](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_rbf_pre_stim.png)
-
-### Shuffle comparison rbf reward
-
-![1_shuffle_comparison_rbf_reward](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_rbf_reward.png)
-
-### Shuffle comparison rbf stim
-
-![1_shuffle_comparison_rbf_stim](../2_pipeline/4c_population_svm/out/figures/1_shuffle_comparison_rbf_stim.png)
-
-### Accuracy vs size linear
-
-![2_accuracy_vs_size_linear](../2_pipeline/4c_population_svm/out/figures/2_accuracy_vs_size_linear.png)
-
-### Accuracy vs size rbf
-
-![2_accuracy_vs_size_rbf](../2_pipeline/4c_population_svm/out/figures/2_accuracy_vs_size_rbf.png)
-
-### Linear vs rbf
-
-![3_linear_vs_rbf](../2_pipeline/4c_population_svm/out/figures/3_linear_vs_rbf.png)

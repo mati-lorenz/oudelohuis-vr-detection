@@ -1,6 +1,28 @@
 # 2f_lag_information
 
-*Auto-generated from `2_pipeline/2f_lag_information/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/2f_lag_information/out/` on 2026-11-10 17:48. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Lag search
+
+![1_lag_search](../2_pipeline/2f_lag_information/out/figures/1_lag_search.png)
+
+### Lag search
+
+![1_lag_search](../2_pipeline/2f_lag_information/out/selection/maxcells-100/figures/1_lag_search.png)
+
+### Granger causality
+
+![2_granger_causality](../2_pipeline/2f_lag_information/out/selection/maxcells-100/figures/2_granger_causality.png)
+
+### Lagged information psth
+
+![3_lagged_information_psth](../2_pipeline/2f_lag_information/out/selection/maxcells-100/figures/3_lagged_information_psth.png)
+
+### Transfer entropy psth
+
+![4_transfer_entropy_psth](../2_pipeline/2f_lag_information/out/selection/maxcells-100/figures/4_transfer_entropy_psth.png)
 
 ## Tables
 
@@ -393,8 +415,349 @@
 
 [position_transfer_entropy.csv](../2_pipeline/2f_lag_information/out/position_transfer_entropy.csv)
 
-## Figures
+### Granger by group  session
 
-### Lag search
+| predictor | group | unit | frac_significant | n_cells | animal_id |
+| --- | --- | --- | --- | --- | --- |
+| lick | AL_unl | LPE10884_2024_01_12 | 0.1111 | 81 | LPE10884 |
+| lick | AL_unl | LPE11622_2024_02_22 | 0.2 | 5 | LPE11622 |
+| lick | AL_unl | LPE11622_2024_02_23 | 0.1667 | 12 | LPE11622 |
+| lick | AL_unl | LPE11622_2024_02_26 | 0.2222 | 9 | LPE11622 |
+| lick | AL_unl | LPE11997_2024_04_10 | 0 | 6 | LPE11997 |
+| lick | AL_unl | LPE11997_2024_04_16 | 0 | 10 | LPE11997 |
+| lick | AL_unl | LPE11997_2024_04_17 | 0.125 | 8 | LPE11997 |
+| lick | AL_unl | LPE11997_2024_04_18 | 0 | 6 | LPE11997 |
+| lick | AL_unl | LPE11998_2024_04_23 | 0.1333 | 30 | LPE11998 |
+| lick | AL_unl | LPE11998_2024_04_24 | 0.2 | 15 | LPE11998 |
+| lick | AL_unl | LPE11998_2024_04_25 | 0.1429 | 28 | LPE11998 |
+| lick | AL_unl | LPE12013_2024_04_25 | 0.2593 | 27 | LPE12013 |
+| lick | AL_unl | LPE12013_2024_04_26 | 0.2162 | 37 | LPE12013 |
+| lick | AL_unl | LPE12013_2024_04_29 | 0.1282 | 39 | LPE12013 |
+| lick | AL_unl | LPE12013_2024_04_30 | 0.07407 | 27 | LPE12013 |
+| lick | AL_unl | LPE12385_2024_06_15 | 0.03125 | 32 | LPE12385 |
+| lick | AL_unl | LPE12385_2024_06_16 | 0.2308 | 13 | LPE12385 |
+| lick | AL_unl | LPE12385_2024_06_17 | 0.4348 | 23 | LPE12385 |
+| lick | AL_unl | LPE12385_2024_06_26 | 0.1364 | 44 | LPE12385 |
+| lick | AL_unl | LPE12385_2024_06_27 | 0 | 29 | LPE12385 |
+| lick | PM_unl | LPE11622_2024_02_20 | 0.07692 | 13 | LPE11622 |
+| lick | PM_unl | LPE11622_2024_02_22 | 0.2414 | 29 | LPE11622 |
+| lick | PM_unl | LPE11622_2024_02_23 | 0.1818 | 11 | LPE11622 |
+| lick | PM_unl | LPE11622_2024_02_26 | 0.04545 | 22 | LPE11622 |
+| lick | PM_unl | LPE11997_2024_04_16 | 0.3125 | 16 | LPE11997 |
+| lick | PM_unl | LPE11997_2024_04_17 | 0.3 | 10 | LPE11997 |
+| lick | PM_unl | LPE11997_2024_04_18 | 0.2105 | 19 | LPE11997 |
+| lick | PM_unl | LPE11998_2024_04_23 | 0.2 | 5 | LPE11998 |
+| lick | PM_unl | LPE11998_2024_04_24 | 0.1 | 10 | LPE11998 |
+| lick | PM_unl | LPE11998_2024_04_25 | 0.2143 | 14 | LPE11998 |
 
-![1_lag_search](../2_pipeline/2f_lag_information/out/figures/1_lag_search.png)
+*(showing first 30 of 432 rows -- see the linked CSV for the rest)*
+
+[granger_by_group__session.csv](../2_pipeline/2f_lag_information/out/selection/maxcells-100/granger_by_group__session.csv)
+
+### Granger causality
+
+| session_id | animal_id | cell_id | group | predictor | lag_s | r2_restricted | r2_unrestricted | p_value | r2_improvement | significant |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 0.25 | 0.3768 | 0.377 | 0.04222 | 0.0001555 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 0.25 | 0.08633 | 0.08643 | 0.1813 | 9.874e-05 | False |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0342 | AL_unl | runspeed | 0.25 | 0.04647 | 0.0469 | 0.006311 | 0.00043 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0242 | AL_unl | runspeed | 0.25 | 0.06173 | 0.06175 | 0.6252 | 1.354e-05 | False |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0246 | AL_unl | runspeed | 0.25 | 0.03653 | 0.03952 | 7.399e-13 | 0.002992 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0146 | AL_unl | runspeed | 0.25 | 0.07125 | 0.07763 | 0 | 0.006378 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0046 | AL_unl | runspeed | 0.25 | 0.1911 | 0.1921 | 8.779e-06 | 0.000966 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0213 | AL_unl | runspeed | 0.25 | 0.06813 | 0.06846 | 0.0145 | 0.0003367 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0013 | AL_unl | runspeed | 0.25 | 0.3097 | 0.3132 | 0 | 0.003504 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0113 | AL_unl | runspeed | 0.25 | 0.1102 | 0.1103 | 0.4184 | 3.524e-05 | False |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0117 | AL_unl | runspeed | 0.25 | 0.09885 | 0.09934 | 0.002592 | 0.0004944 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0413 | AL_unl | runspeed | 0.25 | 0.01816 | 0.01833 | 0.09345 | 0.0001671 | False |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0017 | AL_unl | runspeed | 0.25 | 0.3058 | 0.31 | 0 | 0.004191 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0217 | AL_unl | runspeed | 0.25 | 0.05962 | 0.06013 | 0.002857 | 0.0005058 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0203 | AL_unl | runspeed | 0.25 | 0.05991 | 0.05999 | 0.2288 | 8.234e-05 | False |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0303 | AL_unl | runspeed | 0.25 | 0.02444 | 0.02722 | 6.461e-12 | 0.00278 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0103 | AL_unl | runspeed | 0.25 | 0.1726 | 0.1727 | 0.1394 | 0.0001093 | False |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0003 | AL_unl | runspeed | 0.25 | 0.4006 | 0.4009 | 0.009672 | 0.0002426 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0007 | AL_unl | runspeed | 0.25 | 0.2108 | 0.2189 | 0 | 0.008102 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0107 | AL_unl | runspeed | 0.25 | 0.2306 | 0.2374 | 0 | 0.006745 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0207 | AL_unl | runspeed | 0.25 | 0.05198 | 0.06038 | 0 | 0.008394 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0152 | AL_unl | runspeed | 0.25 | 0.0624 | 0.06916 | 0 | 0.006762 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0052 | AL_unl | runspeed | 0.25 | 0.154 | 0.154 | 0.6295 | 1.191e-05 | False |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0252 | AL_unl | runspeed | 0.25 | 0.06488 | 0.06605 | 5.471e-06 | 0.001168 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0356 | AL_unl | runspeed | 0.25 | 0.01106 | 0.01229 | 5.762e-06 | 0.001229 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0256 | AL_unl | runspeed | 0.25 | 0.06544 | 0.06923 | 2.22e-16 | 0.003784 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0056 | AL_unl | runspeed | 0.25 | 0.1718 | 0.1723 | 0.002218 | 0.0004686 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0156 | AL_unl | runspeed | 0.25 | 0.07873 | 0.08476 | 0 | 0.006038 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0399 | AL_unl | runspeed | 0.25 | 0.03042 | 0.04142 | 0 | 0.01099 | True |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0123 | AL_unl | runspeed | 0.25 | 0.115 | 0.1177 | 1.512e-12 | 0.002673 | True |
+
+*(showing first 30 of 8528 rows -- see the linked CSV for the rest)*
+
+[granger_causality.csv](../2_pipeline/2f_lag_information/out/selection/maxcells-100/granger_causality.csv)
+
+### Lag curve by group  session
+
+| predictor | group | lag_s | mean | sem | n_units |
+| --- | --- | --- | --- | --- | --- |
+| lick | AL_unl | -2 | 0.0002664 | 3.811e-05 | 20 |
+| lick | AL_unl | -1.75 | 0.0003021 | 4.338e-05 | 20 |
+| lick | AL_unl | -1.5 | 0.0002786 | 3.374e-05 | 20 |
+| lick | AL_unl | -1.25 | 0.0003227 | 4.989e-05 | 20 |
+| lick | AL_unl | -1 | 0.000322 | 4.661e-05 | 20 |
+| lick | AL_unl | -0.75 | 0.0002863 | 3.613e-05 | 20 |
+| lick | AL_unl | -0.5 | 0.0003229 | 4.757e-05 | 20 |
+| lick | AL_unl | -0.25 | 0.0003411 | 5.693e-05 | 20 |
+| lick | AL_unl | 0 | 0.00032 | 5.069e-05 | 20 |
+| lick | AL_unl | 0.25 | 0.000323 | 6.036e-05 | 20 |
+| lick | AL_unl | 0.5 | 0.0002931 | 4.568e-05 | 20 |
+| lick | AL_unl | 0.75 | 0.0002826 | 4.137e-05 | 20 |
+| lick | AL_unl | 1 | 0.0002639 | 4.751e-05 | 20 |
+| lick | AL_unl | 1.25 | 0.0002443 | 4.756e-05 | 20 |
+| lick | AL_unl | 1.5 | 0.0001943 | 2.735e-05 | 20 |
+| lick | AL_unl | 1.75 | 0.0002144 | 3.913e-05 | 20 |
+| lick | AL_unl | 2 | 0.0001703 | 2.092e-05 | 20 |
+| lick | PM_unl | -2 | 0.0003113 | 8.129e-05 | 14 |
+| lick | PM_unl | -1.75 | 0.0003722 | 9.026e-05 | 14 |
+| lick | PM_unl | -1.5 | 0.0003878 | 0.0001013 | 14 |
+| lick | PM_unl | -1.25 | 0.0004077 | 7.164e-05 | 14 |
+| lick | PM_unl | -1 | 0.000377 | 6.929e-05 | 14 |
+| lick | PM_unl | -0.75 | 0.0003109 | 4.648e-05 | 14 |
+| lick | PM_unl | -0.5 | 0.0003527 | 4.36e-05 | 14 |
+| lick | PM_unl | -0.25 | 0.0003415 | 6.472e-05 | 14 |
+| lick | PM_unl | 0 | 0.0003276 | 6.668e-05 | 14 |
+| lick | PM_unl | 0.25 | 0.0002629 | 3.076e-05 | 14 |
+| lick | PM_unl | 0.5 | 0.0003142 | 4.644e-05 | 14 |
+| lick | PM_unl | 0.75 | 0.0002724 | 4.187e-05 | 14 |
+| lick | PM_unl | 1 | 0.000309 | 4.139e-05 | 14 |
+
+*(showing first 30 of 476 rows -- see the linked CSV for the rest)*
+
+[lag_curve_by_group__session.csv](../2_pipeline/2f_lag_information/out/selection/maxcells-100/lag_curve_by_group__session.csv)
+
+### Lag search per cell
+
+| session_id | animal_id | cell_id | group | predictor | lag_s | r2 |
+| --- | --- | --- | --- | --- | --- | --- |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -2 | 0.0007673 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -2 | 0.001261 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0342 | AL_unl | runspeed | -2 | 0.0009921 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0025 | RSP_unl | runspeed | -2 | 0.008217 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0242 | AL_unl | runspeed | -2 | 0.0004226 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0021 | RSP_unl | runspeed | -2 | 0.002967 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0246 | AL_unl | runspeed | -2 | 0.0009706 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0146 | AL_unl | runspeed | -2 | 0.006239 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0046 | AL_unl | runspeed | -2 | 0.001698 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0213 | AL_unl | runspeed | -2 | 0.0001803 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0013 | AL_unl | runspeed | -2 | 0.0002631 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0029 | RSP_unl | runspeed | -2 | 0.001604 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0113 | AL_unl | runspeed | -2 | 1.215e-05 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0117 | AL_unl | runspeed | -2 | 0.0004261 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0413 | AL_unl | runspeed | -2 | 0.0001911 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0017 | AL_unl | runspeed | -2 | 0.0001449 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0217 | AL_unl | runspeed | -2 | 5.996e-06 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0064 | RSP_unl | runspeed | -2 | 0.0001504 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0203 | AL_unl | runspeed | -2 | 4.82e-07 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0303 | AL_unl | runspeed | -2 | 0.00102 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0103 | AL_unl | runspeed | -2 | 0.0004569 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0003 | AL_unl | runspeed | -2 | 0.005172 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0039 | RSP_unl | runspeed | -2 | 0.004322 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0007 | AL_unl | runspeed | -2 | 0.004447 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0107 | AL_unl | runspeed | -2 | 0.01434 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0060 | RSP_unl | runspeed | -2 | 0.0004564 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0207 | AL_unl | runspeed | -2 | 0.003507 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0152 | AL_unl | runspeed | -2 | 0.00634 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0052 | AL_unl | runspeed | -2 | 0.001301 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_6_0035 | RSP_unl | runspeed | -2 | 0.005144 |
+
+*(showing first 30 of 146200 rows -- see the linked CSV for the rest)*
+
+[lag_search_per_cell.csv](../2_pipeline/2f_lag_information/out/selection/maxcells-100/lag_search_per_cell.csv)
+
+### Optimal lags  session
+
+| predictor | group | optimal_lag_s | r2_at_optimum | n_units |
+| --- | --- | --- | --- | --- |
+| lick | AL_unl | -0.25 | 0.0003411 | 20 |
+| lick | PM_unl | -1.25 | 0.0004077 | 14 |
+| lick | PMdeep_lab | -1 | 0.0004223 | 8 |
+| lick | PMdeep_unl | -0.75 | 0.0004197 | 21 |
+| lick | RSP_unl | -1 | 0.0003163 | 21 |
+| lick | V1_lab | -1 | 0.0004386 | 5 |
+| lick | V1_unl | -1.5 | 0.0003215 | 21 |
+| motionenergy | AL_unl | 0 | 0.004293 | 19 |
+| motionenergy | PM_unl | 0.5 | 0.00314 | 14 |
+| motionenergy | PMdeep_lab | 0 | 0.00504 | 8 |
+| motionenergy | PMdeep_unl | 0 | 0.004074 | 20 |
+| motionenergy | RSP_unl | 0 | 0.00291 | 20 |
+| motionenergy | V1_lab | 0.25 | 0.001487 | 5 |
+| motionenergy | V1_unl | 0.25 | 0.001854 | 20 |
+| pupil_area | AL_unl | -0.25 | 0.002818 | 19 |
+| pupil_area | PM_unl | 0.25 | 0.003706 | 14 |
+| pupil_area | PMdeep_lab | -0.5 | 0.008587 | 8 |
+| pupil_area | PMdeep_unl | -0.25 | 0.005209 | 20 |
+| pupil_area | RSP_unl | -0.5 | 0.003679 | 20 |
+| pupil_area | V1_lab | -1.75 | 0.00192 | 5 |
+| pupil_area | V1_unl | -0.25 | 0.002358 | 20 |
+| runspeed | AL_unl | 0.25 | 0.01073 | 20 |
+| runspeed | PM_unl | 0.25 | 0.009384 | 14 |
+| runspeed | PMdeep_lab | 0.25 | 0.01179 | 8 |
+| runspeed | PMdeep_unl | 0.25 | 0.01234 | 21 |
+| runspeed | RSP_unl | 0.25 | 0.009454 | 21 |
+| runspeed | V1_lab | 0.5 | 0.007181 | 5 |
+| runspeed | V1_unl | 0.25 | 0.005854 | 21 |
+
+[optimal_lags__session.csv](../2_pipeline/2f_lag_information/out/selection/maxcells-100/optimal_lags__session.csv)
+
+### Position information  session
+
+| predictor | s_rel | group | unit | mi_bits | n_cells | animal_id |
+| --- | --- | --- | --- | --- | --- | --- |
+| lick | -76 | AL_unl | LPE10884_2024_01_12 | 0 | 81 | LPE10884 |
+| lick | -76 | AL_unl | LPE11622_2024_02_22 | 0 | 5 | LPE11622 |
+| lick | -76 | AL_unl | LPE11622_2024_02_23 | 0 | 12 | LPE11622 |
+| lick | -76 | AL_unl | LPE11622_2024_02_26 | 0 | 9 | LPE11622 |
+| lick | -76 | AL_unl | LPE11997_2024_04_10 | 0 | 6 | LPE11997 |
+| lick | -76 | AL_unl | LPE11997_2024_04_16 | 0 | 10 | LPE11997 |
+| lick | -76 | AL_unl | LPE11997_2024_04_17 | 0 | 8 | LPE11997 |
+| lick | -76 | AL_unl | LPE11997_2024_04_18 | 0 | 6 | LPE11997 |
+| lick | -76 | AL_unl | LPE11998_2024_04_25 | 0 | 28 | LPE11998 |
+| lick | -76 | AL_unl | LPE12013_2024_04_25 | 0 | 27 | LPE12013 |
+| lick | -76 | AL_unl | LPE12013_2024_04_26 | 0 | 37 | LPE12013 |
+| lick | -76 | AL_unl | LPE12013_2024_04_29 | 0 | 39 | LPE12013 |
+| lick | -76 | AL_unl | LPE12013_2024_04_30 | 0 | 27 | LPE12013 |
+| lick | -76 | AL_unl | LPE12385_2024_06_15 | 0 | 32 | LPE12385 |
+| lick | -76 | AL_unl | LPE12385_2024_06_16 | 0 | 13 | LPE12385 |
+| lick | -76 | AL_unl | LPE12385_2024_06_17 | 0 | 23 | LPE12385 |
+| lick | -76 | AL_unl | LPE12385_2024_06_26 | 0 | 44 | LPE12385 |
+| lick | -76 | AL_unl | LPE12385_2024_06_27 | 0 | 29 | LPE12385 |
+| lick | -76 | PM_unl | LPE11622_2024_02_20 | 0 | 13 | LPE11622 |
+| lick | -76 | PM_unl | LPE11622_2024_02_22 | 0 | 29 | LPE11622 |
+| lick | -76 | PM_unl | LPE11622_2024_02_23 | 0 | 11 | LPE11622 |
+| lick | -76 | PM_unl | LPE11622_2024_02_26 | 0 | 22 | LPE11622 |
+| lick | -76 | PM_unl | LPE11997_2024_04_16 | 0 | 16 | LPE11997 |
+| lick | -76 | PM_unl | LPE11997_2024_04_17 | 0 | 10 | LPE11997 |
+| lick | -76 | PM_unl | LPE11997_2024_04_18 | 0 | 19 | LPE11997 |
+| lick | -76 | PM_unl | LPE11998_2024_04_25 | 0 | 14 | LPE11998 |
+| lick | -76 | PM_unl | LPE12013_2024_04_25 | 0 | 8 | LPE12013 |
+| lick | -76 | PM_unl | LPE12013_2024_04_26 | 0 | 7 | LPE12013 |
+| lick | -76 | PM_unl | LPE12013_2024_04_29 | 0 | 8 | LPE12013 |
+| lick | -76 | PM_unl | LPE12013_2024_04_30 | 0 | 24 | LPE12013 |
+
+*(showing first 30 of 6219 rows -- see the linked CSV for the rest)*
+
+[position_information__session.csv](../2_pipeline/2f_lag_information/out/selection/maxcells-100/position_information__session.csv)
+
+### Position information per cell
+
+| session_id | animal_id | cell_id | group | predictor | s_rel | n_samples | mi_bits |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -76 | 1739 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -68 | 593 | 0.01656 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -60 | 593 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -52 | 958 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -44 | 447 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -36 | 478 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -20 | 557 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -12 | 824 | 0.00111 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -4 | 667 | 0.04128 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 4 | 515 | 0.03675 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 12 | 773 | 0.03459 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 20 | 2421 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 28 | 1684 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 36 | 500 | 3.679e-05 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 44 | 456 | 0.003223 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 52 | 424 | 0.04348 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -76 | 1739 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -68 | 593 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -60 | 593 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -52 | 958 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -44 | 447 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -36 | 478 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -20 | 557 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -12 | 824 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -4 | 667 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 4 | 515 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 12 | 773 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 20 | 2421 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 28 | 1684 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 36 | 500 | 0 |
+
+*(showing first 30 of 125453 rows -- see the linked CSV for the rest)*
+
+[position_information_per_cell.csv](../2_pipeline/2f_lag_information/out/selection/maxcells-100/position_information_per_cell.csv)
+
+### Position te per cell
+
+| session_id | animal_id | cell_id | group | predictor | s_rel | n_samples | te_bits |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -76 | 960 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -20 | 516 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -12 | 821 | 0.008865 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | -4 | 667 | 0.00883 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 4 | 515 | 0.01806 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 12 | 773 | 0.01182 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 20 | 2421 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 28 | 1683 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 36 | 500 | 0.004833 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 44 | 456 | 0.01482 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0042 | AL_unl | runspeed | 52 | 424 | 0.01138 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -76 | 960 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -20 | 516 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -12 | 821 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | -4 | 667 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 4 | 515 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 12 | 773 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 20 | 2421 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 28 | 1683 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 36 | 500 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 44 | 456 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0142 | AL_unl | runspeed | 52 | 424 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0342 | AL_unl | runspeed | -76 | 960 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0342 | AL_unl | runspeed | -20 | 516 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0342 | AL_unl | runspeed | -12 | 821 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0342 | AL_unl | runspeed | -4 | 667 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0342 | AL_unl | runspeed | 4 | 515 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0342 | AL_unl | runspeed | 12 | 773 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0342 | AL_unl | runspeed | 20 | 2421 | 0 |
+| LPE10884_2024_01_12 | LPE10884 | LPE10884_2024_01_12_7_0342 | AL_unl | runspeed | 28 | 1683 | 0 |
+
+*(showing first 30 of 97690 rows -- see the linked CSV for the rest)*
+
+[position_te_per_cell.csv](../2_pipeline/2f_lag_information/out/selection/maxcells-100/position_te_per_cell.csv)
+
+### Position transfer entropy  session
+
+| predictor | s_rel | group | unit | te_bits | n_cells | animal_id |
+| --- | --- | --- | --- | --- | --- | --- |
+| lick | -76 | AL_unl | LPE10884_2024_01_12 | 0 | 40 | LPE10884 |
+| lick | -76 | AL_unl | LPE11998_2024_04_25 | 0 | 28 | LPE11998 |
+| lick | -76 | AL_unl | LPE12013_2024_04_30 | 0 | 27 | LPE12013 |
+| lick | -76 | AL_unl | LPE12385_2024_06_17 | 0 | 23 | LPE12385 |
+| lick | -76 | AL_unl | LPE12385_2024_06_26 | 0 | 40 | LPE12385 |
+| lick | -76 | PM_unl | LPE11998_2024_04_25 | 0 | 14 | LPE11998 |
+| lick | -76 | PM_unl | LPE12013_2024_04_30 | 0 | 24 | LPE12013 |
+| lick | -76 | PMdeep_lab | LPE11998_2024_05_01 | 0 | 9 | LPE11998 |
+| lick | -76 | PMdeep_unl | LPE11998_2024_04_25 | 0 | 7 | LPE11998 |
+| lick | -76 | PMdeep_unl | LPE11998_2024_05_01 | 0 | 18 | LPE11998 |
+| lick | -76 | PMdeep_unl | LPE12013_2024_04_30 | 0.0005069 | 5 | LPE12013 |
+| lick | -76 | PMdeep_unl | LPE12385_2024_06_17 | 0 | 16 | LPE12385 |
+| lick | -76 | PMdeep_unl | LPE12385_2024_06_26 | 0 | 7 | LPE12385 |
+| lick | -76 | RSP_unl | LPE10884_2024_01_12 | 0 | 19 | LPE10884 |
+| lick | -76 | RSP_unl | LPE11998_2024_04_25 | 0 | 6 | LPE11998 |
+| lick | -76 | RSP_unl | LPE11998_2024_05_01 | 0 | 12 | LPE11998 |
+| lick | -76 | RSP_unl | LPE12013_2024_04_30 | 7.033e-05 | 23 | LPE12013 |
+| lick | -76 | RSP_unl | LPE12385_2024_06_17 | 0 | 36 | LPE12385 |
+| lick | -76 | RSP_unl | LPE12385_2024_06_26 | 0 | 17 | LPE12385 |
+| lick | -76 | V1_lab | LPE11998_2024_05_01 | 0 | 8 | LPE11998 |
+| lick | -76 | V1_unl | LPE11998_2024_04_25 | 0 | 37 | LPE11998 |
+| lick | -76 | V1_unl | LPE11998_2024_05_01 | 0 | 40 | LPE11998 |
+| lick | -76 | V1_unl | LPE12013_2024_04_30 | 0 | 15 | LPE12013 |
+| lick | -76 | V1_unl | LPE12385_2024_06_17 | 0 | 21 | LPE12385 |
+| lick | -76 | V1_unl | LPE12385_2024_06_26 | 0 | 29 | LPE12385 |
+| lick | -68 | AL_unl | LPE11998_2024_04_25 | 0 | 28 | LPE11998 |
+| lick | -68 | AL_unl | LPE12013_2024_04_30 | 0.0002287 | 27 | LPE12013 |
+| lick | -68 | AL_unl | LPE12385_2024_06_15 | 0 | 32 | LPE12385 |
+| lick | -68 | AL_unl | LPE12385_2024_06_16 | 0 | 13 | LPE12385 |
+| lick | -68 | AL_unl | LPE12385_2024_06_17 | 0 | 23 | LPE12385 |
+
+*(showing first 30 of 4924 rows -- see the linked CSV for the rest)*
+
+[position_transfer_entropy__session.csv](../2_pipeline/2f_lag_information/out/selection/maxcells-100/position_transfer_entropy__session.csv)

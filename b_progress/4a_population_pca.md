@@ -1,6 +1,40 @@
 # 4a_population_pca
 
-*Auto-generated from `2_pipeline/4a_population_pca/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/4a_population_pca/out/` on 2026-11-10 17:49. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Shuffle comparison pre stim
+
+![1_shuffle_comparison_pre_stim](../2_pipeline/4a_population_pca/out/figures/1_shuffle_comparison_pre_stim.png)
+
+### Shuffle comparison reward
+
+![1_shuffle_comparison_reward](../2_pipeline/4a_population_pca/out/figures/1_shuffle_comparison_reward.png)
+
+### Shuffle comparison stim
+
+![1_shuffle_comparison_stim](../2_pipeline/4a_population_pca/out/figures/1_shuffle_comparison_stim.png)
+
+### Dimensionality vs size
+
+![2_dimensionality_vs_size](../2_pipeline/4a_population_pca/out/figures/2_dimensionality_vs_size.png)
+
+### Scree example stim
+
+![3_scree_example_stim](../2_pipeline/4a_population_pca/out/figures/3_scree_example_stim.png)
+
+### Trajectory variance explained
+
+![4_trajectory_variance_explained](../2_pipeline/4a_population_pca/out/figures/4_trajectory_variance_explained.png)
+
+### Trajectory pc vs position
+
+![5_trajectory_pc_vs_position](../2_pipeline/4a_population_pca/out/figures/5_trajectory_pc_vs_position.png)
+
+### Trajectory pc1 pc2
+
+![6_trajectory_pc1_pc2](../2_pipeline/4a_population_pca/out/figures/6_trajectory_pc1_pc2.png)
 
 ## Tables
 
@@ -159,37 +193,3 @@
 *(showing first 30 of 565 rows -- see the linked CSV for the rest)*
 
 [trajectory_variance.csv](../2_pipeline/4a_population_pca/out/trajectory_variance.csv)
-
-## Figures
-
-### Shuffle comparison pre stim
-
-![1_shuffle_comparison_pre_stim](../2_pipeline/4a_population_pca/out/figures/1_shuffle_comparison_pre_stim.png)
-
-### Shuffle comparison reward
-
-![1_shuffle_comparison_reward](../2_pipeline/4a_population_pca/out/figures/1_shuffle_comparison_reward.png)
-
-### Shuffle comparison stim
-
-![1_shuffle_comparison_stim](../2_pipeline/4a_population_pca/out/figures/1_shuffle_comparison_stim.png)
-
-### Dimensionality vs size
-
-![2_dimensionality_vs_size](../2_pipeline/4a_population_pca/out/figures/2_dimensionality_vs_size.png)
-
-### Scree example stim
-
-![3_scree_example_stim](../2_pipeline/4a_population_pca/out/figures/3_scree_example_stim.png)
-
-### Trajectory variance explained
-
-![4_trajectory_variance_explained](../2_pipeline/4a_population_pca/out/figures/4_trajectory_variance_explained.png)
-
-### Trajectory pc vs position
-
-![5_trajectory_pc_vs_position](../2_pipeline/4a_population_pca/out/figures/5_trajectory_pc_vs_position.png)
-
-### Trajectory pc1 pc2
-
-![6_trajectory_pc1_pc2](../2_pipeline/4a_population_pca/out/figures/6_trajectory_pc1_pc2.png)

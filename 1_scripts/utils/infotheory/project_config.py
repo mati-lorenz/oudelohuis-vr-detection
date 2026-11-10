@@ -9,7 +9,8 @@ re-define these values locally.
 1. WHICH DATA (selection)           ANIMALS / SESSIONS
 2. HOW TO AGGREGATE (unit)          AGGREGATE_BY  = "pooled" | "session" | "mouse"
 3. MEMORY                           N_JOBS_SESSIONS (sessions processed in parallel, one in RAM each)
-4. SHARED BINNING                   so correlations, MI, information breakdown and PID are computed on
+4. DEPTH RULE                       which cells enter the area comparison (max depth) and the extra deep-PM groups
+5. SHARED BINNING                   so correlations, MI, information breakdown and PID are computed on
                                     the SAME trials and the SAME bins and are comparable BEFORE any bias
                                     correction (see the block below)
 
@@ -45,6 +46,15 @@ AGGREGATES = ("pooled", "session", "mouse")
 # --------------------------------------------------------------------- #
 N_JOBS_SESSIONS = 10
 
+#    Caps on the number of units analysed per session (None = all). --max-cells / --max-pairs override them per run.
+#    The cap picks a fixed pseudo-random, NESTED subset (first N of a hash order of the session's cells), and the per-session
+#    caches store results PER CELL / PER PAIR, so changing the cap never recomputes what is already stored: N=100, then 300
+#    computes the 200 added cells; then 50 just reads the first 50. A run with a cap writes to out/selection/<tag>/.
+# The caps apply PER GROUP (V1-lab, V1-unl, PM-lab, ... incl. deep PM) within a session: MAX_CELLS_PER_SESSION = 10 keeps up to 10 cells of each
+# group, so rare groups (labeled cells) are not emptied; MAX_PAIRS_PER_SESSION counts pairs per pair of groups.
+MAX_CELLS_PER_SESSION = None
+MAX_PAIRS_PER_SESSION = None
+
 # --------------------------------------------------------------------- #
 # 4. Shared binning (consumed by 2c, 3a-3f, 4a-4c once migrated; at the moment only 1a follows the
 #    selection/aggregation rules). The rule: any two quantities that are compared with each other (correlation, MI,
@@ -58,5 +68,67 @@ N_JOBS_SESSIONS = 10
 # --------------------------------------------------------------------- #
 RESPONSE_BINS = 3                  # per-cell response bins for discrete information measures
 RESPONSE_BIN_METHOD = "quantile"   # equal-occupancy
-MIN_TRIALS_PER_TARGET_BIN = 1      # trials needed in a stimulus/choice bin for it to be used
+MIN_TRIALS_PER_TARGET_BIN = 3      # trials needed in a stimulus/choice bin for it to be used
 MIN_TRIALS_ANALYSIS = 20           # trials needed (after the filters above) to analyse a cell/pair
+
+# --------------------------------------------------------------------- #
+# 5. Depth rule. Defined ONCE in 2a_cell_distribution (column `depth_class` of celldata_combined.csv) and inherited by every
+#    later step through that file (neural_encoding.load_cell_inclusion, infotheory.groups.add_six_group_column).
+#    To COMPARE AREAS only cells shallower than MAX_DEPTH_UM are used (all areas, labeled and unlabeled), so all areas are
+#    compared at the same depth. Because deep PM cells matter for the feedback loop, PM cells between DEEP_PM_DEPTH_UM[0] and
+#    [1] form two EXTRA groups (PM-lab (deep), PM-unl (deep)) that are shown next to the six shallow groups. Everything else
+#    deeper than MAX_DEPTH_UM (deep V1 / AL / RSP, PM deeper than DEEP_PM_DEPTH_UM[1], cells without depth) is excluded.
+#      depth_class:  "shallow"  depth < MAX_DEPTH_UM                  -> the six groups
+#                    "deep_pm"  PM, DEEP_PM_DEPTH_UM[0] <= depth < [1]  -> the two deep-PM groups
+#                    "excluded" everything else                          -> no group, not analysed
+#    MAX_DEPTH_UM = None switches the whole rule off (old behaviour: only unlabeled V1/PM cells <300 um were kept in 2a).
+#    DEEP_PM_DEPTH_UM = None keeps the max-depth rule but drops the deep-PM groups.
+#    Sessions whose depth looks badly measured (2a `depth_suspect`) cannot be classified reliably:
+#    DEPTH_SUSPECT_POLICY "exclude" = their cells are `excluded`; "keep" = classified by their (doubtful) depth anyway.
+# --------------------------------------------------------------------- #
+MAX_DEPTH_UM = 300.0
+DEEP_PM_DEPTH_UM = (300.0, 500.0)
+DEPTH_SUSPECT_POLICY = "exclude"
+
+# --------------------------------------------------------------------- #
+# 6. POOLED-FRAMES information (2c). Besides the per-TRIAL values (one window mean per trial, RESPONSE_BINS bins) 2c also
+#    computes MI between a behavior (runspeed, pupil, motion energy, lick) and a cell's activity with EVERY imaging frame
+#    inside the window of every engaged trial pooled into one distribution (predictors named "<cur_var>__frames").
+#    * more samples allow finer bins: with a few hundred trials 3 bins (9 joint cells) is all the data support, with thousands
+#      of frames RESPONSE_BINS_FRAMES bins (64 joint cells, ~100 frames per cell) are affordable. The two families therefore
+#      use different bin numbers on purpose; the per-trial one stays at RESPONSE_BINS because it is shared with the
+#      correlations / breakdown / PID (rule: shared binning before bias correction).
+#    * zero-inflated variables (lick rate, deconvolved activity: one value holds > 1/bins of the frames) get that value as its
+#      own bin and equal-occupancy bins over the rest (otherwise the bins collapse and the MI is 0); continuous ones are binned
+#      exactly like mutual_information_hist.
+#    * frames of one trial are autocorrelated, so the null is NOT a frame permutation: the cell trace is circularly rolled
+#      by >= FRAME_SHIFT_MIN_TRIALS windows' worth of frames (keeps the autocorrelation of both signals) and bias
+#      correction = mean of the rolled MIs, p = fraction of rolled MIs >= raw. The p-value is still optimistic because
+#      frames from one trial are not independent samples of the trial-to-trial variability, so compare the pooled-frame and
+#      per-trial results rather than trusting the frame p-values alone.
+# --------------------------------------------------------------------- #
+RESPONSE_BINS_FRAMES = 8
+MIN_FRAMES_ANALYSIS = 300           # pooled frames needed to analyse a (cell, behavior) pair in a window
+FRAME_SHIFT_MIN_TRIALS = 10         # smallest circular shift of the null, in units of the median frames per trial window
+
+# --------------------------------------------------------------------- #
+# 7. Face-quantity normalization. pupil area / x / y, motion energy and the video PCs are z-scored WITHIN each session
+#    (continuous.zscore_per_session, after blink rejection) wherever the behavior tables are built (neural_encoding:
+#    build_session_tables / build_window_frames), as in 1c / 1d / 1f. Running speed and licks are NOT normalized (physical
+#    units). Per-session quantile-binned measures do not depend on it; it matters for anything that pools raw values
+#    across sessions.
+# --------------------------------------------------------------------- #
+NORMALIZE_FACE_PER_SESSION = True
+
+# --------------------------------------------------------------------- #
+# 8. DEPTH CORRECTIONS for sessions whose recorded depth carries a known constant offset (um). Convention:
+#       corrected depth = recorded depth - offset      (the recorded values are too DEEP by `offset`;
+#                                                       use a negative offset when they are too shallow)
+#    Applied in 2a (celldata.depth, before the depth_suspect check and the depth classes, so celldata_combined.csv holds the
+#    corrected value + `depth_recorded` + `depth_offset_um`) and by anything that reads a session's raw celldata through
+#    infotheory.celldata_utils.apply_depth_correction (2b does). Key = session_id.
+# --------------------------------------------------------------------- #
+DEPTH_OFFSET_CORRECTIONS_UM = {
+    "LPE12013_2024_04_30": 325.0,
+}
+

@@ -58,7 +58,7 @@ Project-wide rules (infotheory/project_config.py) -- what applies here
                   sessions does not change any cell's result.
     * aggregate : --aggregate pooled|session|mouse = the unit for group comparisons: pooled = all cells of a group
                   together, no error bars; session / mouse = one value per session / mouse (MIN_CELLS_PER_UNIT cells
-                  needed), bars = mean +- SEM over units, dots = units coloured by mouse. Always the six groups
+                  needed), bars = mean +- SEM over units, dots = units coloured by mouse. Always all the groups of the depth rule (the six + deep PM)
                   (V1-lab, V1-unl, PM-lab, PM-unl, AL, RSP). Autocorrelogram and population-mean profiles:
                   mean +- SEM over units (pooled: over cells, shaded band omitted). Rasters: one pooled raster per
                   group always; in session / mouse mode additionally one raster figure per session / mouse.
@@ -100,10 +100,11 @@ import matplotlib.pyplot as plt
 
 from infotheory.pipeline import get_pipeline_paths
 from infotheory.session import discover_sessions, load_sessions
+from infotheory import project_config as cfg
 from infotheory.celldata_utils import (
-    get_area_label, LABEL_SPLIT_AREAS, SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GROUP_COLORS,
+    apply_depth_correction, get_area_label, LABEL_SPLIT_AREAS, SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GROUP_COLORS,
 )
-from infotheory.groups import add_six_group_column, six_panel_figure, group_key
+from infotheory.groups import add_six_group_column, six_panel_figure, group_key, group_meta_columns
 from infotheory import spike_stats as ss
 from infotheory import qc_lib
 from infotheory import raster as rs
@@ -129,7 +130,7 @@ QC_THRESHOLDS = dict(
     rate_thr=qc_lib.RATE_THR, noise_thr=qc_lib.NOISE_THR, fano_thr=qc_lib.FANO_THR,
     skew_min=qc_lib.SKEW_MIN, flat_std_thr=qc_lib.FLAT_STD_THR, nan_frac_thr=qc_lib.NAN_FRAC_THR,
 )
-MIN_CELLS_PER_UNIT = 5               # session / mouse aggregate: cells needed in a group for a unit's value to be used
+MIN_CELLS_PER_UNIT = 10               # session / mouse aggregate: cells needed in a group for a unit's value to be used
 N_JOBS_NEURONS = 1                   # keep 1: sessions are already parallel
 
 # ---- part 2: raster -------------------------------------------------------------------------------------
@@ -154,7 +155,7 @@ OUTCOME_WINDOWS = {"pre_stim": (-30.0, -10.0), "stim": (0.0, 20.0)}   # cm relat
 EQUALIZE_QUANTILE = 0.1              # position-matched frame sampling for the window means (as 2d's ROC)
 MIN_TRIALS_COND = 5                  # trials needed in an outcome condition (per cell) for a trace / value
 MIN_PER_CLASS = 5                    # trials per class (and contrast level) for AUROC
-MIN_POP_CELLS = 5                    # cells of a group in a session for its population markers
+MIN_POP_CELLS = 10                    # cells of a group in a session for its population markers
 ALPHA = 0.05
 N_MARKER_BINS = 3                    # prestimulus-variance bins for hit probability (per session)
 MIN_TRIALS_PER_MARKER_BIN = 5
@@ -205,7 +206,7 @@ def process_session(ses, seed):
     rng = np.random.default_rng(RANDOM_STATE + seed)
     fs = ss.get_frame_rate(ses, fallback=8.0)
     calciumdata = ses.calciumdata.to_numpy()
-    celldata = ses.celldata.reset_index(drop=True)
+    celldata = apply_depth_correction(ses.celldata, ses.session_id).reset_index(drop=True)   # project_config section 8
     area, label, _ = get_area_label(celldata, label_split_areas=LABEL_SPLIT_AREAS)
     T, N = calciumdata.shape
 
@@ -243,7 +244,7 @@ def process_session(ses, seed):
 
     per_neuron = pd.DataFrame({
         "session_id": ses.session_id, "animal_id": ses.animal_id, "cell_id": celldata["cell_id"].to_numpy(),
-        "roi_name": area, "labeled": label,
+        "roi_name": area, "labeled": label, "depth": celldata["depth"].to_numpy(float),
         "mean_activity_per_sec": rate, "active_frame_rate_hz": active_rate, "sparsity": spars,
         "fano_factor_magnitude": fano, "fano_factor_active_frames": active_fano,
         "runspeed_corr": runspeed_corr, "fchan2_corr": fchan2_corr,
@@ -252,7 +253,8 @@ def process_session(ses, seed):
     per_neuron = pd.concat([per_neuron, qc.reset_index(drop=True)], axis=1)
     sub_id = {"session_id": ses.session_id, "animal_id": ses.animal_id,
               "cell_id": celldata["cell_id"].to_numpy()[subsample_idx],
-              "roi_name": area[subsample_idx], "labeled": label[subsample_idx]}
+              "roi_name": area[subsample_idx], "labeled": label[subsample_idx],
+              "depth": celldata["depth"].to_numpy(float)[subsample_idx]}
     iei_sub = pd.DataFrame({**sub_id, "median_iei": median_iei, "cv_iei": cv_iei})
     ac = pd.concat([pd.DataFrame(sub_id), pd.DataFrame(ac_sub, columns=[f"lag_{j}" for j in range(ac_sub.shape[1])])],
                    axis=1)
@@ -264,7 +266,7 @@ def process_session(ses, seed):
 
 results = run_sessions(
     session_ids, process_session, [PROTOCOL], paths.store, "activity_session",
-    key_params=dict(version="2b-v2", fano=FANO_WINDOW_SEC, max_lag=MAX_LAG_SEC_AUTOCORR,
+    key_params=dict(version="2b-v4", depth_offsets=sorted(cfg.DEPTH_OFFSET_CORRECTIONS_UM.items()), fano=FANO_WINDOW_SEC, max_lag=MAX_LAG_SEC_AUTOCORR,
                     max_iei=MAX_NEURONS_FOR_IEI_AUTOCORR, rs=RANDOM_STATE, fchan2_z=FCHAN2_ARTIFACT_Z),
     load_kwargs=dict(load_behaviordata=True, load_videodata=False, load_celldata=True, load_calciumdata=True),
     n_jobs=N_JOBS, recompute=args.recompute, verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps, flatten=False)
@@ -288,6 +290,14 @@ for r in results:
 ac_df = pd.concat(ac_parts, ignore_index=True)
 del results, ac_parts
 
+# groups follow the depth rule (project_config section 5): use 2a's per-cell `depth_class` (it also knows the depth-suspect
+# sessions); cells it does not know (2a not rerun) are classified from their own depth
+_cd2a_path = paths.out_from("2a_cell_distribution") / "celldata_combined.csv"
+if _cd2a_path.exists() and "depth_class" in pd.read_csv(_cd2a_path, nrows=1).columns:
+    _dc2a = pd.read_csv(_cd2a_path, low_memory=False)[["session_id", "cell_id", "depth_class"]].drop_duplicates(["session_id", "cell_id"])
+    per_neuron, iei_sub, ac_df = [d.merge(_dc2a, on=["session_id", "cell_id"], how="left") for d in (per_neuron, iei_sub, ac_df)]
+else:
+    print("NOTE: 2a's celldata_combined.csv has no depth_class (rerun 2a): the depth classes are computed from each cell's depth here")
 per_neuron = add_six_group_column(per_neuron)
 iei_sub = add_six_group_column(iei_sub)
 ac_df = add_six_group_column(ac_df)
@@ -609,7 +619,7 @@ if ri is not None and want_raster:
     cells = pd.concat([pd.DataFrame({"session_id": s["session_id"], "animal_id": s["animal_id"],
                                      "cell_id": s["cell_ids"]}) for s in sessions], ignore_index=True)
     profiles = {name: np.vstack([s[name] for s in sessions]) for name in ("all", "odd", "even")}
-    meta = cd_table[["session_id", "cell_id", "roi_name", "labeled"]]
+    meta = cd_table[["session_id", "cell_id"] + group_meta_columns(cd_table)]
     cells = add_six_group_column(cells.merge(meta, on=["session_id", "cell_id"], how="left"))
     assert len(cells) == len(profiles["all"])
 
@@ -878,7 +888,7 @@ if ri is not None and want_raster:
 if ri is not None and want_outcome:
     o_ids, o_cells, o_cd, o_mu_sigma = ri
     rule = STIM_BINNING_STRATEGIES[OUTCOME_STRATEGY]
-    cd_g = add_six_group_column(o_cd[["session_id", "cell_id", "roi_name", "labeled"]])
+    cd_g = add_six_group_column(o_cd[["session_id", "cell_id"] + group_meta_columns(o_cd)])
     group_of = dict(zip(zip(cd_g["session_id"], cd_g["cell_id"]), cd_g["group"]))
     fits_mtime = int((paths.out_from("1b_psychometric") / "psychometric_fits.csv").stat().st_mtime)
 
@@ -920,7 +930,7 @@ if ri is not None and want_outcome:
 
         def attach_group(df):
             return add_unit(add_six_group_column(df.merge(
-                o_cd[["session_id", "cell_id", "roi_name", "labeled"]], on=["session_id", "cell_id"], how="left")))
+                o_cd[["session_id", "cell_id"] + group_meta_columns(o_cd)], on=["session_id", "cell_id"], how="left")))
 
         def out_cols(df, keep_unit=True):
             """Drop helper columns for CSV: pooled keeps original names, others get unit + animal_id."""
@@ -983,7 +993,7 @@ if ri is not None and want_outcome:
             category=lambda d: d["condition"].str.split("|").str[1].fillna("no stimulus"),
             outcome=lambda d: d["condition"].str.split("|").str[0]).drop(columns="condition").to_csv(
             table_dir / f"outcome_traces_by_group{AGG_SUFFIX}.csv", index=False)
-        fig, axes = plt.subplots(len(SIX_GROUP_ORDER), len(cat_names), figsize=(4.2 * len(cat_names), 2.3 * 6),
+        fig, axes = plt.subplots(len(SIX_GROUP_ORDER), len(cat_names), figsize=(4.2 * len(cat_names), 2.3 * len(SIX_GROUP_ORDER)),
                                  sharex=True, squeeze=False)
         for gi, g in enumerate(SIX_GROUP_ORDER):
             for ci, cname in enumerate(cat_names):
@@ -1212,7 +1222,7 @@ if ri is not None and want_outcome:
             hp = mtr.groupby(["marker", "group", "unit", "bin"]).agg(hit_probability=("hit", "mean"), n_trials=("hit", "size"),
                                                                      animal_id=("animal_id", "first")).reset_index()
             out_cols(hp).to_csv(table_dir / f"hit_probability_by_prestim_marker{AGG_SUFFIX}.csv", index=False)
-            fig, axes = plt.subplots(2, 6, figsize=(17, 6), sharey=True, squeeze=False)
+            fig, axes = plt.subplots(2, len(SIX_GROUP_ORDER), figsize=(2.9 * len(SIX_GROUP_ORDER), 6), sharey=True, squeeze=False)
             for ri_, marker in enumerate(("popvar", "popmean")):
                 for ci, g in enumerate(SIX_GROUP_ORDER):
                     ax = axes[ri_, ci]

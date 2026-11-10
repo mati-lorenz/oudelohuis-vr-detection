@@ -77,13 +77,13 @@ STORE_VALUES = VALUES + ["I1", "I2"]
 parser = argparse.ArgumentParser()
 add_scope_args(parser)
 parser.add_argument("--strategies", nargs="+", default=None, choices=sorted(STIM_BINNING_STRATEGIES))
-parser.add_argument("--max-pairs", type=int, default=MAX_PAIRS_PER_GROUP, help="pairs per (session, area, label)")
 parser.add_argument("--binnings", nargs="+", default=BINNINGS, choices=BINNINGS)
 parser.add_argument("--window", type=float, default=WINDOW, help="sliding window (cm)")
 parser.add_argument("--step", type=float, default=STEP, help="sliding step (cm)")
 parser.add_argument("--pid-shuffles", type=int, default=PID_SHUFFLES)
 parser.add_argument("--redundancy", default=REDUNDANCY_MEASURE, choices=sorted(REDUNDANCY_MEASURES))
 args = parser.parse_args()
+MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
 scope = scope_from_args(args)
 AGG = scope.aggregate
 UNIT = unit_noun(AGG)
@@ -110,7 +110,7 @@ def process_session(ses, seed):
     cells = inp.cells_by_session.get(sid)
     if not cells or ses.celldata is None or ses.calciumdata is None or ses.behaviordata is None:
         return []
-    pairs = ptt.sample_group_pairs(ses, cells, args.max_pairs, "pairs3f", RANDOM_STATE)
+    pairs = ptt.sample_group_pairs(ses, cells, MAX_PAIRS, "pairs3f", RANDOM_STATE)
     if pairs is None:
         return []
     use = sorted(set(pairs["cell_i"]) | set(pairs["cell_j"]))
@@ -142,7 +142,7 @@ def process_session(ses, seed):
 records = run_sessions(
     inp.session_ids, process_session, [PROTOCOL], paths.store, "pid_temporal",
     key_params=dict(s_pre=S_PRE, s_post=S_POST, binsize=BINSIZE, window=args.window, step=args.step, binnings=BINS_RUN,
-                    r_bins=R_BINS, pid_shuffles=args.pid_shuffles, redundancy=args.redundancy, max_pairs=args.max_pairs,
+                    r_bins=R_BINS, pid_shuffles=args.pid_shuffles, redundancy=args.redundancy, max_pairs=MAX_PAIRS,
                     targets=target_signature(TARGETS), min_trials=cfg.MIN_TRIALS_ANALYSIS,
                     min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3f-v4", fits_mtime=int(inp.fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),

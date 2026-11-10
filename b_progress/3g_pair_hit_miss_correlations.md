@@ -1,6 +1,52 @@
 # 3g_pair_hit_miss_correlations
 
-*Auto-generated from `2_pipeline/3g_pair_hit_miss_correlations/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/3g_pair_hit_miss_correlations/out/` on 2026-11-10 17:48. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Compare conditioning delta
+
+![compare_conditioning_delta](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/compare_conditioning_delta.png)
+
+### Hit vs miss
+
+![1_hit_vs_miss](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus/1_hit_vs_miss.png)
+
+### Delta hit minus miss
+
+![2_delta_hit_minus_miss](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus/2_delta_hit_minus_miss.png)
+
+### Effect of trial matching
+
+![3_effect_of_trial_matching](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus/3_effect_of_trial_matching.png)
+
+### Distance matched delta
+
+![4_distance_matched_delta](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus/4_distance_matched_delta.png)
+
+### Noise correlation vs distance
+
+![5_noise_correlation_vs_distance](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus/5_noise_correlation_vs_distance.png)
+
+### Hit vs miss
+
+![1_hit_vs_miss](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus_plus_movement/1_hit_vs_miss.png)
+
+### Delta hit minus miss
+
+![2_delta_hit_minus_miss](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus_plus_movement/2_delta_hit_minus_miss.png)
+
+### Effect of trial matching
+
+![3_effect_of_trial_matching](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus_plus_movement/3_effect_of_trial_matching.png)
+
+### Distance matched delta
+
+![4_distance_matched_delta](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus_plus_movement/4_distance_matched_delta.png)
+
+### Noise correlation vs distance
+
+![5_noise_correlation_vs_distance](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus_plus_movement/5_noise_correlation_vs_distance.png)
 
 ## Tables
 
@@ -120,49 +166,3 @@
 *(showing first 15 of 25 columns; showing first 30 of 68952 rows -- see the linked CSV for the rest)*
 
 [hit_miss_pair_correlations.csv](../2_pipeline/3g_pair_hit_miss_correlations/out/hit_miss_pair_correlations.csv)
-
-## Figures
-
-### Compare conditioning delta
-
-![compare_conditioning_delta](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/compare_conditioning_delta.png)
-
-### Hit vs miss
-
-![1_hit_vs_miss](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus/1_hit_vs_miss.png)
-
-### Delta hit minus miss
-
-![2_delta_hit_minus_miss](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus/2_delta_hit_minus_miss.png)
-
-### Effect of trial matching
-
-![3_effect_of_trial_matching](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus/3_effect_of_trial_matching.png)
-
-### Distance matched delta
-
-![4_distance_matched_delta](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus/4_distance_matched_delta.png)
-
-### Noise correlation vs distance
-
-![5_noise_correlation_vs_distance](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus/5_noise_correlation_vs_distance.png)
-
-### Hit vs miss
-
-![1_hit_vs_miss](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus_plus_movement/1_hit_vs_miss.png)
-
-### Delta hit minus miss
-
-![2_delta_hit_minus_miss](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus_plus_movement/2_delta_hit_minus_miss.png)
-
-### Effect of trial matching
-
-![3_effect_of_trial_matching](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus_plus_movement/3_effect_of_trial_matching.png)
-
-### Distance matched delta
-
-![4_distance_matched_delta](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus_plus_movement/4_distance_matched_delta.png)
-
-### Noise correlation vs distance
-
-![5_noise_correlation_vs_distance](../2_pipeline/3g_pair_hit_miss_correlations/out/figures/stimulus_plus_movement/5_noise_correlation_vs_distance.png)

@@ -57,7 +57,6 @@ def run(script_file, *, stem, store_name, version, what, components, compare, yl
     parser = argparse.ArgumentParser()
     add_scope_args(parser)
     parser.add_argument("--behaviors", nargs="+", default=BEHAVIOR_VARS, choices=BEHAVIOR_VARS)
-    parser.add_argument("--max-pairs", type=int, default=MAX_PAIRS_PER_GROUP, help="pairs per (session, area, label)")
     parser.add_argument("--axes", nargs="+", default=list(AXES_DEF), choices=list(AXES_DEF))
     parser.add_argument("--binnings", nargs="+", default=BINNINGS, choices=BINNINGS,
                         help="windows = 3a-3c's three position windows (position axis only)")
@@ -68,6 +67,7 @@ def run(script_file, *, stem, store_name, version, what, components, compare, yl
     if add_args:
         add_args(parser)
     args = parser.parse_args()
+    max_pairs = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
     axes_def = {k: dict(v) for k, v in AXES_DEF.items()}
     for ax_ in axes_def:
         axes_def[ax_]["binsize"] = getattr(args, f"{ax_}_bin")
@@ -101,7 +101,7 @@ def run(script_file, *, stem, store_name, version, what, components, compare, yl
         cells = inp.cells_by_session.get(sid)
         if not cells or ses.celldata is None or ses.calciumdata is None or ses.behaviordata is None:
             return []
-        pairs = ptt.sample_group_pairs(ses, cells, args.max_pairs, PAIR_TAG, RANDOM_STATE)
+        pairs = ptt.sample_group_pairs(ses, cells, max_pairs, PAIR_TAG, RANDOM_STATE)
         if pairs is None:
             return []
         use = sorted(set(pairs["cell_i"]) | set(pairs["cell_j"]))
@@ -128,7 +128,7 @@ def run(script_file, *, stem, store_name, version, what, components, compare, yl
         return recs
 
     key = dict(axes_def={a: axes_def[a] for a in axes}, axes=axes, binnings=binnings, behaviors=behaviors,
-               r_bins=cfg.RESPONSE_BINS, max_pairs=args.max_pairs, min_trials=cfg.MIN_TRIALS_ANALYSIS,
+               r_bins=cfg.RESPONSE_BINS, max_pairs=max_pairs, min_trials=cfg.MIN_TRIALS_ANALYSIS,
                min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, windows=WINDOWS, version=version,
                fits_mtime=int(inp.fits_path.stat().st_mtime))
     if key_extra:

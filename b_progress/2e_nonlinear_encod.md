@@ -1,6 +1,64 @@
 # 2e_nonlinear_encod
 
-*Auto-generated from `2_pipeline/2e_nonlinear_encod/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/2e_nonlinear_encod/out/` on 2026-11-10 17:48. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Linear vs nonlinear r2
+
+![1_linear_vs_nonlinear_r2](../2_pipeline/2e_nonlinear_encod/out/figures/1_linear_vs_nonlinear_r2.png)
+
+### Improvement by group pre stim
+
+![2_improvement_by_group_pre_stim](../2_pipeline/2e_nonlinear_encod/out/figures/2_improvement_by_group_pre_stim.png)
+
+### Improvement by group reward
+
+![2_improvement_by_group_reward](../2_pipeline/2e_nonlinear_encod/out/figures/2_improvement_by_group_reward.png)
+
+### Improvement by group stim
+
+![2_improvement_by_group_stim](../2_pipeline/2e_nonlinear_encod/out/figures/2_improvement_by_group_stim.png)
+
+### Gap closed by group pre stim
+
+![3_gap_closed_by_group_pre_stim](../2_pipeline/2e_nonlinear_encod/out/figures/3_gap_closed_by_group_pre_stim.png)
+
+### Gap closed by group reward
+
+![3_gap_closed_by_group_reward](../2_pipeline/2e_nonlinear_encod/out/figures/3_gap_closed_by_group_reward.png)
+
+### Gap closed by group stim
+
+![3_gap_closed_by_group_stim](../2_pipeline/2e_nonlinear_encod/out/figures/3_gap_closed_by_group_stim.png)
+
+### Linear vs nonlinear r2
+
+![1_linear_vs_nonlinear_r2](../2_pipeline/2e_nonlinear_encod/out/selection/maxcells-100/figures/1_linear_vs_nonlinear_r2.png)
+
+### Improvement by group pre stim
+
+![2_improvement_by_group_pre_stim](../2_pipeline/2e_nonlinear_encod/out/selection/maxcells-100/figures/2_improvement_by_group_pre_stim.png)
+
+### Improvement by group reward
+
+![2_improvement_by_group_reward](../2_pipeline/2e_nonlinear_encod/out/selection/maxcells-100/figures/2_improvement_by_group_reward.png)
+
+### Improvement by group stim
+
+![2_improvement_by_group_stim](../2_pipeline/2e_nonlinear_encod/out/selection/maxcells-100/figures/2_improvement_by_group_stim.png)
+
+### Gap closed by group pre stim
+
+![3_gap_closed_by_group_pre_stim](../2_pipeline/2e_nonlinear_encod/out/selection/maxcells-100/figures/3_gap_closed_by_group_pre_stim.png)
+
+### Gap closed by group reward
+
+![3_gap_closed_by_group_reward](../2_pipeline/2e_nonlinear_encod/out/selection/maxcells-100/figures/3_gap_closed_by_group_reward.png)
+
+### Gap closed by group stim
+
+![3_gap_closed_by_group_stim](../2_pipeline/2e_nonlinear_encod/out/selection/maxcells-100/figures/3_gap_closed_by_group_stim.png)
 
 ## Tables
 
@@ -121,32 +179,119 @@
 
 [nonlinear_refits.csv](../2_pipeline/2e_nonlinear_encod/out/nonlinear_refits.csv)
 
-## Figures
+### Nonlinear by group  session
 
-### Linear vs nonlinear r2
+| group | unit | animal_id | window | predictor | n_refit | poly_improvement | r2_linear_adj | r2_best_nonlinear_adj | frac_explained_nonlinear | n_gap_closed | frac_gap_closed |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| AL_unl | LPE11998_2024_04_23 | LPE11998 | pre_stim | cur_lick | 1 | -0.01097 | 0.04364 | 0.03267 | 0.2244 | 0 | 0 |
+| AL_unl | LPE10884_2024_01_12 | LPE10884 | pre_stim | cur_motionenergy | 3 | -0.00649 | 6.49e-05 | -0.006425 | 0 | 0 | 0 |
+| AL_unl | LPE11622_2024_02_22 | LPE11622 | pre_stim | cur_motionenergy | 1 | -0.003965 | 0.001135 | -0.00283 | 0 | 0 | 0 |
+| AL_unl | LPE11997_2024_04_10 | LPE11997 | pre_stim | cur_motionenergy | 1 | -0.00741 | -0.001105 | -0.008515 | 0 | 0 | 0 |
+| AL_unl | LPE11997_2024_04_16 | LPE11997 | pre_stim | cur_motionenergy | 2 | 0.01152 | 0.03296 | 0.04448 | 0.2992 | 0 | 0 |
+| AL_unl | LPE11997_2024_04_17 | LPE11997 | pre_stim | cur_motionenergy | 2 | -0.004215 | -0.002254 | -0.006469 | 0 | 0 | 0 |
+| AL_unl | LPE11998_2024_04_23 | LPE11998 | pre_stim | cur_motionenergy | 4 | -0.01317 | 0.00679 | -0.006382 | 0.03931 | 0 | 0 |
+| AL_unl | LPE11998_2024_04_25 | LPE11998 | pre_stim | cur_motionenergy | 6 | -0.001108 | 0.01038 | 0.009272 | 0.2119 | 0 | 0 |
+| AL_unl | LPE12013_2024_04_25 | LPE12013 | pre_stim | cur_motionenergy | 3 | 0.03865 | 0.004243 | 0.04289 | 0.3333 | 1 | 0.3333 |
+| AL_unl | LPE12013_2024_04_26 | LPE12013 | pre_stim | cur_motionenergy | 7 | 0.001474 | -0.001934 | -0.0004594 | 0.07778 | 0 | 0 |
+| AL_unl | LPE12013_2024_04_29 | LPE12013 | pre_stim | cur_motionenergy | 2 | -0.004537 | -9.692e-05 | -0.004634 | 0 | 0 | 0 |
+| AL_unl | LPE12385_2024_06_15 | LPE12385 | pre_stim | cur_motionenergy | 13 | 0.01258 | 0.01608 | 0.02866 | 0.2591 | 2 | 0.1538 |
+| AL_unl | LPE12385_2024_06_17 | LPE12385 | pre_stim | cur_motionenergy | 2 | -0.002097 | -0.001821 | -0.003918 | 0 | 0 | 0 |
+| AL_unl | LPE12385_2024_06_26 | LPE12385 | pre_stim | cur_motionenergy | 6 | 0.009972 | 0.0006154 | 0.01059 | 0.2425 | 0 | 0 |
+| AL_unl | LPE12385_2024_06_27 | LPE12385 | pre_stim | cur_motionenergy | 5 | 0.0002986 | -0.0005043 | -0.0002057 | 0.05082 | 0 | 0 |
+| AL_unl | LPE10884_2024_01_12 | LPE10884 | pre_stim | cur_pupil_area | 13 | 0.001524 | 0.01268 | 0.0142 | 0.2319 | 1 | 0.07692 |
+| AL_unl | LPE11622_2024_02_22 | LPE11622 | pre_stim | cur_pupil_area | 1 | -0.0003998 | -0.001175 | -0.001575 | 0 | 0 | 0 |
+| AL_unl | LPE11622_2024_02_23 | LPE11622 | pre_stim | cur_pupil_area | 1 | 0.06704 | 0.03678 | 0.1038 | 1 | 1 | 1 |
+| AL_unl | LPE11622_2024_02_26 | LPE11622 | pre_stim | cur_pupil_area | 1 | -0.005454 | 0.002899 | -0.002556 | 0 | 0 | 0 |
+| AL_unl | LPE11997_2024_04_16 | LPE11997 | pre_stim | cur_pupil_area | 1 | -0.004201 | 0.008362 | 0.004161 | 0.06608 | 0 | 0 |
+| AL_unl | LPE11997_2024_04_17 | LPE11997 | pre_stim | cur_pupil_area | 1 | -0.002834 | 0.006043 | 0.003209 | 0.07675 | 0 | 0 |
+| AL_unl | LPE11998_2024_04_23 | LPE11998 | pre_stim | cur_pupil_area | 1 | 0.1603 | 0.01738 | 0.1777 | 1 | 1 | 1 |
+| AL_unl | LPE11998_2024_04_24 | LPE11998 | pre_stim | cur_pupil_area | 2 | -0.002268 | 0.02215 | 0.01988 | 0.2164 | 0 | 0 |
+| AL_unl | LPE11998_2024_04_25 | LPE11998 | pre_stim | cur_pupil_area | 5 | -0.003093 | 0.01965 | 0.01656 | 0.2231 | 0 | 0 |
+| AL_unl | LPE12013_2024_04_25 | LPE12013 | pre_stim | cur_pupil_area | 6 | 0.003811 | 0.01727 | 0.02108 | 0.3452 | 0 | 0 |
+| AL_unl | LPE12013_2024_04_26 | LPE12013 | pre_stim | cur_pupil_area | 5 | 3.566e-05 | 0.007673 | 0.007708 | 0.2467 | 0 | 0 |
+| AL_unl | LPE12013_2024_04_29 | LPE12013 | pre_stim | cur_pupil_area | 1 | -0.002559 | 0.04014 | 0.03758 | 0.64 | 0 | 0 |
+| AL_unl | LPE12385_2024_06_15 | LPE12385 | pre_stim | cur_pupil_area | 21 | 0.001647 | 0.01626 | 0.01791 | 0.218 | 2 | 0.09524 |
+| AL_unl | LPE12385_2024_06_17 | LPE12385 | pre_stim | cur_pupil_area | 2 | -0.002432 | 0.01326 | 0.01083 | 0.3472 | 0 | 0 |
+| AL_unl | LPE12385_2024_06_26 | LPE12385 | pre_stim | cur_pupil_area | 7 | 0.003901 | 0.006169 | 0.01007 | 0.1629 | 0 | 0 |
 
-![1_linear_vs_nonlinear_r2](../2_pipeline/2e_nonlinear_encod/out/figures/1_linear_vs_nonlinear_r2.png)
+*(showing first 30 of 1798 rows -- see the linked CSV for the rest)*
 
-### Improvement by group pre stim
+[nonlinear_by_group__session.csv](../2_pipeline/2e_nonlinear_encod/out/selection/maxcells-100/nonlinear_by_group__session.csv)
 
-![2_improvement_by_group_pre_stim](../2_pipeline/2e_nonlinear_encod/out/figures/2_improvement_by_group_pre_stim.png)
+### Nonlinear candidates by group  session
 
-### Improvement by group reward
+| group | unit | animal_id | window | predictor | n_significant_pairs | n_candidates | frac_candidates |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| AL_unl | LPE11998_2024_04_23 | LPE11998 | pre_stim | cur_lick | 27 | 24 | 0.8889 |
+| AL_unl | LPE10884_2024_01_12 | LPE10884 | pre_stim | cur_motionenergy | 21 | 19 | 0.9048 |
+| AL_unl | LPE11622_2024_02_22 | LPE11622 | pre_stim | cur_motionenergy | 10 | 10 | 1 |
+| AL_unl | LPE11622_2024_02_23 | LPE11622 | pre_stim | cur_motionenergy | 17 | 13 | 0.7647 |
+| AL_unl | LPE11622_2024_02_26 | LPE11622 | pre_stim | cur_motionenergy | 10 | 9 | 0.9 |
+| AL_unl | LPE11997_2024_04_10 | LPE11997 | pre_stim | cur_motionenergy | 25 | 24 | 0.96 |
+| AL_unl | LPE11997_2024_04_16 | LPE11997 | pre_stim | cur_motionenergy | 23 | 19 | 0.8261 |
+| AL_unl | LPE11997_2024_04_17 | LPE11997 | pre_stim | cur_motionenergy | 25 | 21 | 0.84 |
+| AL_unl | LPE11997_2024_04_18 | LPE11997 | pre_stim | cur_motionenergy | 1 | 0 | 0 |
+| AL_unl | LPE11998_2024_04_23 | LPE11998 | pre_stim | cur_motionenergy | 21 | 21 | 1 |
+| AL_unl | LPE11998_2024_04_24 | LPE11998 | pre_stim | cur_motionenergy | 13 | 12 | 0.9231 |
+| AL_unl | LPE11998_2024_04_25 | LPE11998 | pre_stim | cur_motionenergy | 30 | 28 | 0.9333 |
+| AL_unl | LPE12013_2024_04_25 | LPE12013 | pre_stim | cur_motionenergy | 23 | 21 | 0.913 |
+| AL_unl | LPE12013_2024_04_26 | LPE12013 | pre_stim | cur_motionenergy | 37 | 35 | 0.9459 |
+| AL_unl | LPE12013_2024_04_29 | LPE12013 | pre_stim | cur_motionenergy | 39 | 35 | 0.8974 |
+| AL_unl | LPE12385_2024_06_15 | LPE12385 | pre_stim | cur_motionenergy | 123 | 117 | 0.9512 |
+| AL_unl | LPE12385_2024_06_17 | LPE12385 | pre_stim | cur_motionenergy | 23 | 23 | 1 |
+| AL_unl | LPE12385_2024_06_26 | LPE12385 | pre_stim | cur_motionenergy | 53 | 50 | 0.9434 |
+| AL_unl | LPE12385_2024_06_27 | LPE12385 | pre_stim | cur_motionenergy | 27 | 27 | 1 |
+| AL_unl | LPE10884_2024_01_12 | LPE10884 | pre_stim | cur_pupil_area | 56 | 39 | 0.6964 |
+| AL_unl | LPE11622_2024_02_22 | LPE11622 | pre_stim | cur_pupil_area | 8 | 8 | 1 |
+| AL_unl | LPE11622_2024_02_23 | LPE11622 | pre_stim | cur_pupil_area | 13 | 12 | 0.9231 |
+| AL_unl | LPE11622_2024_02_26 | LPE11622 | pre_stim | cur_pupil_area | 14 | 13 | 0.9286 |
+| AL_unl | LPE11997_2024_04_10 | LPE11997 | pre_stim | cur_pupil_area | 16 | 8 | 0.5 |
+| AL_unl | LPE11997_2024_04_16 | LPE11997 | pre_stim | cur_pupil_area | 8 | 7 | 0.875 |
+| AL_unl | LPE11997_2024_04_17 | LPE11997 | pre_stim | cur_pupil_area | 23 | 17 | 0.7391 |
+| AL_unl | LPE11997_2024_04_18 | LPE11997 | pre_stim | cur_pupil_area | 1 | 1 | 1 |
+| AL_unl | LPE11998_2024_04_23 | LPE11998 | pre_stim | cur_pupil_area | 31 | 29 | 0.9355 |
+| AL_unl | LPE11998_2024_04_24 | LPE11998 | pre_stim | cur_pupil_area | 17 | 16 | 0.9412 |
+| AL_unl | LPE11998_2024_04_25 | LPE11998 | pre_stim | cur_pupil_area | 12 | 10 | 0.8333 |
 
-![2_improvement_by_group_reward](../2_pipeline/2e_nonlinear_encod/out/figures/2_improvement_by_group_reward.png)
+*(showing first 30 of 2358 rows -- see the linked CSV for the rest)*
 
-### Improvement by group stim
+[nonlinear_candidates_by_group__session.csv](../2_pipeline/2e_nonlinear_encod/out/selection/maxcells-100/nonlinear_candidates_by_group__session.csv)
 
-![2_improvement_by_group_stim](../2_pipeline/2e_nonlinear_encod/out/figures/2_improvement_by_group_stim.png)
+### Nonlinear refits
 
-### Gap closed by group pre stim
+| session_id | window | cell_id | predictor | family | n_trials | n_trials_2d | r2_linear | mi_reference_bits | mi_p_value | frac_explained_linearly | y_props | x_props | r2_linear_adj | r2_poly2 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_6_0005 | cur_runspeed | poly | 209 | 209 | 0.04519 | 0.02014 | 0 | 0.6935 | 0.6651;0.3349 | 0.3349;0.3301;0.3349 | 0.04058 | 0.04021 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_6_0019 | cur_runspeed | poly | 209 | 209 | 0.02588 | 0.01576 | 0 | 0.6184 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.02118 | 0.01643 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_6_0025 | cur_runspeed | poly | 209 | 209 | 0.09976 | 0.09893 | 0 | 0.4559 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.09541 | 0.09216 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_6_0044 | cur_runspeed | poly | 209 | 209 | 0.0005313 | 0.02758 | 0 | 0 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | -0.004297 | 0.002337 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_6_0050 | cur_runspeed | poly | 209 | 209 | 0.03034 | 0.03885 | 0 | 0.3017 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.02565 | 0.02129 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_6_0058 | cur_runspeed | poly | 209 | 209 | 0.001935 | 0.03403 | 0 | 0 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | -0.002887 | -0.006334 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_6_0058 | cur_pupil_area | poly | 209 | 209 | 0.02348 | 0.02122 | 0 | 0.4038 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.01877 | 0.0143 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_6_0060 | cur_runspeed | poly | 209 | 209 | 0.003288 | 0.03456 | 0 | 0 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | -0.001527 | -0.006327 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_6_0064 | cur_runspeed | poly | 209 | 209 | 0.004021 | 0.05584 | 0 | 0 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | -0.0007909 | -0.004041 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0003 | stim__zero_to80_above80 | categorical | 209 | 209 | 0.01442 | 0.01911 | 0 | 0.2221 | 0.3349;0.3301;0.3349 | 0.1005;0.5167;0.3828 | 0.009655 |  |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0003 | stim__pct_0-20_20-80_80-100 | categorical | 209 | 209 | 0.007396 | 0.01701 | 0 | 0.06861 | 0.3349;0.3301;0.3349 | 0.3110;0.3062;0.3828 | 0.002601 |  |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0013 | cur_pupil_area | poly | 209 | 209 | 0.001497 | 0.02347 | 0 | 0 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | -0.003326 | -0.008091 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0017 | cur_runspeed | poly | 209 | 209 | 0.04688 | 0.01863 | 0 | 0.7879 | 0.6651;0.3349 | 0.3349;0.3301;0.3349 | 0.04227 | 0.03791 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0023 | cur_runspeed | poly | 209 | 209 | 0.03704 | 0.04102 | 0 | 0.3627 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.03239 | 0.05971 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0033 | cur_runspeed | poly | 209 | 209 | 0.02809 | 0.02575 | 0 | 0.3123 | 0.6651;0.3349 | 0.3349;0.3301;0.3349 | 0.0234 | 0.01924 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0042 | cur_runspeed | poly | 209 | 209 | 0.08222 | 0.05841 | 0 | 0.4674 | 0.6651;0.3349 | 0.3349;0.3301;0.3349 | 0.07778 | 0.07413 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0042 | cur_pupil_area | poly | 209 | 209 | 0.006626 | 0.0237 | 0 | 0.02659 | 0.6651;0.3349 | 0.3349;0.3301;0.3349 | 0.001827 | 0.007956 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0052 | cur_runspeed | poly | 209 | 209 | 0.1328 | 0.08826 | 0 | 0.5227 | 0.6651;0.3349 | 0.3349;0.3301;0.3349 | 0.1286 | 0.132 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0056 | cur_runspeed | poly | 209 | 209 | 0.06362 | 0.08003 | 0 | 0.3429 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.05909 | 0.06329 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0062 | cur_runspeed | poly | 209 | 209 | 0.02251 | 0.01965 | 0 | 0.4108 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.01778 | 0.01638 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0062 | cur_pupil_area | poly | 209 | 209 | 0.02608 | 0.03596 | 0 | 0.2709 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.02137 | 0.01935 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0066 | cur_runspeed | poly | 209 | 209 | 0.004473 | 0.03257 | 0 | 0 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | -0.0003362 | -0.004658 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0072 | cur_motionenergy | poly | 209 | 209 | 7.744e-06 | 0.01955 | 0 | 0 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | -0.004823 | -0.006753 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0076 | cur_runspeed | poly | 209 | 209 | 0.01332 | 0.02076 | 0 | 0.1854 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.008554 | 0.00375 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0076 | cur_motionenergy | poly | 209 | 209 | 0.01146 | 0.02227 | 0 | 0.1372 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.006684 | 0.003025 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0080 | stim__pct_0-20_20-80_80-100 | categorical | 209 | 209 | 3.302e-06 | 0.01713 | 0 | 0 | 0.3349;0.3301;0.3349 | 0.3110;0.3062;0.3828 | -0.004828 |  |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0085 | cur_runspeed | poly | 209 | 209 | 0.004124 | 0.04563 | 0 | 0 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | -0.0006873 | -0.005375 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0089 | cur_pupil_area | poly | 209 | 209 | 0.004746 | 0.02376 | 0 | 0 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | -6.211e-05 | -0.00465 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0103 | cur_runspeed | poly | 209 | 209 | 0.02516 | 0.08559 | 0 | 0.1092 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.02046 | 0.0157 |
+| LPE10884_2024_01_12 | pre_stim | LPE10884_2024_01_12_7_0107 | cur_runspeed | poly | 209 | 209 | 0.05618 | 0.06921 | 0 | 0.3448 | 0.3349;0.3301;0.3349 | 0.3349;0.3301;0.3349 | 0.05162 | 0.06983 |
 
-![3_gap_closed_by_group_pre_stim](../2_pipeline/2e_nonlinear_encod/out/figures/3_gap_closed_by_group_pre_stim.png)
+*(showing first 15 of 31 columns; showing first 30 of 12506 rows -- see the linked CSV for the rest)*
 
-### Gap closed by group reward
-
-![3_gap_closed_by_group_reward](../2_pipeline/2e_nonlinear_encod/out/figures/3_gap_closed_by_group_reward.png)
-
-### Gap closed by group stim
-
-![3_gap_closed_by_group_stim](../2_pipeline/2e_nonlinear_encod/out/figures/3_gap_closed_by_group_stim.png)
+[nonlinear_refits.csv](../2_pipeline/2e_nonlinear_encod/out/selection/maxcells-100/nonlinear_refits.csv)

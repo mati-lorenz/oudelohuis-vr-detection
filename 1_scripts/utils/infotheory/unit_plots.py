@@ -139,7 +139,7 @@ def group_unit_bars(ax, cells, value, aggregate, mouse_colors=None, min_cells_pe
         n = int(sub["size"].sum()) if aggregate == "pooled" else len(sub)
         labels.append(f"{SIX_GROUP_LABELS[(a, l)]}\n(n={n})")
     ax.set_xticks(range(len(order)))
-    ax.set_xticklabels(labels, fontsize=tick_size)
+    ax.set_xticklabels(labels, fontsize=tick_size, rotation=0 if len(order) <= 6 else 35, ha="center" if len(order) <= 6 else "right")
     if log_y:
         ax.set_yscale("log")
     if hline is not None:
@@ -183,7 +183,8 @@ def _draw_grouped(ax, g, aggregate, series_col, series_order, series_colors, mou
                        linewidth=0.25, zorder=3)
         ns.append(n_group)
     ax.set_xticks(range(len(order)))
-    ax.set_xticklabels([f"{SIX_GROUP_LABELS[gr]}\n(n={n})" for gr, n in zip(SIX_GROUP_ORDER, ns)], fontsize=tick_size)
+    ax.set_xticklabels([f"{SIX_GROUP_LABELS[gr]}\n(n={n})" for gr, n in zip(SIX_GROUP_ORDER, ns)], fontsize=tick_size,
+                       rotation=0 if len(order) <= 6 else 35, ha="center" if len(order) <= 6 else "right")
     if hline is not None:
         ax.axhline(hline, color="grey", linestyle="--", linewidth=1)
     if ylabel:

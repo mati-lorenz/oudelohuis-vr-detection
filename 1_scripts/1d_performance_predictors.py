@@ -50,6 +50,7 @@ Outputs
             performance_overview[__<aggregate>].csv                  accuracy per (protocol, [unit])
             performance_binning_used.csv                              the shared settings + stimulus
                                                 strategies actually used, per protocol
+            pupil_performance_by_quantile[__<aggregate>].csv, pupil_performance_quadratic[__<aggregate>].csv   (section 7: pupil focus)
             figures/*.png
     out/selection/<tag>/...  the same for a restricted run
     store/  trial_performance_<hash>.pkl      per-session trial table (reused unless --recompute)
@@ -66,7 +67,7 @@ from joblib import Parallel, delayed
 
 from infotheory.pipeline import get_pipeline_paths
 from infotheory.session import discover_sessions, PROTOCOLS
-from infotheory.continuous import merge_behavior_video, restrict_to_engaged, remove_pupil_outliers, \
+from infotheory.continuous import merge_behavior_video, restrict_to_engaged, remove_pupil_outliers, zscore_per_session, \
     compute_trial_position_window_means
 from infotheory.info_theory import mutual_information_shuffle, mutual_information_shuffle_ksg, \
     compare_mi_to_linear, linear_fit, multivariate_linear_fit, quantile_bin_edges
@@ -82,8 +83,8 @@ from infotheory.stim_binning import STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES,
 
 BEHAVIOR_VARS = ["runspeed", "pupil_area", "motionenergy", "lick"]
 RATE_VARIABLES = ["lick"]  # 0/1 event channel -- binned as counts/width (a rate), never averaged
-VAR_LABELS = {"runspeed": "speed (cm/s)", "pupil_area": "pupil area (a.u.)",
-              "motionenergy": "motion energy (a.u.)", "lick": "lick rate", "stim": "stimulus bin"}
+VAR_LABELS = {"runspeed": "speed (cm/s)", "pupil_area": "pupil area (z)",
+              "motionenergy": "motion energy (z)", "lick": "lick rate", "stim": "stimulus bin"}
 PRESTIM_WINDOW = (-30.0, -10.0)   # cm relative to stimStart -- BEFORE the stimulus (see docstring)
 
 # --- stimulus binning (shared strategies, infotheory/stim_binning.py; edit them THERE) ----------------
@@ -98,6 +99,7 @@ MIN_TRIALS_ANALYSIS = cfg.MIN_TRIALS_ANALYSIS               # trials needed to a
 
 # --- local to this script -------------------------------------------------------------------------------
 N_QUANTILE_BINS = 5      # exploratory tuning curves: accuracy per quantile bin of a predictor
+PUPIL_VAR = "pupil_area"   # section 7: focused pupil-vs-performance analysis (pre-stimulus pupil, z-scored per session)
 MAX_LAG_KERNEL = 5       # history kernel: how many trials back
 KERNEL_MIN_TRIALS = 5    # per class, for one kernel point
 N_SHUFFLES = 100
@@ -164,6 +166,7 @@ def process_session(ses, seed):
         return None
     merged_full = merge_behavior_video(ses.behaviordata, ses.videodata)
     merged_full = remove_pupil_outliers(merged_full)
+    merged_full = zscore_per_session(merged_full)      # pupil, motion energy, video PCs: z-scored within the session
     if merged_full.empty:
         return None
     merged = restrict_to_engaged(merged_full, ses.trialdata)
@@ -202,7 +205,7 @@ def process_session(ses, seed):
 
 session_tables = run_sessions(
     included_ids, process_session, list(PROTOCOLS), paths.store, "trial_performance",
-    key_params=dict(version="1d-v2", variables=BEHAVIOR_VARS, rate_variables=RATE_VARIABLES,
+    key_params=dict(version="1d-v3", variables=BEHAVIOR_VARS, rate_variables=RATE_VARIABLES,
                     window=PRESTIM_WINDOW, max_lag=MAX_LAG_KERNEL),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True),
     n_jobs=N_JOBS, recompute=args.recompute, verbose=JOBLIB_VERBOSE,
@@ -611,5 +614,70 @@ if len(multivariate_table) and np.isfinite(multivariate_table["mi_reference_bits
         ax.set_title(f"Fraction of the joint MI a multivariate\nlinear fit captures (unit = {UNIT})")
         fig.tight_layout()
         save_fig(fig, figdir, "6a_multivariate_frac_explained_linearly")
+
+
+# --------------------------------------------------------------------- #
+# 7. PUPIL FOCUS: pre-stimulus pupil area (z-scored per session) and performance.
+#    7a  accuracy / lick probability on stimulus trials (signal > 0) / lick probability on signal == 0 (false alarms)
+#        per within-session pupil quantile (do the three move together = arousal / criterion, or does only accuracy
+#        change = sensitivity?)
+#    7b  inverted-U test: per unit, correct ~ 1 + z + z^2 (linear probability model). A NEGATIVE quadratic
+#        coefficient = best performance at intermediate pupil (Yerkes-Dodson). Bars = mean over units, dots = units.
+#    Same unit of analysis (--aggregate) as the rest of 1d; pooled = no error bars.
+# --------------------------------------------------------------------- #
+pcol = f"cur_{PUPIL_VAR}"
+if pcol in trial_performance.columns and trial_performance[pcol].notna().any():
+    tp = trial_performance.dropna(subset=[pcol, "correct"]).copy()
+    # quantile bins WITHIN each session (ranks: ties split evenly) -> comparable across sessions
+    tp["pupil_bin"] = tp.groupby("session_id")[pcol].transform(
+        lambda x: pd.qcut(x.rank(method="first"), N_QUANTILE_BINS, labels=False) + 1 if len(x) >= 2 * N_QUANTILE_BINS else np.nan)
+    tp = tp.dropna(subset=["pupil_bin"])
+    tp["lick_signal"] = np.where(tp["signal"] > 0, tp["lickResponse"], np.nan)
+    tp["lick_nosignal"] = np.where(tp["signal"] == 0, tp["lickResponse"], np.nan)
+    panels = [("correct", "accuracy"), ("lick_signal", "P(lick | signal > 0)"), ("lick_nosignal", "P(lick | signal = 0)  (false alarms)")]
+    fig, axes = plt.subplots(1, len(panels) + 1, figsize=(4.2 * (len(panels) + 1), 3.8), squeeze=False)
+    bin_rows = []
+    for ax, (col, lab) in zip(axes[0], panels):
+        for protocol in protocols_present:
+            d = tp[tp["protocol"] == protocol].dropna(subset=[col])
+            if d.empty:
+                continue
+            m, sem = unit_curve(d, "pupil_bin", col, AGG)
+            ax.errorbar(m.index, m.values, yerr=sem.values, color=PROTOCOL_COLORS[protocol], marker="o", markersize=4,
+                        capsize=3, label=protocol)
+            for b, v in m.items():
+                bin_rows.append({"protocol": protocol, "measure": col, "pupil_bin": int(b), "mean": v, "sem": sem.get(b, 0.0)})
+        ax.set_xticks(range(1, N_QUANTILE_BINS + 1))
+        ax.set_xlabel("pre-stimulus pupil area quantile (within session; 1 = smallest)")
+        ax.set_ylabel(lab, fontsize=8)
+        ax.set_ylim(0, 1)
+    axes[0][0].legend(fontsize=7, frameon=False)
+    pd.DataFrame(bin_rows).to_csv(table_dir / f"pupil_performance_by_quantile{AGG_SUFFIX}.csv", index=False)
+
+    quad_rows = []
+    for protocol in protocols_present:
+        for unit, usub in unit_groups(tp[tp["protocol"] == protocol]):
+            d = usub[[pcol, "correct"]].dropna()
+            if len(d) < MIN_TRIALS_ANALYSIS or not class_counts_ok(d["correct"]) or d[pcol].std() == 0:
+                continue
+            z = d[pcol].to_numpy(float)
+            z = (z - z.mean()) / z.std()
+            X = np.column_stack([np.ones(len(z)), z, z ** 2])
+            beta = np.linalg.lstsq(X, d["correct"].to_numpy(float), rcond=None)[0]
+            quad_rows.extend(tag_unit([{"protocol": protocol, "n_trials": len(d), "beta_linear": beta[1],
+                                        "beta_quadratic": beta[2]}], unit, usub))
+    quad = pd.DataFrame(quad_rows)
+    quad.to_csv(table_dir / f"pupil_performance_quadratic{AGG_SUFFIX}.csv", index=False)
+    if len(quad):
+        order = [p for p in protocols_present if p in quad["protocol"].unique()]
+        unit_bars(axes[0][-1], quad, "protocol", "beta_quadratic", order, AGG, colors=PROTOCOL_COLORS,
+                  mouse_colors=mouse_colors, ylabel="quadratic coefficient of pupil (accuracy)", hline=0)
+        axes[0][-1].set_title("inverted U if < 0", fontsize=9)
+        print(f"\nPupil -> accuracy, quadratic coefficient (mean over {UNIT}s; < 0 = inverted U):")
+        print(quad.groupby("protocol")[["beta_linear", "beta_quadratic"]].mean().round(4).to_string())
+    fig.suptitle(f"Pre-stimulus pupil area and performance (unit = {UNIT})", y=1.03)
+    fig.tight_layout()
+    save_fig(fig, figdir, "7_pupil_performance")
+    plt.close(fig)
 
 print(f"\nWrote tables to {table_dir}, figures to {figdir}")

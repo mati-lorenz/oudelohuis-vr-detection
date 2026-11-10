@@ -14,12 +14,17 @@ What this does
    within PROXIMITY_RADIUS_UM of a labeled cell of the same area in the SAME session; see
    celldata_utils.filter_nearlabeled). Computed and reported either way; `APPLY_PROXIMITY_FILTER` decides whether
    the rest of this script's plots use the filtered or the full population.
-   DEPTH filter (same population, unlabeled V1/PM cells only): a cell deeper than DEPTH_MAX_UM (layer 2/3) fails
-   `passes_depth_filter`. Labeled cells and AL / RSP always pass. `APPLY_DEPTH_FILTER` works like
-   `APPLY_PROXIMITY_FILTER` (2a's own plots); later steps always get proximity AND depth AND QC through
-   infotheory.neural_encoding.load_cell_inclusion. A session whose median depth is an outlier (DEPTH_OUTLIER_SD
-   from the group; depth probably badly measured there) is FLAGGED `depth_suspect` in celldata_combined.csv and in
-   depth_session_summary.csv -- it is not removed.
+   DEPTH RULE (project_config section 5; defined HERE, inherited by every later step through celldata_combined.csv):
+   to compare areas only cells SHALLOWER than MAX_DEPTH_UM (300 um) are used -- ALL areas, labeled and unlabeled.
+   PM cells between DEEP_PM_DEPTH_UM (300-500 um) form two EXTRA groups, PM-lab (deep) and PM-unl (deep) (feedback-loop
+   question), shown as two extra panels / bars next to the six shallow groups. Everything else (deep V1 / AL / RSP, PM below
+   500 um, cells without a depth) is excluded. Written per cell as `depth_class` (shallow | deep_pm | excluded) and
+   `passes_depth_filter` (= depth_class != excluded). The proximity filter is unchanged and also applies to unlabeled deep PM
+   cells. `APPLY_DEPTH_FILTER` works like `APPLY_PROXIMITY_FILTER` (2a's own non-group plots; group plots always follow the
+   rule); later steps always get proximity AND depth AND QC through infotheory.neural_encoding.load_cell_inclusion.
+   A session whose median depth is an outlier (DEPTH_OUTLIER_SD from the group; depth probably badly measured there) is
+   FLAGGED `depth_suspect` in celldata_combined.csv and in depth_session_summary.csv; because the depth rule needs a
+   trustworthy depth its cells are `excluded` (project_config.DEPTH_SUSPECT_POLICY = "keep" classifies them anyway).
 3. Cell counts per session / animal / group, depth and layer distribution (depth is absolute, so it is comparable
    across sessions), FOV x/y positions (NEVER pooled across sessions or areas: local coordinates), cell size/shape.
 
@@ -30,8 +35,7 @@ Project-wide rules (infotheory/project_config.py) -- what applies to 2a
     * aggregate : --aggregate pooled|session|mouse = the unit for the group comparisons (counts, depth, layer
                   composition, size/shape): pooled = all cells of a group together, no error bars; session / mouse =
                   one value per session / mouse (MIN_CELLS_PER_UNIT cells needed in the group), bars = mean +- SEM
-                  over units, dots = units coloured by mouse. Always the six groups (V1-lab, V1-unl, PM-lab, PM-unl,
-                  AL, RSP). Per-session diagnostics (cells per session, depth per session, x/y maps, labeled-cell
+                  over units, dots = units coloured by mouse. Always the groups of the depth rule (V1-lab, V1-unl, PM-lab, PM-unl, AL, RSP + PM-lab / PM-unl (deep)). Per-session diagnostics (cells per session, depth per session, x/y maps, labeled-cell
                   and proximity-pass diagnostics) are session-level by nature and not affected.
     * memory    : celldata of ONE session at a time (per-session cache in store/); only the small combined cell table
                   is held. No violin plots.
@@ -43,9 +47,10 @@ Outputs
 -------
 2_pipeline/2a_cell_distribution/
     out/    celldata_combined.csv     every DN session's celldata + session_id / animal_id + passes_proximity_filter
-                                      + passes_depth_filter + depth_suspect (+ labeled_grouped) -- read this from later steps (Rule #1)
+                                      + passes_depth_filter + depth_class + depth_suspect (+ labeled_grouped) -- read this from later steps (Rule #1)
             depth_session_summary.csv per session: median depth, z vs the other sessions, `depth_suspect` flag, and how
-                                      many unlabeled V1/PM cells the depth filter removes
+                                      many cells fall in each depth class (shallow / deep_pm / excluded)
+            depth_class_counts.csv    cells per area x label x depth class (pooled over sessions)
             cell_counts_summary.csv   per session / area counts
             cell_properties_by_unit[__<aggregate>].csv   per group (and unit): n_cells, mean depth / size / shape
             figures/*.png
@@ -66,8 +71,9 @@ from infotheory.session import discover_sessions
 from infotheory.celldata_utils import (
     get_area_label, filter_nearlabeled, nearest_labeled_distance, LABEL_SPLIT_AREAS,
     AREA_COLORS, LABEL_MARKERS, DEFAULT_AREA_ORDER, DEFAULT_LABEL_ORDER,
-    SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GROUP_COLORS,
+    SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GROUP_COLORS, classify_depth, apply_depth_correction,
 )
+from infotheory import project_config as cfg
 from infotheory.groups import add_six_group_column, group_key
 from infotheory.plotting import set_style, save_fig, clear_figures
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
@@ -84,10 +90,9 @@ PROXIMITY_RADIUS_UM = 50.0       # how close an unlabeled V1/PM cell must be to 
 PROXIMITY_AREAS = ("V1", "PM")
 APPLY_PROXIMITY_FILTER = False   # True: sections 4+ use ONLY cells that pass the proximity filter
 
-DEPTH_MAX_UM = 300.0             # unlabeled cells of DEPTH_AREAS deeper than this (um) fail the depth filter (layer 2/3)
-DEPTH_AREAS = PROXIMITY_AREAS    # labeled cells and the other areas (AL, RSP) always pass
-APPLY_DEPTH_FILTER = False       # True: sections 4+ of THIS script use only cells that pass the depth filter too
-                                 # (later steps always apply it, via neural_encoding.load_cell_inclusion)
+# Depth rule: project_config.MAX_DEPTH_UM / DEEP_PM_DEPTH_UM / DEPTH_SUSPECT_POLICY (edit them THERE, all steps share them).
+APPLY_DEPTH_FILTER = False       # True: sections 4+ of THIS script's non-group plots use only cells of the analysed depth classes
+                                 # (the group figures always follow the rule; later steps apply it via load_cell_inclusion)
 DEPTH_OUTLIER_SD = 2.0           # a session whose median depth is further than this many SD from the median of the
                                  # session medians is flagged `depth_suspect` (needs >= 4 sessions)
 
@@ -131,22 +136,19 @@ mouse_colors = mouse_palette(a for _, a, _ in all_triples)
 def process_session(ses, seed):
     if ses.celldata is None or ses.celldata.empty:
         return None
-    cd = ses.celldata.copy()
+    cd = apply_depth_correction(ses.celldata, ses.session_id)   # known constant depth offsets (project_config section 8)
     cd["session_id"] = ses.session_id
     cd["animal_id"] = ses.animal_id
     # proximity is computed per session by definition, so doing it here equals doing it on the combined table
     cd["passes_proximity_filter"] = filter_nearlabeled(cd, radius_um=PROXIMITY_RADIUS_UM, areas=PROXIMITY_AREAS)
-    # depth: only unlabeled cells of DEPTH_AREAS are constrained (same population as the proximity filter); a missing
-    # depth counts as failing for them
-    constrained = cd["roi_name"].isin(DEPTH_AREAS).to_numpy() & ~cd["redcell"].to_numpy().astype(bool)
-    cd["passes_depth_filter"] = ~constrained | (cd["depth"].to_numpy(float) < DEPTH_MAX_UM)
+    # the depth class needs the session-level depth_suspect flag, so it is set after all sessions are combined (section 2b)
     return cd
 
 
 tables = run_sessions(
     session_ids, process_session, [PROTOCOL], paths.store, "celldata_session",
-    key_params=dict(version="2a-v3", radius=PROXIMITY_RADIUS_UM, areas=PROXIMITY_AREAS,
-                    depth_max=DEPTH_MAX_UM, depth_areas=DEPTH_AREAS),
+    key_params=dict(version="2a-v5", radius=PROXIMITY_RADIUS_UM, areas=PROXIMITY_AREAS,
+                    depth_offsets=sorted(cfg.DEPTH_OFFSET_CORRECTIONS_UM.items())),
     load_kwargs=dict(load_behaviordata=False, load_celldata=True),
     n_jobs=scope.n_jobs, recompute=args.recompute, verbose=JOBLIB_VERBOSE,
     extra_key_by_session=stamps, flatten=False)
@@ -175,17 +177,14 @@ else:
 
 # --------------------------------------------------------------------- #
 # 2b. Per-session depth check: is the depth of one session badly measured (different objective / zoom / offset)?
-#     Flag only -- nothing is removed here. Written to depth_session_summary.csv and as `depth_suspect` in
-#     celldata_combined.csv (computed on ALL cells of the session, before any filter).
+#     Flagged in depth_session_summary.csv and as `depth_suspect` in celldata_combined.csv (computed on ALL cells of the
+#     session, before any filter). Under the depth rule below the flagged session's cells are `excluded` (policy in
+#     project_config), but the cells stay in celldata_combined.csv.
 # --------------------------------------------------------------------- #
-_constr = celldata["roi_name"].isin(DEPTH_AREAS) & ~celldata["redcell"].astype(bool)
 depth_summary = (celldata.groupby(["animal_id", "session_id"])
                  .agg(n_cells=("depth", "size"), median_depth=("depth", "median"),
+                      median_depth_recorded=("depth_recorded", "median"), depth_offset_um=("depth_offset_um", "first"),
                       min_depth=("depth", "min"), max_depth=("depth", "max")).reset_index())
-depth_summary["n_unl_V1PM"] = depth_summary["session_id"].map(_constr.groupby(celldata["session_id"]).sum())
-depth_summary["n_unl_V1PM_fail_depth"] = depth_summary["session_id"].map(
-    (_constr & ~celldata["passes_depth_filter"]).groupby(celldata["session_id"]).sum())
-depth_summary["frac_unl_V1PM_fail_depth"] = depth_summary["n_unl_V1PM_fail_depth"] / depth_summary["n_unl_V1PM"].replace(0, np.nan)
 if len(depth_summary) >= 4:
     _med, _sd = depth_summary["median_depth"].median(), depth_summary["median_depth"].std()
     depth_summary["group_median_depth"] = _med
@@ -199,13 +198,37 @@ depth_summary["flag_reason"] = np.where(
     "median depth " + depth_summary["median_depth"].round(0).astype(str) + " um is "
     + depth_summary["depth_z"].abs().round(1).astype(str) + " SD from the group median ("
     + depth_summary["group_median_depth"].round(0).astype(str) + " um): depth probably badly measured", "")
+celldata["depth_suspect"] = celldata["session_id"].map(depth_summary.set_index("session_id")["depth_suspect"]).fillna(False).astype(bool)
+
+# THE depth rule (project_config section 5): one class per cell, read by every later step through celldata_combined.csv
+celldata["depth_class"] = classify_depth(celldata["roi_name"], celldata["depth"], celldata["depth_suspect"])
+celldata["passes_depth_filter"] = celldata["depth_class"] != "excluded"
+for _c in ("shallow", "deep_pm", "excluded"):
+    depth_summary[f"n_{_c}"] = depth_summary["session_id"].map(
+        (celldata["depth_class"] == _c).groupby(celldata["session_id"]).sum()).fillna(0).astype(int)
 depth_summary.sort_values("session_id").to_csv(table_dir / "depth_session_summary.csv", index=False)
-celldata["depth_suspect"] = celldata["session_id"].map(depth_summary.set_index("session_id")["depth_suspect"])
+if (depth_summary["depth_offset_um"] != 0).any():
+    print("\nDEPTH CORRECTION applied (corrected = recorded - offset; project_config.DEPTH_OFFSET_CORRECTIONS_UM):")
+    print(depth_summary.loc[depth_summary["depth_offset_um"] != 0,
+                            ["session_id", "depth_offset_um", "median_depth_recorded", "median_depth", "depth_z", "depth_suspect"]].round(1).to_string(index=False))
 if depth_summary["depth_suspect"].any():
-    print(f"\nDEPTH-SUSPECT session(s) (flagged in depth_session_summary.csv, NOT removed):")
+    print(f"\nDEPTH-SUSPECT session(s) (flagged in depth_session_summary.csv; DEPTH_SUSPECT_POLICY="
+          f"{cfg.DEPTH_SUSPECT_POLICY!r}: {'their cells are excluded from every depth-gated analysis' if cfg.DEPTH_SUSPECT_POLICY == 'exclude' else 'kept, classified by their depth'}):")
     print(depth_summary.loc[depth_summary["depth_suspect"],
-                            ["session_id", "median_depth", "group_median_depth", "depth_z",
-                             "n_unl_V1PM", "n_unl_V1PM_fail_depth"]].round(2).to_string(index=False))
+                            ["session_id", "median_depth", "group_median_depth", "depth_z", "n_shallow", "n_deep_pm", "n_excluded"]]
+          .round(2).to_string(index=False))
+
+_lab = celldata["labeled"].where(celldata["roi_name"].isin(LABEL_SPLIT_AREAS), "unl")
+class_counts = (celldata.assign(label=_lab).groupby(["roi_name", "label", "depth_class"]).size().unstack("depth_class", fill_value=0)
+                .reindex(columns=["shallow", "deep_pm", "excluded"], fill_value=0).reset_index())
+class_counts.to_csv(table_dir / "depth_class_counts.csv", index=False)
+print(f"\nDepth rule: shallow = depth < {cfg.MAX_DEPTH_UM} um (all areas); deep PM = {cfg.DEEP_PM_DEPTH_UM} um; "
+      f"sessions flagged suspect: {int(depth_summary['depth_suspect'].sum())}")
+print("Cells per area / label and depth class (pooled over sessions):")
+print(class_counts.to_string(index=False))
+_nan_depth = celldata[celldata["depth"].isna()].groupby("roi_name").size()
+if len(_nan_depth):
+    print(f"WARNING: cells WITHOUT a depth (excluded by the depth rule): {_nan_depth.to_dict()}")
 
 
 # --------------------------------------------------------------------- #
@@ -223,18 +246,13 @@ for area in PROXIMITY_AREAS:
 # AL/RSP cell must not form its own near-empty group). Kept in celldata_combined.csv as before.
 _, celldata["labeled_grouped"], _ = get_area_label(celldata, label_split_areas=LABEL_SPLIT_AREAS)
 
-for area in DEPTH_AREAS:
-    unl_mask = (celldata["roi_name"] == area) & (celldata["labeled"] == "unl")
-    print(f"Depth filter ({area}, unlabeled, depth < {DEPTH_MAX_UM:.0f}um): "
-          f"{int((unl_mask & celldata['passes_depth_filter']).sum())}/{int(unl_mask.sum())} pass")
-
 analysis_celldata = celldata.copy()
 if APPLY_PROXIMITY_FILTER:
     analysis_celldata = analysis_celldata[analysis_celldata["passes_proximity_filter"]]
 if APPLY_DEPTH_FILTER:
     analysis_celldata = analysis_celldata[analysis_celldata["passes_depth_filter"]]
 analysis_celldata = analysis_celldata.copy()
-print(f"APPLY_PROXIMITY_FILTER={APPLY_PROXIMITY_FILTER}, APPLY_DEPTH_FILTER={APPLY_DEPTH_FILTER}: "
+print(f"APPLY_PROXIMITY_FILTER={APPLY_PROXIMITY_FILTER}, APPLY_DEPTH_FILTER={APPLY_DEPTH_FILTER} (group figures always follow the depth rule): "
       f"sections 4+ use {len(analysis_celldata)}/{len(celldata)} cells")
 celldata.to_csv(table_dir / "celldata_combined.csv", index=False)
 
@@ -279,7 +297,8 @@ if UNIT_KEYS:
 colors = {k: SIX_GROUP_COLORS[g] for k, g in zip(GROUP_KEYS, SIX_GROUP_ORDER)}
 unit_bars(axes[1], cnt, "group", "n_cells", GROUP_KEYS, AGG, colors=colors, mouse_colors=mouse_colors,
           ylabel="cells" if AGG == "pooled" else f"cells per {UNIT}")
-axes[1].set_xticklabels([SIX_GROUP_LABELS[g] for g in SIX_GROUP_ORDER], fontsize=8)
+axes[1].set_xticklabels([SIX_GROUP_LABELS[g] for g in SIX_GROUP_ORDER], fontsize=8,
+                        rotation=0 if len(SIX_GROUP_ORDER) <= 6 else 45, ha="center" if len(SIX_GROUP_ORDER) <= 6 else "right")
 axes[1].set_title(f"Cells by group (unit = {UNIT}; {n_sessions_total} sessions, {n_animals_total} animals)")
 if AGG != "pooled":
     mouse_legend(axes[1], mouse_colors, animals=analysis_celldata["animal_id"].unique(), loc="upper right")
@@ -287,6 +306,29 @@ fig.suptitle(f"Cell counts -- {PROTOCOL}" + (f" (recombinase={RECOMBINASE_FILTER
              y=1.03)
 fig.tight_layout()
 save_fig(fig, figdir, "1_cell_counts")
+
+# 4c. The depth rule at a glance (diagnostic, all recorded cells, pooled over sessions): how many cells of each area / label are
+#     analysed shallow cells, analysed deep-PM cells, or excluded by the rule.
+_dc_order = ["shallow", "deep_pm", "excluded"]
+_dc_colors = {"shallow": "#4c78a8", "deep_pm": "#5b1a8f", "excluded": "#bbbbbb"}
+_cc = class_counts.assign(key=lambda d: d["roi_name"] + np.where(d["roi_name"].isin(LABEL_SPLIT_AREAS), "-" + d["label"], ""))
+_cc = _cc.set_index("key").reindex([f"{a}-{l}" if a in LABEL_SPLIT_AREAS else a for a, l in
+                                    [("V1", "lab"), ("V1", "unl"), ("PM", "lab"), ("PM", "unl"), ("AL", "unl"), ("RSP", "unl")]]).fillna(0)
+fig, ax = plt.subplots(figsize=(7.5, 4))
+_bottom = np.zeros(len(_cc))
+for _c in _dc_order:
+    ax.bar(range(len(_cc)), _cc[_c].to_numpy(), bottom=_bottom, color=_dc_colors[_c], edgecolor="black", linewidth=0.3,
+           label={"shallow": f"shallow (< {cfg.MAX_DEPTH_UM:g} um)", "deep_pm": f"deep PM ({cfg.DEEP_PM_DEPTH_UM[0]:g}-{cfg.DEEP_PM_DEPTH_UM[1]:g} um)"
+                  if cfg.DEEP_PM_DEPTH_UM else "deep PM (off)", "excluded": "excluded by the depth rule"}[_c])
+    _bottom += _cc[_c].to_numpy()
+ax.set_xticks(range(len(_cc)))
+ax.set_xticklabels(_cc.index, fontsize=8)
+ax.set_ylabel("cells (all sessions)")
+ax.set_title(f"Depth rule: cells per area / label and depth class ({int(celldata['depth_suspect'].sum())} cells in depth-suspect sessions)", fontsize=9)
+ax.legend(fontsize=7, frameon=False)
+fig.tight_layout()
+save_fig(fig, figdir, "1b_depth_rule_cell_counts")
+plt.close(fig)
 
 print("\nCells per animal:")
 print(analysis_celldata.groupby("animal_id")["session_id"].apply(lambda s: (s.nunique(), len(s)))
@@ -318,7 +360,8 @@ layer_cmap = plt.colormaps["Blues"]
 layer_colors = {l: LAYER_COLORS_BASE.get(l, layer_cmap((i + 1) / (len(ordered_layers) + 1)))
                 for i, l in enumerate(ordered_layers)}
 layer_pivot.plot(kind="bar", stacked=True, ax=axes[1], color=layer_colors, edgecolor="black", linewidth=0.3)
-axes[1].set_xticklabels([SIX_GROUP_LABELS[g] for g in SIX_GROUP_ORDER], rotation=0, fontsize=8)
+axes[1].set_xticklabels([SIX_GROUP_LABELS[g] for g in SIX_GROUP_ORDER], fontsize=8,
+                        rotation=0 if len(SIX_GROUP_ORDER) <= 6 else 45, ha="center" if len(SIX_GROUP_ORDER) <= 6 else "right")
 axes[1].set_xlabel("")
 axes[1].set_ylabel("fraction of cells")
 axes[1].set_title("Layer composition" + ("" if AGG == "pooled" else f" (mean over {UNITS})"))
@@ -334,6 +377,76 @@ axes[2].set_title("Depth per session (consistency check)")
 fig.suptitle(f"Depth / laminar distribution -- {PROTOCOL}", y=1.03)
 fig.tight_layout()
 save_fig(fig, figdir, "2_depth_laminar_distribution")
+
+
+# 5b. Depth as a continuous vertical histogram, one panel per group (shared axes). Not mirrored (no violin): bar length =
+#     fraction of the group's cells per DEPTH_BIN_UM bin. pooled: one histogram; session / mouse: mean over units
+#     (units with >= MIN_CELLS_PER_UNIT cells). Sessions flagged depth_suspect (2b) are excluded from THIS figure.
+DEPTH_BIN_UM = 15.0
+_dmax = float(np.nanmax(analysis_celldata["depth"])) if len(analysis_celldata) else DEPTH_BIN_UM
+_edges = np.arange(0, np.ceil(_dmax / DEPTH_BIN_UM) * DEPTH_BIN_UM + DEPTH_BIN_UM, DEPTH_BIN_UM)
+_mid = 0.5 * (_edges[:-1] + _edges[1:])
+_hist_cells = analysis_celldata[~analysis_celldata["depth_suspect"].fillna(False).astype(bool)]   # depth-suspect sessions left out here
+_n_susp = analysis_celldata.loc[analysis_celldata["depth_suspect"].fillna(False).astype(bool), "session_id"].nunique()
+fig, axes = plt.subplots(1, len(SIX_GROUP_ORDER), figsize=(2.3 * len(SIX_GROUP_ORDER), 5), sharex=True, sharey=True)
+for ax, g in zip(axes, SIX_GROUP_ORDER):
+    sub = _hist_cells[_hist_cells["group"] == group_key(g)]
+    col = SIX_GROUP_COLORS[g]
+    if UNIT_KEYS:
+        fr = [np.histogram(u["depth"].dropna(), _edges)[0] / u["depth"].notna().sum()
+              for _, u in sub.groupby(UNIT_KEYS) if u["depth"].notna().sum() >= MIN_CELLS_PER_UNIT]
+        if fr:
+            ax.fill_betweenx(_mid, 0, np.mean(fr, 0), step="mid", color=col, alpha=0.6)
+    elif len(sub):
+        f = np.histogram(sub["depth"].dropna(), _edges)[0] / sub["depth"].notna().sum()
+        ax.fill_betweenx(_mid, 0, f, step="mid", color=col, alpha=0.7)
+    ax.set_title(f"{SIX_GROUP_LABELS[g]}\n(n={len(sub)} cells)", fontsize=9)
+    ax.set_xlabel("fraction of cells")
+axes[0].set_ylabel("depth (μm from pial surface)")
+axes[0].invert_yaxis()
+fig.suptitle(f"Depth distribution per group ({DEPTH_BIN_UM:.0f} μm bins; {_n_susp} depth-suspect session(s) excluded)"
+             + ("" if AGG == "pooled" else f" -- mean over {UNITS}"), y=1.02)
+fig.tight_layout()
+save_fig(fig, figdir, "2b_depth_histograms")
+
+# 5c. ORIGINAL recording planes (all recorded cells, no filter): the depth of each plane of each area in each session.
+#     Expected: 3 planes per session for V1 and PM, 1 for AL and RSP (PLANES_EXPECTED, editable). Plane depth = median
+#     depth of the plane's cells; the thin vertical line is the min-max of the cells' depths. depth_suspect sessions excluded.
+PLANES_EXPECTED = {"V1": 3, "PM": 3, "AL": 1, "RSP": 1}
+_plane_cells = celldata[~celldata["depth_suspect"].fillna(False).astype(bool)]        # depth-suspect sessions left out of this figure / table
+plane_tab = (_plane_cells.groupby(["session_id", "animal_id", "roi_name", "plane_in_roi_idx"])["depth"]
+             .agg(n_cells="size", plane_depth="median", depth_min="min", depth_max="max").reset_index())
+plane_tab.to_csv(table_dir / "recording_plane_depths.csv", index=False)
+_np = plane_tab.groupby(["session_id", "roi_name"]).size().rename("n_planes").reset_index()
+_bad = _np[_np["roi_name"].map(PLANES_EXPECTED).notna() & (_np["n_planes"] != _np["roi_name"].map(PLANES_EXPECTED))]
+if len(_bad):
+    print(f"\nWARNING: {len(_bad)} (session, area) with an unexpected number of recording planes "
+          f"(expected {PLANES_EXPECTED}):")
+    print(_bad.to_string(index=False))
+_areas = [a for a in DEFAULT_AREA_ORDER if a in set(plane_tab["roi_name"])] or sorted(plane_tab["roi_name"].unique())
+fig, axes = plt.subplots(1, len(_areas), figsize=(3.2 * len(_areas), 5), sharey=True, squeeze=False)
+_rng_j = np.random.default_rng(0)
+for ax, area in zip(axes[0], _areas):
+    sub = plane_tab[plane_tab["roi_name"] == area]
+    nplanes = max(int(sub["plane_in_roi_idx"].max()) + 1, PLANES_EXPECTED.get(area, 1))
+    for _, r in sub.iterrows():
+        x = r["plane_in_roi_idx"] + _rng_j.uniform(-0.15, 0.15)
+        ax.plot([x, x], [r["depth_min"], r["depth_max"]], color=AREA_COLORS.get(area, "gray"), alpha=0.25, linewidth=1)
+        ax.scatter(x, r["plane_depth"], s=22, color=AREA_COLORS.get(area, "gray"), edgecolor="black", linewidth=0.4, zorder=3)
+    for k, m in sub.groupby("plane_in_roi_idx")["plane_depth"].median().items():
+        ax.hlines(m, k - 0.3, k + 0.3, color="black", linewidth=2, zorder=4)
+        ax.text(k + 0.32, m, f"{m:.0f}", fontsize=8, va="center")
+    ax.set_xticks(range(nplanes))
+    ax.set_xticklabels([f"plane {k + 1}" for k in range(nplanes)], fontsize=8)
+    ax.set_xlim(-0.6, nplanes - 0.4)
+    ax.set_title(f"{area} ({sub.groupby('session_id').ngroups} sessions)", fontsize=10)
+axes[0][0].set_ylabel("plane depth (μm from pial surface)")
+axes[0][0].invert_yaxis()
+fig.suptitle(f"Original recording planes (all recorded cells; {celldata.loc[~celldata.index.isin(_plane_cells.index), 'session_id'].nunique()} "
+             "depth-suspect session(s) excluded): dot = plane median depth in one session, line = range of "
+             "its cells, black = median over sessions", y=1.02)
+fig.tight_layout()
+save_fig(fig, figdir, "2c_recording_plane_depths")
 
 depth_by_session = analysis_celldata.groupby("session_id")["depth"].median()
 if len(depth_by_session) >= 4:
@@ -527,121 +640,3 @@ if prox_rows:
     save_fig(fig, figdir, "5_proximity_filter_pass_rate")
 
 print(f"\nWrote tables to {table_dir}, figures to {figdir}")
-
-#%% ===== FINAL SESSIONS + CELLS (OUR PIPELINE) -- append at the END of 2a_cell_distribution.py =====
-# Reads only other steps' out/ (Rule #1). Needs 1b and 2b to have been run. Writes into 2a's own out/tables:
-#   final_sessions_ours.csv : session_id, animal_id, protocol, kept, reason
-#   final_cells_ours.csv    : session_id, roi_name, labeled, n_cells   (proximity AND 2b QC AND session kept by 1b)
-# Same layout as final_*_theirs.csv, so:  pd.read_csv(a).merge(pd.read_csv(b), on=[...], how='outer', indicator=True)
-import pandas as _pd
-
-def _find(step, name):
-    base = paths.out_from(step)
-    for p in (base / name, base / "tables" / name):
-        if p.exists():
-            return p
-    raise FileNotFoundError(f"{name} not found under {base} (run {step} first)")
-
-# ---------- sessions (1b) ----------
-fits = _pd.read_csv(_find("1b_psychometric", "psychometric_fits.csv"))
-fits["kept"] = fits["included"].astype(bool)
-fits["reason"] = fits["exclude_reasons"].fillna("")
-fits["borderline"] = fits.get("borderline", False)
-fits["borderline"] = fits["borderline"].fillna(False).astype(bool)
-fits["borderline_reasons"] = fits.get("borderline_reasons", "")
-fits["animal_id"] = fits["session_id"].str.split("_").str[0]          # from the session id (also for sessions without cells)
-final_sessions = (fits[["session_id", "animal_id", "protocol", "kept", "borderline", "borderline_reasons", "reason", "dprime_engaged",
-                        "fa_rate_engaged", "frac_engaged", "mu", "sigma", "guess_rate"]]
-                  .sort_values(["protocol", "session_id"]).reset_index(drop=True))
-final_sessions.to_csv(table_dir / "final_sessions_ours.csv", index=False)
-
-print("\n===== FINAL SESSIONS (our filter, 1b) =====")
-for proto, g in final_sessions.groupby("protocol"):
-    print(f"{proto}: {int(g['kept'].sum())}/{len(g)} kept")
-print("\nKept:")
-print(final_sessions.loc[final_sessions["kept"], ["protocol", "session_id"]].to_string(index=False))
-print("\nBorderline (kept, flagged):")
-print(final_sessions.loc[final_sessions["borderline"], ["protocol", "session_id", "borderline_reasons"]].to_string(index=False))
-print("\nDropped:")
-print(final_sessions.loc[~final_sessions["kept"], ["protocol", "session_id", "reason"]].to_string(index=False))
-
-# ---------- cells (2a proximity + 2b QC), kept sessions only ----------
-qc = _pd.read_csv(_find("2b_activity_statistics", "qc_per_cell.csv"))[["session_id", "cell_id", "qc_pass"]]
-cells = celldata.merge(qc, on=["session_id", "cell_id"], how="left")
-cells["qc_pass"] = cells["qc_pass"].fillna(False).astype(bool)             # cell without QC row = not included
-kept_ids = set(final_sessions.loc[final_sessions["kept"], "session_id"])
-if "passes_depth_filter" not in cells.columns:                              # 2a older than v3
-    cells["passes_depth_filter"] = True
-cells["final"] = (cells["passes_proximity_filter"].astype(bool) & cells["passes_depth_filter"].astype(bool)
-                  & cells["qc_pass"] & cells["session_id"].isin(kept_ids))
-final_cells = (cells[cells["final"]].groupby(["session_id", "roi_name", "labeled"]).size()
-               .rename("n_cells").reset_index())
-final_cells.to_csv(table_dir / "final_cells_ours.csv", index=False)
-
-print("\n===== FINAL CELLS (our filter: proximity + QC, kept sessions) =====")
-print(final_cells.pivot_table(index="roi_name", columns="labeled", values="n_cells", aggfunc="sum", fill_value=0))
-_p = cells["passes_proximity_filter"].astype(bool); _d = _p & cells["passes_depth_filter"].astype(bool)
-print(f"proximity only: {int(_p.sum())}; + depth: {int(_d.sum())}; + QC: {int((_d & cells['qc_pass']).sum())}; "
-      f"+ kept sessions: {int(cells['final'].sum())}")
-
-
-# ---------- SLIDE TABLES: mice / sessions / cells that passed the filters ----------
-# Writes final_selection_sessions.csv, final_selection_cells_funnel.csv, final_selection_groups.csv (table_dir) and
-# final_selection_summary.png (figdir). Mice = distinct animal_id.
-fin = add_six_group_column(cells[cells["final"]].copy())
-
-# 1. sessions and mice per protocol: recorded -> kept (and how many of the kept are borderline-flagged)
-srows = []
-for proto, g in final_sessions.groupby("protocol"):
-    k = g[g["kept"]]
-    row = {"protocol": proto, "mice recorded": g["animal_id"].nunique(), "sessions recorded": len(g),
-           "mice kept": k["animal_id"].nunique(), "sessions kept": len(k), "of which borderline": int(k["borderline"].sum())}
-    if proto == "DN":                                   # only DN has cells
-        wc = k[k["session_id"].isin(set(fin["session_id"]))]
-        row["kept sessions with cells"], row["mice with cells"] = len(wc), wc["animal_id"].nunique()
-    srows.append(row)
-sess_tab = _pd.DataFrame(srows)
-for _c in ("kept sessions with cells", "mice with cells"):
-    sess_tab[_c] = sess_tab[_c].astype("Int64")                # whole numbers; empty for DM / DP (no cells)
-sess_tab.to_csv(table_dir / "final_selection_sessions.csv", index=False)
-
-# 2. cell funnel (DN): each step on top of the previous one
-_steps = [("recorded cells", _pd.Series(True, index=cells.index)),
-          ("+ proximity (unl. V1/PM within %d um of a labeled cell)" % PROXIMITY_RADIUS_UM, _p),
-          ("+ depth (unl. V1/PM < %d um)" % DEPTH_MAX_UM, _d),
-          ("+ activity QC (2b)", _d & cells["qc_pass"]),
-          ("+ session passed behavior (1b) = FINAL", cells["final"])]
-frows = [{"step": name, "cells": int(m.sum()), "sessions": cells.loc[m, "session_id"].nunique(),
-          "mice": cells.loc[m, "session_id"].str.split("_").str[0].nunique()} for name, m in _steps]
-funnel_tab = _pd.DataFrame(frows)
-funnel_tab.to_csv(table_dir / "final_selection_cells_funnel.csv", index=False)
-
-# 3. final cells per group (always the six groups)
-grows = []
-for g in SIX_GROUP_ORDER:
-    sub = fin[fin["group"] == group_key(g)]
-    grows.append({"group": SIX_GROUP_LABELS[g], "cells": len(sub), "sessions": sub["session_id"].nunique(),
-                  "mice": sub["animal_id"].nunique()})
-grows.append({"group": "all", "cells": len(fin), "sessions": fin["session_id"].nunique(), "mice": fin["animal_id"].nunique()})
-group_tab = _pd.DataFrame(grows)
-group_tab.to_csv(table_dir / "final_selection_groups.csv", index=False)
-
-print("\n===== SUMMARY TABLES (for the slide) =====")
-for title, t in [("Sessions / mice", sess_tab), ("Cell funnel (DN)", funnel_tab), ("Final cells per group", group_tab)]:
-    print(f"\n{title}\n{t.to_string(index=False)}")
-
-fig, axes = plt.subplots(3, 1, figsize=(9, 8.5), gridspec_kw=dict(height_ratios=[len(sess_tab) + 1, len(funnel_tab) + 1, len(group_tab) + 1]))
-for ax, title, t in zip(axes, ["Sessions and mice", "Cells: filter by filter (DN sessions)", "Final cells per group"],
-                        [sess_tab.astype(object).where(sess_tab.notna(), "-"), funnel_tab, group_tab]):
-    ax.axis("off")
-    ax.set_title(title, fontsize=11, loc="left")
-    tb = ax.table(cellText=t.astype(str).values, colLabels=list(t.columns), loc="center", cellLoc="center")
-    tb.auto_set_font_size(False)
-    tb.set_fontsize(9)
-    tb.auto_set_column_width(list(range(len(t.columns))))
-    for (r, c), cell in tb.get_celld().items():
-        if r == 0:
-            cell.set_text_props(weight="bold")
-            cell.set_facecolor("#e8e8e8")
-fig.tight_layout()
-save_fig(fig, figdir, "final_selection_summary")

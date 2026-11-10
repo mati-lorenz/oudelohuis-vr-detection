@@ -1,6 +1,72 @@
 # 3d_pair_activity_statistics_temporal
 
-*Auto-generated from `2_pipeline/3d_pair_activity_statistics_temporal/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/3d_pair_activity_statistics_temporal/out/` on 2026-11-10 17:48. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Correlation vs position
+
+![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/all_levels/1_correlation_vs_position.png)
+
+### Correlation vs position
+
+![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/choice/1_correlation_vs_position.png)
+
+### Compare targets noise corr
+
+![compare_targets_noise_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/compare_targets_noise_corr.png)
+
+### Compare targets raw corr
+
+![compare_targets_raw_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/compare_targets_raw_corr.png)
+
+### Compare targets signal corr
+
+![compare_targets_signal_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/compare_targets_signal_corr.png)
+
+### Correlation vs position
+
+![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/pct_0-20_20-80_80-100/1_correlation_vs_position.png)
+
+### Correlation vs position
+
+![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/zero_to80_above80/1_correlation_vs_position.png)
+
+### Correlation vs position
+
+![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/zero_vs_nonzero/1_correlation_vs_position.png)
+
+### Correlation vs position
+
+![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/all_levels/1_correlation_vs_position.png)
+
+### Correlation vs position
+
+![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/choice/1_correlation_vs_position.png)
+
+### Compare targets noise corr
+
+![compare_targets_noise_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/compare_targets_noise_corr.png)
+
+### Compare targets raw corr
+
+![compare_targets_raw_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/compare_targets_raw_corr.png)
+
+### Compare targets signal corr
+
+![compare_targets_signal_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/compare_targets_signal_corr.png)
+
+### Correlation vs position
+
+![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/pct_0-20_20-80_80-100/1_correlation_vs_position.png)
+
+### Correlation vs position
+
+![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/zero_to80_above80/1_correlation_vs_position.png)
+
+### Correlation vs position
+
+![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/zero_vs_nonzero/1_correlation_vs_position.png)
 
 ## Tables
 
@@ -120,69 +186,3 @@
 *(showing first 15 of 16 columns; showing first 30 of 17740 rows -- see the linked CSV for the rest)*
 
 [pair_correlations_temporal_moments.csv](../2_pipeline/3d_pair_activity_statistics_temporal/out/pair_correlations_temporal_moments.csv)
-
-## Figures
-
-### Correlation vs position
-
-![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/all_levels/1_correlation_vs_position.png)
-
-### Correlation vs position
-
-![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/choice/1_correlation_vs_position.png)
-
-### Compare targets noise corr
-
-![compare_targets_noise_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/compare_targets_noise_corr.png)
-
-### Compare targets raw corr
-
-![compare_targets_raw_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/compare_targets_raw_corr.png)
-
-### Compare targets signal corr
-
-![compare_targets_signal_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/compare_targets_signal_corr.png)
-
-### Correlation vs position
-
-![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/pct_0-20_20-80_80-100/1_correlation_vs_position.png)
-
-### Correlation vs position
-
-![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/zero_to80_above80/1_correlation_vs_position.png)
-
-### Correlation vs position
-
-![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/fixed/zero_vs_nonzero/1_correlation_vs_position.png)
-
-### Correlation vs position
-
-![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/all_levels/1_correlation_vs_position.png)
-
-### Correlation vs position
-
-![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/choice/1_correlation_vs_position.png)
-
-### Compare targets noise corr
-
-![compare_targets_noise_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/compare_targets_noise_corr.png)
-
-### Compare targets raw corr
-
-![compare_targets_raw_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/compare_targets_raw_corr.png)
-
-### Compare targets signal corr
-
-![compare_targets_signal_corr](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/compare_targets_signal_corr.png)
-
-### Correlation vs position
-
-![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/pct_0-20_20-80_80-100/1_correlation_vs_position.png)
-
-### Correlation vs position
-
-![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/zero_to80_above80/1_correlation_vs_position.png)
-
-### Correlation vs position
-
-![1_correlation_vs_position](../2_pipeline/3d_pair_activity_statistics_temporal/out/figures/sliding/zero_vs_nonzero/1_correlation_vs_position.png)

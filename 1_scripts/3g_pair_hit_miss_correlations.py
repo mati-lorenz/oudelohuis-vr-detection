@@ -98,10 +98,10 @@ DIST_MIDS = [25, 75, 125, 200, 325, 500]
 parser = argparse.ArgumentParser()
 add_scope_args(parser)
 parser.add_argument("--strategy", default=STRATEGY, choices=sorted(STIM_BINNING_STRATEGIES))
-parser.add_argument("--max-pairs", type=int, default=MAX_PAIRS_PER_GROUP, help="pairs per (session, area, label)")
 parser.add_argument("--draws", type=int, default=N_DRAWS)
 parser.add_argument("--caliper", type=float, default=CALIPER_UM, help="distance-matching tolerance (microns)")
 args = parser.parse_args()
+MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
 scope = scope_from_args(args)
 AGG = scope.aggregate
 UNIT = unit_noun(AGG)
@@ -222,7 +222,7 @@ def process_session(ses, seed):
     if len(celldata) < 2:
         return []
     pairs = pt.sample_session_pairs(celldata, sid, np.random.default_rng(stable_seed(sid, "pairs3g", base=RANDOM_STATE)),
-                                    args.max_pairs)
+                                    MAX_PAIRS)
     if pairs.empty:
         return []
     pairs["distance_um"] = pd_.pair_distances(celldata, pairs["cell_i"], pairs["cell_j"])
@@ -261,7 +261,7 @@ def process_session(ses, seed):
 
 records = run_sessions(
     session_ids, process_session, [PROTOCOL], paths.store, "hit_miss",
-    key_params=dict(windows=WINDOWS, strategy=args.strategy, max_pairs=args.max_pairs, draws=args.draws,
+    key_params=dict(windows=WINDOWS, strategy=args.strategy, max_pairs=MAX_PAIRS, draws=args.draws,
                     min_matched=MIN_MATCHED, movement=MOVEMENT_COLUMNS, version="3g-v1",
                     min_trials=cfg.MIN_TRIALS_ANALYSIS, fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),

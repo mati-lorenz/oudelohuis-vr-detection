@@ -1,6 +1,36 @@
 # 4b_population_fa
 
-*Auto-generated from `2_pipeline/4b_population_fa/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/4b_population_fa/out/` on 2026-11-10 17:49. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Shuffle comparison pre stim
+
+![1_shuffle_comparison_pre_stim](../2_pipeline/4b_population_fa/out/figures/1_shuffle_comparison_pre_stim.png)
+
+### Shuffle comparison reward
+
+![1_shuffle_comparison_reward](../2_pipeline/4b_population_fa/out/figures/1_shuffle_comparison_reward.png)
+
+### Shuffle comparison stim
+
+![1_shuffle_comparison_stim](../2_pipeline/4b_population_fa/out/figures/1_shuffle_comparison_stim.png)
+
+### Shared variance vs size
+
+![2_shared_variance_vs_size](../2_pipeline/4b_population_fa/out/figures/2_shared_variance_vs_size.png)
+
+### Communality by area pre stim
+
+![3_communality_by_area_pre_stim](../2_pipeline/4b_population_fa/out/figures/3_communality_by_area_pre_stim.png)
+
+### Communality by area reward
+
+![3_communality_by_area_reward](../2_pipeline/4b_population_fa/out/figures/3_communality_by_area_reward.png)
+
+### Communality by area stim
+
+![3_communality_by_area_stim](../2_pipeline/4b_population_fa/out/figures/3_communality_by_area_stim.png)
 
 ## Tables
 
@@ -81,33 +111,3 @@
 *(showing first 30 of 27459 rows -- see the linked CSV for the rest)*
 
 [fa_shuffle_results.csv](../2_pipeline/4b_population_fa/out/fa_shuffle_results.csv)
-
-## Figures
-
-### Shuffle comparison pre stim
-
-![1_shuffle_comparison_pre_stim](../2_pipeline/4b_population_fa/out/figures/1_shuffle_comparison_pre_stim.png)
-
-### Shuffle comparison reward
-
-![1_shuffle_comparison_reward](../2_pipeline/4b_population_fa/out/figures/1_shuffle_comparison_reward.png)
-
-### Shuffle comparison stim
-
-![1_shuffle_comparison_stim](../2_pipeline/4b_population_fa/out/figures/1_shuffle_comparison_stim.png)
-
-### Shared variance vs size
-
-![2_shared_variance_vs_size](../2_pipeline/4b_population_fa/out/figures/2_shared_variance_vs_size.png)
-
-### Communality by area pre stim
-
-![3_communality_by_area_pre_stim](../2_pipeline/4b_population_fa/out/figures/3_communality_by_area_pre_stim.png)
-
-### Communality by area reward
-
-![3_communality_by_area_reward](../2_pipeline/4b_population_fa/out/figures/3_communality_by_area_reward.png)
-
-### Communality by area stim
-
-![3_communality_by_area_stim](../2_pipeline/4b_population_fa/out/figures/3_communality_by_area_stim.png)

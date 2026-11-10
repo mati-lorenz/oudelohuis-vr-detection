@@ -72,8 +72,9 @@ from infotheory.celldata_utils import SIX_GROUP_ORDER
 from infotheory.groups import group_key
 from infotheory.plotting import set_style, save_fig, clear_figures
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
-from infotheory.session_jobs import run_sessions
+from infotheory.session_jobs import run_sessions_units
 from infotheory.unit_plots import group_panels, mouse_palette
+from infotheory.groups import add_six_group_column, group_meta_columns
 from infotheory.stim_binning import STIM_BINNING_STRATEGIES, target_signature
 from infotheory import cell_tables as ct
 
@@ -113,6 +114,10 @@ for f, hint in [(comparison_path, "2d_linear_encod.py"), (fits_path, "1b_psychom
     if not f.exists():
         raise SystemExit(f"Run {hint} first -- expected {f}")
 comparison = pd.read_csv(comparison_path)
+_missing = [c for c in ("x_props", "y_props", "frac_explained_linearly", "mi_reference_bits") if c not in comparison.columns]
+if _missing:
+    raise SystemExit(f"{comparison_path} lacks the columns {_missing}: it was written by an older 2d_linear_encod.py. "
+                     f"Re-run 2d_linear_encod.py (full, uncapped) with the current version, then 2e again.")
 all_triples = discover_sessions([PROTOCOL])
 triples = select_sessions(all_triples, scope)
 selected = {f"{a}_{d}": (p, a, d) for p, a, d in triples}
@@ -146,6 +151,9 @@ strategies = sorted({p[len(ct.STIM_PREFIX):] for p in candidates["predictor"] if
 cand_by_session = {sid: sub for sid, sub in candidates.groupby("session_id")}
 session_ids = sorted(cand_by_session)
 cells_by_session = {sid: sorted(sub["cell_id"].unique()) for sid, sub in cand_by_session.items()}
+_cd = pd.read_csv(paths.out_from("2a_cell_distribution") / "celldata_combined.csv", low_memory=False)
+_cd = add_six_group_column(_cd[["session_id", "cell_id"] + group_meta_columns(_cd)])
+cell_group = dict(zip(_cd["cell_id"], _cd["group"]))                       # per-group cell cap (--max-cells)
 mu_sigma_lookup = pd.read_csv(fits_path).set_index("session_id")[["mu", "sigma"]].to_dict("index")
 stamps = {s: data_stamp(*selected[s]) for s in session_ids}
 cand_hash = {s: hashlib.sha1("|".join(sorted(f"{c}/{w}/{p}" for c, w, p in
@@ -161,12 +169,13 @@ def adj_r2(design, y):
     return fit.adj_r2
 
 
-def process_session(ses, seed):
+def process_session(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
     cand = cand_by_session[sid]
+    cand = cand[cand["cell_id"].isin(set(new_cells))]      # only the cells not yet in the ledger (session_jobs.run_sessions_units)
     tables = build_session_tables(ses, mu_sigma_lookup, WINDOWS, included_cell_ids=set(cand["cell_id"]))
     if not tables:
-        return []
+        return None
     tables = {w: ct.add_stimulus_columns(t, strategies) for w, t in tables.items()}
     rows = []
     for _, r in cand.iterrows():
@@ -195,18 +204,20 @@ def process_session(ses, seed):
             rec["r2_categorical"] = adj_r2(design, y)
             rec["r2_best_nonlinear_adj"] = rec["r2_categorical"]
         rows.append(rec)
-    return rows
+    return {"rows": pd.DataFrame(rows)} if rows else None
 
 
-results = run_sessions(
+results = run_sessions_units(
     session_ids, process_session, [PROTOCOL], paths.store, "refit_session",
-    key_params=dict(version="2e-v3", bins=cfg.RESPONSE_BINS, windows=WINDOWS, strategies=target_signature(strategies), deg=MAX_POLY_DEGREE,
+    key_params=dict(version="2e-v4", face_z=cfg.NORMALIZE_FACE_PER_SESSION, bins=cfg.RESPONSE_BINS, windows=WINDOWS, strategies=target_signature(strategies), deg=MAX_POLY_DEGREE,
                     min_trials=cfg.MIN_TRIALS_ANALYSIS, min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN,
                     thr=NONLINEAR_GAP_THR),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
-    cells_by_session=cells_by_session, n_jobs=N_JOBS, recompute=args.recompute, verbose=JOBLIB_VERBOSE,
-    extra_key_by_session={s: f"{stamps[s]}-{cand_hash[s]}" for s in session_ids}, flatten=True)
-refit = pd.DataFrame(results)
+    cells_by_session=cells_by_session, parts={"rows": "cell"}, unwrap="rows", groups_by_cell=cell_group, max_cells=scope.max_cells,
+    n_jobs=N_JOBS, recompute=args.recompute, verbose=JOBLIB_VERBOSE,
+    extra_key_by_session={s: f"{stamps[s]}-{int(comparison_path.stat().st_mtime)}" for s in session_ids})   # 2d table changed -> refit
+results = [r for r in results if r is not None and len(r)]
+refit = pd.concat(results, ignore_index=True) if results else pd.DataFrame()
 if refit.empty:
     print("\nNo candidate could be refit (too few valid trials) -- nothing further to report.")
     raise SystemExit(0)

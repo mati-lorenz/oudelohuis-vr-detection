@@ -110,6 +110,12 @@ def build_progress_markdown(script_name: str, project_root: Path | None = None,
         "after the script's output changes -- don't hand-edit this file.*",
     ]
 
+    if png_paths:
+        lines += ["", "## Figures"]
+        for png_path in png_paths:
+            rel = Path("..") / png_path.relative_to(root)
+            lines += ["", f"### {_title_from_filename(png_path)}", "",
+                      f"![{png_path.stem}]({rel.as_posix()})"]
     if csv_paths:
         lines += ["", "## Tables"]
         for csv_path in csv_paths:
@@ -123,14 +129,7 @@ def build_progress_markdown(script_name: str, project_root: Path | None = None,
             except Exception as exc:
                 lines.append(f"*(could not read {csv_path.name}: {exc})*")
             lines += ["", f"[{csv_path.name}]({rel.as_posix()})"]
-
-    if png_paths:
-        lines += ["", "## Figures"]
-        for png_path in png_paths:
-            rel = Path("..") / png_path.relative_to(root)
-            lines += ["", f"### {_title_from_filename(png_path)}", "",
-                      f"![{png_path.stem}]({rel.as_posix()})"]
-
+            
     if not csv_paths and not png_paths:
         lines += ["", "*(out/ is empty -- nothing to report yet.)*"]
 

@@ -31,7 +31,7 @@ Project-wide rules (infotheory/project_config.py)
                   (>= MIN_CELLS_PER_UNIT cells of the group when not pooled) and then across units: curves = mean +- SEM
                   over units (pooled: mean over all cells, no band), Granger bars = mean +- SEM over units, dots = units
                   coloured by mouse. The optimal lag is the argmax of THAT mean curve, so it depends on the aggregate.
-                  Always the six groups (V1-lab, V1-unl, PM-lab, PM-unl, AL, RSP).
+                  Always all the groups of the depth rule (the six + deep PM) (V1-lab, V1-unl, PM-lab, PM-unl, AL, RSP).
     * memory    : each session is loaded once per pass (pass A = lag search; pass B = Granger + position MI + TE, which
                   needs the lags of pass A), reduced to small tables, cached per session in store/ and freed. Peak RAM
                   ~ n_jobs x one session. (The old script held every session at once and reloaded it four times.)
@@ -75,10 +75,10 @@ from infotheory.psth import derive_onset_time, compute_position_bin_indices, mi_
 from infotheory.info_theory import granger_causality_test
 from infotheory.spike_stats import get_frame_rate
 from infotheory.celldata_utils import SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GROUP_COLORS
-from infotheory.groups import add_six_group_column, group_key
+from infotheory.groups import add_six_group_column, group_key, group_meta_columns
 from infotheory.plotting import set_style, save_fig, clear_figures
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
-from infotheory.session_jobs import run_sessions
+from infotheory.session_jobs import run_sessions_units, rank_cells
 from infotheory.unit_stats import stable_seed
 from infotheory.unit_plots import grouped_series_bars, mouse_palette, mouse_legend
 
@@ -143,12 +143,14 @@ if not session_ids:
     raise SystemExit("None of the selected sessions passed 1b_psychometric's inclusion criteria.")
 mouse_colors = mouse_palette(a for _, a, _ in all_triples)
 cell_inclusion = load_cell_inclusion(cell_dist_out, activity_out)
+cell_group = dict(zip(cell_inclusion["cell_id"], cell_inclusion["group"]))      # per-group cell / pair caps (--max-cells / --max-pairs)
 cells_by_session = {sid: sorted(sub.loc[sub["include"], "cell_id"]) for sid, sub in cell_inclusion.groupby("session_id")
                     if sid in session_ids}
 session_ids = [s for s in session_ids if cells_by_session.get(s)]
 if not session_ids:
     raise SystemExit("No included cells in the selected sessions.")
-cd = add_six_group_column(pd.read_csv(cell_dist_out / "celldata_combined.csv", low_memory=False)[["session_id", "cell_id", "roi_name", "labeled"]])
+_cd_all = pd.read_csv(cell_dist_out / "celldata_combined.csv", low_memory=False)
+cd = add_six_group_column(_cd_all[["session_id", "cell_id"] + group_meta_columns(_cd_all)])
 group_of = dict(zip(zip(cd["session_id"], cd["cell_id"]), cd["group"]))
 animal_of = {s: selected[s][1] for s in session_ids}
 stamps = {s: data_stamp(*selected[s]) for s in session_ids}
@@ -208,8 +210,8 @@ def r2_columns(A, ref):
 # --------------------------------------------------------------------- #
 # 2. PASS A -- linear lag search (per session, cached)
 # --------------------------------------------------------------------- #
-def lag_session(ses, seed):
-    cells = cells_by_session[ses.session_id]
+def lag_session(ses, seed, new_cells, new_pairs, req_cells):
+    cells = list(new_cells)          # only the cells not yet in the ledger (session_jobs.run_sessions_units)
     frame_table, _ = build_frame_table(ses, cells)
     if frame_table is None:
         return None
@@ -224,14 +226,15 @@ def lag_session(ses, seed):
             rows.append(pd.DataFrame({"session_id": ses.session_id, "animal_id": ses.animal_id, "cell_id": cells,
                                       "group": groups, "predictor": pred, "lag_s": lag_s, "r2": r2}))
     print(f"  [{ses.session_id}] lag search done ({len(cells)} cells, {len(lags)} lags)")
-    return pd.concat(rows, ignore_index=True) if rows else None
+    return {"df": pd.concat(rows, ignore_index=True)} if rows else None
 
 
 LOAD = dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True)
-resA = run_sessions(session_ids, lag_session, [PROTOCOL], paths.store, "lag_session",
-                    key_params=dict(version="2f-v2", lags=list(lags), min_frames=MIN_FRAMES_LAG),
-                    load_kwargs=LOAD, cells_by_session=cells_by_session, n_jobs=N_JOBS, recompute=args.recompute,
-                    verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps, flatten=False)
+resA = run_sessions_units(session_ids, lag_session, [PROTOCOL], paths.store, "lag_session",
+                    key_params=dict(version="2f-v3", lags=list(lags), min_frames=MIN_FRAMES_LAG),
+                    load_kwargs=LOAD, cells_by_session=cells_by_session, parts={"df": "cell"}, unwrap="df",
+                    groups_by_cell=cell_group, max_cells=scope.max_cells, n_jobs=N_JOBS, recompute=args.recompute,
+                    verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps)
 lag_tab = pd.concat([r for r in resA if r is not None], ignore_index=True)
 del resA
 lag_tab = lag_tab[lag_tab["group"].isin(GROUP_KEYS)]
@@ -307,9 +310,9 @@ plt.close(fig)
 # --------------------------------------------------------------------- #
 # 3. PASS B -- Granger + position MI + position TE (per session, cached)
 # --------------------------------------------------------------------- #
-def pass_b(ses, seed):
+def pass_b(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
-    cells = cells_by_session[sid]
+    cells = list(new_cells)          # only the cells not yet in the ledger (session_jobs.run_sessions_units)
     frame_table, engaged_trials = build_frame_table(ses, cells)
     if frame_table is None or engaged_trials is None or engaged_trials.empty:
         return None
@@ -323,8 +326,15 @@ def pass_b(ses, seed):
     for c in cells:
         if cell_group[c] in GROUP_KEYS:
             by_group.setdefault(cell_group[c], []).append(c)
-    te_cells = {g: (list(rng.choice(cs, MAX_CELLS_FOR_TE, replace=False)) if len(cs) > MAX_CELLS_FOR_TE else cs)
-                for g, cs in by_group.items()}
+    # TE only for the first MAX_CELLS_FOR_TE cells of each group in the session's fixed cell order (rank over ALL included
+    # cells, not over the requested ones), so the TE set does not depend on the cap and caps nest
+    te_rank = {}
+    for c in rank_cells(sid, cells_by_session[sid]):
+        gg = group_of.get((sid, c), "")
+        if gg in GROUP_KEYS:
+            te_rank.setdefault(gg, []).append(c)
+    te_ok = {c for cs in te_rank.values() for c in cs[:MAX_CELLS_FOR_TE]}
+    te_cells = {g: [c for c in cs if c in te_ok] for g, cs in by_group.items()}
     act = {c: frame_table[c].to_numpy(dtype=float) for c in cells}
     gr, pi, te = [], [], []
     for pred in [p for p in PREDICTORS if p in frame_table.columns]:
@@ -355,13 +365,14 @@ def pass_b(ses, seed):
     return dict(granger=pd.DataFrame(gr), mi=pd.DataFrame(pi), te=pd.DataFrame(te))
 
 
-resB = run_sessions(
+resB = run_sessions_units(
     session_ids, pass_b, [PROTOCOL], paths.store, "lagB_session",
-    key_params=dict(version="2f-v2", lags=json.dumps({f"{k[0]}|{k[1]}": v for k, v in sorted(lag_of.items())}),
+    key_params=dict(version="2f-v3", lags=json.dumps({f"{k[0]}|{k[1]}": v for k, v in sorted(lag_of.items())}),
                     ar=AR_ORDER_GRANGER, bins=BINS, shuffles=N_SHUFFLES_PSTH, shuffles_te=N_SHUFFLES_TE, te=RUN_TE,
                     max_te=MAX_CELLS_FOR_TE, window=POSITION_WINDOW, min_bin=MIN_SAMPLES_PER_BIN),
-    load_kwargs=LOAD, cells_by_session=cells_by_session, base_seed=RANDOM_STATE, n_jobs=N_JOBS,
-    recompute=args.recompute, verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps, flatten=False)
+    load_kwargs=LOAD, cells_by_session=cells_by_session, parts={"granger": "cell", "mi": "cell", "te": "cell"},
+    groups_by_cell=cell_group, max_cells=scope.max_cells, base_seed=RANDOM_STATE, n_jobs=N_JOBS,
+    recompute=args.recompute, verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps)
 resB = [r for r in resB if r is not None]
 
 

@@ -1,6 +1,44 @@
 # 1d_performance_predictors
 
-*Auto-generated from `2_pipeline/1d_performance_predictors/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/1d_performance_predictors/out/` on 2026-11-10 17:48. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Performance overview
+
+![1_performance_overview](../2_pipeline/1d_performance_predictors/out/figures/1_performance_overview.png)
+
+### Tuning current trial
+
+![2_tuning_current_trial](../2_pipeline/1d_performance_predictors/out/figures/2_tuning_current_trial.png)
+
+### Tuning previous trial
+
+![3_tuning_previous_trial](../2_pipeline/1d_performance_predictors/out/figures/3_tuning_previous_trial.png)
+
+### History kernel
+
+![4_history_kernel](../2_pipeline/1d_performance_predictors/out/figures/4_history_kernel.png)
+
+### Mi vs linear summary
+
+![5_mi_vs_linear_summary](../2_pipeline/1d_performance_predictors/out/figures/5_mi_vs_linear_summary.png)
+
+### 5a frac explained linearly
+
+![5a_frac_explained_linearly](../2_pipeline/1d_performance_predictors/out/figures/5a_frac_explained_linearly.png)
+
+### Multivariate mi vs linear summary
+
+![6_multivariate_mi_vs_linear_summary](../2_pipeline/1d_performance_predictors/out/figures/6_multivariate_mi_vs_linear_summary.png)
+
+### 6a multivariate frac explained linearly
+
+![6a_multivariate_frac_explained_linearly](../2_pipeline/1d_performance_predictors/out/figures/6a_multivariate_frac_explained_linearly.png)
+
+### Pupil performance
+
+![7_pupil_performance](../2_pipeline/1d_performance_predictors/out/figures/7_pupil_performance.png)
 
 ## Tables
 
@@ -49,7 +87,7 @@
 | DM | 4 | 0.03896 | 154 | 11 | LPE11495_2024_02_16 | LPE11495 |
 | DM | 5 | 0.1361 | 153 | 11 | LPE11495_2024_02_16 | LPE11495 |
 
-*(showing first 30 of 310 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 315 rows -- see the linked CSV for the rest)*
 
 [performance_history_kernel__session.csv](../2_pipeline/1d_performance_predictors/out/performance_history_kernel__session.csv)
 
@@ -106,28 +144,28 @@
 | DM | prev_lickResponse | 156 | -0.07143 | 0.005102 | 0.3756 | 0.006871 | 0.004639 | 0.002232 | 0.59 | 0.00369 | 0.00369 | 1 | True | LPE10884_2023_11_30 |
 | DM | cur_stim__zero_vs_nonzero | 122 | 0.2826 | 0.07984 | 0.001615 | 0.05106 | 0.006192 | 0.04487 | 0 | 0.06002 | 0.06002 | 1 | True | LPE10884_2023_12_10 |
 | DM | prev_stim__zero_vs_nonzero | 121 | -0.05838 | 0.003409 | 0.5247 | 0.002575 | 0.005681 | 0 | 0.54 | 0.002463 | 0.002463 | 1 | True | LPE10884_2023_12_10 |
-| DM | cur_runspeed | 122 | 0.2059 | 0.04239 | 0.02291 | 0.03481 | 0.01163 | 0.02318 | 0.05 | 0.03124 | 0.03124 | 1 | True | LPE10884_2023_12_10 |
+| DM | cur_runspeed | 122 | 0.1972 | 0.0389 | 0.02944 | 0.02773 | 0.01161 | 0.01612 | 0.07 | 0.02862 | 0.02862 | 1 | True | LPE10884_2023_12_10 |
 | DM | cur_lick | 122 | -0.1148 | 0.01318 | 0.208 | 0.01054 | 0.006245 | 0.004294 | 0.21 | 0.009567 | 0.009567 | 1 | True | LPE10884_2023_12_10 |
-| DM | prev_runspeed | 121 | 0.2114 | 0.04467 | 0.01995 | 0.03949 | 0.01249 | 0.027 | 0.05 | 0.03297 | 0.03297 | 1 | True | LPE10884_2023_12_10 |
+| DM | prev_runspeed | 121 | 0.2144 | 0.04599 | 0.01818 | 0.03949 | 0.01295 | 0.02654 | 0.06 | 0.03396 | 0.03396 | 1 | True | LPE10884_2023_12_10 |
 | DM | prev_lick | 121 | -0.1336 | 0.01786 | 0.144 | 0.006754 | 0.005123 | 0.001631 | 0.32 | 0.013 | 0.013 | 1 | True | LPE10884_2023_12_10 |
 | DM | prev_correct | 121 | 0.06923 | 0.004793 | 0.4505 | 0.003324 | 0.006683 | 0 | 0.55 | 0.003466 | 0.003466 | 1 | True | LPE10884_2023_12_10 |
 | DM | prev_lickResponse | 121 | 0.2378 | 0.05653 | 0.008638 | 0.03713 | 0.005307 | 0.03182 | 0 | 0.04198 | 0.04198 | 1 | True | LPE10884_2023_12_10 |
 | DM | cur_stim__zero_vs_nonzero | 104 | 0.3563 | 0.127 | 0.0002051 | 0.07149 | 0.007753 | 0.06374 | 0.01 | 0.09795 | 0.09795 | 1 | True | LPE11081_2023_12_11 |
 | DM | prev_stim__zero_vs_nonzero | 103 | 0.09942 | 0.009885 | 0.3177 | 0.006376 | 0.006182 | 0.0001947 | 0.3 | 0.007166 | 0.007166 | 1 | True | LPE11081_2023_12_11 |
-| DM | cur_runspeed | 104 | 0.2025 | 0.041 | 0.03928 | 0.03386 | 0.0168 | 0.01706 | 0.14 | 0.0302 | 0.0302 | 1 | True | LPE11081_2023_12_11 |
+| DM | cur_runspeed | 104 | 0.2022 | 0.04091 | 0.0395 | 0.03386 | 0.0168 | 0.01706 | 0.14 | 0.03013 | 0.03013 | 1 | True | LPE11081_2023_12_11 |
 | DM | cur_lick | 104 | -0.03978 | 0.001583 | 0.6884 | 0.0463 | 0.006724 | 0.03958 | 0.03 | 0.001143 | 0.03958 | 0.02887 | False | LPE11081_2023_12_11 |
-| DM | prev_runspeed | 103 | 0.1476 | 0.02178 | 0.1368 | 0.005662 | 0.01749 | 0 | 0.6 | 0.01588 | 0.01588 | 1 | True | LPE11081_2023_12_11 |
+| DM | prev_runspeed | 103 | 0.1492 | 0.02227 | 0.1324 | 0.005662 | 0.01749 | 0 | 0.6 | 0.01625 | 0.01625 | 1 | True | LPE11081_2023_12_11 |
 | DM | prev_lick | 103 | -0.2684 | 0.07205 | 0.006119 | 0.07832 | 0.006332 | 0.07199 | 0 | 0.05394 | 0.07199 | 0.7493 | False | LPE11081_2023_12_11 |
 | DM | prev_correct | 103 | 0.026 | 0.0006762 | 0.7943 | 0.000456 | 0.00729 | 0 | 1 | 0.000488 | 0.000488 | 1 | True | LPE11081_2023_12_11 |
 | DM | prev_lickResponse | 103 | 0.03867 | 0.001496 | 0.6981 | 0.001018 | 0.008571 | 0 | 1 | 0.00108 | 0.00108 | 1 | True | LPE11081_2023_12_11 |
 | DM | cur_stim__zero_vs_nonzero | 98 | 0.3054 | 0.09328 | 0.002228 | 0.05103 | 0.00992 | 0.04111 | 0 | 0.07063 | 0.07063 | 1 | True | LPE11081_2023_12_12 |
 | DM | prev_stim__zero_vs_nonzero | 97 | -0.0189 | 0.0003572 | 0.8542 | 0.0002675 | 0.007755 | 0 | 1 | 0.0002577 | 0.0002577 | 1 | True | LPE11081_2023_12_12 |
-| DM | cur_runspeed | 98 | -0.0278 | 0.000773 | 0.7858 | 0.008679 | 0.0203 | 0 | 0.66 | 0.0005578 | 0.0005578 | 1 | True | LPE11081_2023_12_12 |
+| DM | cur_runspeed | 98 | -0.02768 | 0.0007664 | 0.7867 | 0.008679 | 0.0203 | 0 | 0.66 | 0.000553 | 0.000553 | 1 | True | LPE11081_2023_12_12 |
 | DM | cur_lick | 98 | 0.05628 | 0.003168 | 0.582 | 3.866e-05 | 0.007871 | 0 | 1 | 0.002289 | 0.002289 | 1 | True | LPE11081_2023_12_12 |
-| DM | prev_runspeed | 97 | -0.1436 | 0.02062 | 0.1605 | 0.04222 | 0.01849 | 0.02373 | 0.15 | 0.01503 | 0.02373 | 0.6336 | False | LPE11081_2023_12_12 |
+| DM | prev_runspeed | 97 | -0.1435 | 0.02059 | 0.1609 | 0.04222 | 0.01849 | 0.02373 | 0.15 | 0.01501 | 0.02373 | 0.6325 | False | LPE11081_2023_12_12 |
 | DM | prev_lick | 97 | 0.09485 | 0.008997 | 0.3554 | 0.04009 | 0.00751 | 0.03258 | 0.05 | 0.006519 | 0.03258 | 0.2001 | False | LPE11081_2023_12_12 |
 
-*(showing first 15 of 16 columns; showing first 30 of 766 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 16 columns; showing first 30 of 782 rows -- see the linked CSV for the rest)*
 
 [performance_mi_vs_linear__session.csv](../2_pipeline/1d_performance_predictors/out/performance_mi_vs_linear__session.csv)
 
@@ -146,37 +184,37 @@
 | protocol | predictors | n_predictors | n_trials | r2 | adj_r2 | p_linear | mi_bits_raw | mi_bits_shuffle_mean | mi_bits_corrected | mi_p_value | mi_bits_from_r2 | mi_reference_bits | frac_explained_linearly | linear_sufficient |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 156 | 0.3562 | 0.3211 | 3.074e-11 | 0.1979 | 0.01358 | 0.1844 | 0 | 0.3176 | 0.3176 | 1 | True |
-| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 121 | 0.2249 | 0.1695 | 0.0002837 | 0.1302 | 0.01536 | 0.1149 | 0 | 0.1838 | 0.1838 | 1 | True |
-| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 103 | 0.2381 | 0.1732 | 0.0009153 | 0.08892 | 0.01253 | 0.07639 | 0 | 0.1961 | 0.1961 | 1 | True |
-| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 97 | 0.1925 | 0.1191 | 0.01267 | 0 | 0.01199 | 0 | 1 | 0.1542 | 0.1542 | 1 | True |
+| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 121 | 0.2244 | 0.1689 | 0.0002931 | 0.1302 | 0.01533 | 0.1149 | 0 | 0.1833 | 0.1833 | 1 | True |
+| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 103 | 0.2381 | 0.1732 | 0.0009152 | 0.08959 | 0.01256 | 0.07703 | 0 | 0.1961 | 0.1961 | 1 | True |
+| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 97 | 0.1925 | 0.1191 | 0.01268 | 0 | 0.01228 | 0 | 1 | 0.1542 | 0.1542 | 1 | True |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_motionenergy, cur_lick, prev_runspeed, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 10 | 146 | 0.2114 | 0.1529 | 0.0002745 | 0.02591 | 0.006019 | 0.01989 | 0.05 | 0.1713 | 0.1713 | 1 | True |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_motionenergy, cur_lick, prev_runspeed, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 10 | 168 | 0.2608 | 0.2137 | 4.787e-07 | 0.004329 | 0.01251 | 0 | 0.5 | 0.218 | 0.218 | 1 | True |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_motionenergy, cur_lick, prev_runspeed, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 10 | 352 | 0.1421 | 0.1169 | 7.94e-08 | 0.02879 | 0.00573 | 0.02306 | 0.05 | 0.1105 | 0.1105 | 1 | True |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 86 | 0.218 | 0.08947 | 0.08525 | 0.05636 | 0.01545 | 0.04091 | 0.1 | 0.1774 | 0.1774 | 1 | True |
-| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 115 | 0.179 | 0.08243 | 0.04923 | 0.01863 | 0.01426 | 0.004374 | 0.3 | 0.1423 | 0.1423 | 1 | True |
+| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 115 | 0.1795 | 0.08292 | 0.04843 | 0.02755 | 0.01426 | 0.01329 | 0.3 | 0.1427 | 0.1427 | 1 | True |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_motionenergy, cur_lick, prev_runspeed, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 10 | 178 | 0.1965 | 0.1483 | 4.863e-05 | 0.06829 | 0.01201 | 0.05628 | 0 | 0.1578 | 0.1578 | 1 | True |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 205 | 0.1719 | 0.1202 | 0.0002117 | 0.0179 | 0.009387 | 0.008514 | 0.3 | 0.1361 | 0.1361 | 1 | True |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 148 | 0.3068 | 0.2452 | 8.458e-07 | 0 | 0.01559 | 0 | 1 | 0.2644 | 0.2644 | 1 | True |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 193 | 0.3166 | 0.2711 | 2.748e-10 | 0.03001 | 0.005579 | 0.02443 | 0 | 0.2746 | 0.2746 | 1 | True |
-| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 232 | 0.2358 | 0.1939 | 2.072e-08 | 0.03946 | 0.01282 | 0.02664 | 0.1 | 0.194 | 0.194 | 1 | True |
+| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 232 | 0.2357 | 0.1939 | 2.088e-08 | 0.03857 | 0.01291 | 0.02566 | 0.1 | 0.1939 | 0.1939 | 1 | True |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_motionenergy, cur_lick, prev_runspeed, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 10 | 173 | 0.2068 | 0.1579 | 3.179e-05 | 0.03101 | 0.01058 | 0.02043 | 0.1 | 0.1671 | 0.1671 | 1 | True |
-| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 175 | 0.2241 | 0.1868 | 9.291e-07 | 0.08625 | 0.01103 | 0.07522 | 0 | 0.1831 | 0.1831 | 1 | True |
+| DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 175 | 0.2173 | 0.1796 | 1.756e-06 | 0.08547 | 0.01125 | 0.07421 | 0 | 0.1768 | 0.1768 | 1 | True |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 209 | 0.26 | 0.2304 | 2.835e-10 | 0.07767 | 0.008443 | 0.06923 | 0 | 0.2172 | 0.2172 | 1 | True |
 | DM | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 163 | 0.2354 | 0.1956 | 1.291e-06 | 0.07265 | 0.0119 | 0.06075 | 0 | 0.1936 | 0.1936 | 1 | True |
 | DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 126 | 0.1766 | 0.1203 | 0.002995 | 0.02632 | 0.007657 | 0.01866 | 0.05 | 0.1402 | 0.1402 | 1 | True |
-| DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 121 | 0.07823 | 0.01239 | 0.3125 | 0 | 0.003611 | 0 | 1 | 0.05876 | 0.05876 | 1 | True |
+| DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 121 | 0.07761 | 0.01172 | 0.3187 | 0 | 0.003945 | 0 | 1 | 0.05827 | 0.05827 | 1 | True |
 | DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 112 | 0.1119 | 0.04288 | 0.1276 | 0 | 0.01883 | 0 | 1 | 0.08558 | 0.08558 | 1 | True |
 | DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_lick, prev_runspeed, prev_lick, prev_correct, prev_lickResponse | 8 | 107 | 0.07434 | -0.001227 | 0.4534 | 0 | 0.01614 | 0 | 1 | 0.05572 | 0.05572 | 1 | True |
-| DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_motionenergy, cur_lick, prev_runspeed, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 10 | 258 | 0.06676 | 0.02898 | 0.06716 | 0.02818 | 0.006833 | 0.02134 | 0.05 | 0.04984 | 0.04984 | 1 | True |
+| DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_motionenergy, cur_lick, prev_runspeed, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 10 | 258 | 0.06679 | 0.02901 | 0.06702 | 0.0281 | 0.00688 | 0.02122 | 0.05 | 0.04986 | 0.04986 | 1 | True |
 | DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_motionenergy, cur_lick, prev_runspeed, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 10 | 360 | 0.09576 | 0.06985 | 0.0001013 | 0.03829 | 0.005602 | 0.03269 | 0.05 | 0.07261 | 0.07261 | 1 | True |
-| DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 224 | 0.08645 | 0.0345 | 0.07662 | 0.08511 | 0.01494 | 0.07017 | 0 | 0.06522 | 0.07017 | 0.9295 | True |
+| DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 224 | 0.08655 | 0.0346 | 0.07612 | 0.08561 | 0.01417 | 0.07144 | 0 | 0.0653 | 0.07144 | 0.9142 | True |
 | DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 218 | 0.1416 | 0.09133 | 0.001362 | 0.1095 | 0.009942 | 0.09952 | 0 | 0.1101 | 0.1101 | 1 | True |
 | DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 111 | 0.2236 | 0.1285 | 0.01065 | 0.154 | 0.01402 | 0.1399 | 0 | 0.1826 | 0.1826 | 1 | True |
 | DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 99 | 0.1928 | 0.08012 | 0.07817 | 0.05082 | 0.02295 | 0.02787 | 0.2 | 0.1545 | 0.1545 | 1 | True |
 | DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 206 | 0.1079 | 0.05245 | 0.0313 | 0.03023 | 0.004099 | 0.02614 | 0.05 | 0.08238 | 0.08238 | 1 | True |
 | DP | cur_stim__zero_vs_nonzero, prev_stim__zero_vs_nonzero, cur_runspeed, cur_pupil_area, cur_motionenergy, cur_lick, prev_runspeed, prev_pupil_area, prev_motionenergy, prev_lick, prev_correct, prev_lickResponse | 12 | 119 | 0.1973 | 0.1064 | 0.01815 | 0.03638 | 0.02422 | 0.01216 | 0.25 | 0.1585 | 0.1585 | 1 | True |
 
-*(showing first 15 of 17 columns; showing first 30 of 62 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 17 columns; showing first 30 of 63 rows -- see the linked CSV for the rest)*
 
 [performance_multivariate_mi_vs_linear__session.csv](../2_pipeline/1d_performance_predictors/out/performance_multivariate_mi_vs_linear__session.csv)
 
@@ -203,7 +241,6 @@
 | DM | LPE12223 | LPE12223_2024_05_30 | 0.9381 | 210 | 0.9643 | 0.5385 | 0.9682 | 0.8462 |
 | DM | LPE12385 | LPE12385_2024_05_30 | 0.8902 | 164 | 0.9315 | 0.5294 | 0.9286 | 0.7568 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 0.622 | 209 | 0.6385 | 0.5897 | 0.6838 | 0.5385 |
-| DN | LPE10884 | LPE10884_2024_01_17 | 0.7403 | 258 | 0.7684 | 0.6567 | 0.7766 | 0.6377 |
 | DN | LPE11495 | LPE11495_2024_02_22 | 0.8578 | 204 | 0.8571 | 0.8571 | 0.8779 | 0.7419 |
 | DN | LPE11622 | LPE11622_2024_02_20 | 0.7045 | 396 | 0.7194 | 0.6667 | 0.7423 | 0.6296 |
 | DN | LPE11622 | LPE11622_2024_02_22 | 0.6324 | 438 | 0.6377 | 0.6273 | 0.64 | 0.6257 |
@@ -214,41 +251,86 @@
 | DN | LPE11997 | LPE11997_2024_04_10 | 0.6929 | 254 | 0.7429 | 0.5769 | 0.7647 | 0.58 |
 | DN | LPE11997 | LPE11997_2024_04_16 | 0.6685 | 359 | 0.6778 | 0.6555 | 0.6863 | 0.6494 |
 | DN | LPE11997 | LPE11997_2024_04_17 | 0.7188 | 345 | 0.7409 | 0.6598 | 0.7432 | 0.6721 |
+| DN | LPE11997 | LPE11997_2024_04_18 | 0.6376 | 229 | 0.6712 | 0.5732 | 0.6613 | 0.6058 |
 
-*(showing first 30 of 62 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 63 rows -- see the linked CSV for the rest)*
 
 [performance_overview__session.csv](../2_pipeline/1d_performance_predictors/out/performance_overview__session.csv)
 
-## Figures
+### Pupil performance by quantile  session
 
-### Performance overview
+| protocol | measure | pupil_bin | mean | sem |
+| --- | --- | --- | --- | --- |
+| DM | correct | 1 | 0.8036 | 0.06873 |
+| DM | correct | 2 | 0.9062 | 0.03149 |
+| DM | correct | 3 | 0.9337 | 0.007535 |
+| DM | correct | 4 | 0.8969 | 0.03654 |
+| DM | correct | 5 | 0.8907 | 0.03859 |
+| DP | correct | 1 | 0.6946 | 0.03583 |
+| DP | correct | 2 | 0.7435 | 0.04503 |
+| DP | correct | 3 | 0.7099 | 0.05205 |
+| DP | correct | 4 | 0.7197 | 0.0495 |
+| DP | correct | 5 | 0.5942 | 0.04125 |
+| DN | correct | 1 | 0.6996 | 0.02507 |
+| DN | correct | 2 | 0.7117 | 0.02154 |
+| DN | correct | 3 | 0.7102 | 0.01803 |
+| DN | correct | 4 | 0.6599 | 0.01939 |
+| DN | correct | 5 | 0.6074 | 0.02444 |
+| DM | lick_signal | 1 | 0.7991 | 0.0644 |
+| DM | lick_signal | 2 | 0.9405 | 0.0247 |
+| DM | lick_signal | 3 | 0.9616 | 0.01286 |
+| DM | lick_signal | 4 | 0.9311 | 0.03134 |
+| DM | lick_signal | 5 | 0.9005 | 0.05618 |
+| DP | lick_signal | 1 | 0.6746 | 0.04659 |
+| DP | lick_signal | 2 | 0.7175 | 0.04996 |
+| DP | lick_signal | 3 | 0.6857 | 0.07746 |
+| DP | lick_signal | 4 | 0.675 | 0.05642 |
+| DP | lick_signal | 5 | 0.5744 | 0.05188 |
+| DN | lick_signal | 1 | 0.6934 | 0.03163 |
+| DN | lick_signal | 2 | 0.7002 | 0.02752 |
+| DN | lick_signal | 3 | 0.6991 | 0.02352 |
+| DN | lick_signal | 4 | 0.642 | 0.02567 |
+| DN | lick_signal | 5 | 0.5618 | 0.03052 |
 
-![1_performance_overview](../2_pipeline/1d_performance_predictors/out/figures/1_performance_overview.png)
+*(showing first 30 of 45 rows -- see the linked CSV for the rest)*
 
-### Tuning current trial
+[pupil_performance_by_quantile__session.csv](../2_pipeline/1d_performance_predictors/out/pupil_performance_by_quantile__session.csv)
 
-![2_tuning_current_trial](../2_pipeline/1d_performance_predictors/out/figures/2_tuning_current_trial.png)
+### Pupil performance quadratic  session
 
-### Tuning previous trial
+| protocol | n_trials | beta_linear | beta_quadratic | unit | animal_id |
+| --- | --- | --- | --- | --- | --- |
+| DM | 87 | 0.05812 | -0.1347 | LPE11623_2024_03_27 | LPE11623 |
+| DM | 117 | 0.09633 | 0.01718 | LPE11623_2024_03_29 | LPE11623 |
+| DM | 207 | -0.01126 | -0.01343 | LPE11997_2024_04_07 | LPE11997 |
+| DM | 149 | 0.02969 | -0.02091 | LPE11998_2024_04_11 | LPE11998 |
+| DM | 194 | 0.01177 | -0.003519 | LPE11998_2024_04_12 | LPE11998 |
+| DM | 234 | -0.008989 | 0.007028 | LPE12013_2024_04_11 | LPE12013 |
+| DP | 225 | -0.09311 | -0.004636 | LPE11622_2024_02_19 | LPE11622 |
+| DP | 219 | 0.0273 | 0.02764 | LPE11997_2024_04_15 | LPE11997 |
+| DP | 112 | -0.1433 | 0.02095 | LPE11998_2024_04_15 | LPE11998 |
+| DP | 100 | 0.0399 | -0.02421 | LPE11998_2024_04_16 | LPE11998 |
+| DP | 208 | -0.01599 | -0.01125 | LPE11998_2024_04_18 | LPE11998 |
+| DP | 120 | 0.01665 | -0.0302 | LPE11998_2024_04_22 | LPE11998 |
+| DP | 153 | -0.05394 | 0.01022 | LPE12013_2024_04_22 | LPE12013 |
+| DN | 209 | -0.09357 | 0.0007097 | LPE10884_2024_01_12 | LPE10884 |
+| DN | 395 | -0.1009 | 0.01494 | LPE11622_2024_02_20 | LPE11622 |
+| DN | 437 | -0.06664 | 0.01882 | LPE11622_2024_02_22 | LPE11622 |
+| DN | 244 | -0.1166 | 0.03245 | LPE11622_2024_02_23 | LPE11622 |
+| DN | 338 | -0.00869 | 0.01559 | LPE11622_2024_02_26 | LPE11622 |
+| DN | 159 | -0.0315 | -0.001513 | LPE11623_2024_04_02 | LPE11623 |
+| DN | 277 | -0.1211 | 0.01717 | LPE11997_2024_04_09 | LPE11997 |
+| DN | 254 | -0.1044 | -0.007576 | LPE11997_2024_04_10 | LPE11997 |
+| DN | 358 | -0.05804 | -0.01564 | LPE11997_2024_04_16 | LPE11997 |
+| DN | 345 | -0.09039 | 0.0104 | LPE11997_2024_04_17 | LPE11997 |
+| DN | 229 | -0.05933 | 0.01018 | LPE11997_2024_04_18 | LPE11997 |
+| DN | 265 | -0.06987 | 0.02027 | LPE11997_2024_04_19 | LPE11997 |
+| DN | 107 | 0.04239 | 0.002052 | LPE11998_2024_04_23 | LPE11998 |
+| DN | 78 | 0.07981 | -0.04931 | LPE11998_2024_04_24 | LPE11998 |
+| DN | 204 | -0.002337 | -0.005285 | LPE11998_2024_04_25 | LPE11998 |
+| DN | 187 | 0.01057 | 0.009376 | LPE11998_2024_04_29 | LPE11998 |
+| DN | 186 | -0.07453 | 0.01728 | LPE11998_2024_05_01 | LPE11998 |
 
-![3_tuning_previous_trial](../2_pipeline/1d_performance_predictors/out/figures/3_tuning_previous_trial.png)
+*(showing first 30 of 38 rows -- see the linked CSV for the rest)*
 
-### History kernel
-
-![4_history_kernel](../2_pipeline/1d_performance_predictors/out/figures/4_history_kernel.png)
-
-### Mi vs linear summary
-
-![5_mi_vs_linear_summary](../2_pipeline/1d_performance_predictors/out/figures/5_mi_vs_linear_summary.png)
-
-### 5a frac explained linearly
-
-![5a_frac_explained_linearly](../2_pipeline/1d_performance_predictors/out/figures/5a_frac_explained_linearly.png)
-
-### Multivariate mi vs linear summary
-
-![6_multivariate_mi_vs_linear_summary](../2_pipeline/1d_performance_predictors/out/figures/6_multivariate_mi_vs_linear_summary.png)
-
-### 6a multivariate frac explained linearly
-
-![6a_multivariate_frac_explained_linearly](../2_pipeline/1d_performance_predictors/out/figures/6a_multivariate_frac_explained_linearly.png)
+[pupil_performance_quadratic__session.csv](../2_pipeline/1d_performance_predictors/out/pupil_performance_quadratic__session.csv)

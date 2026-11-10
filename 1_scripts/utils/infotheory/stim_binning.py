@@ -58,19 +58,21 @@ STIM_BINNING_STRATEGIES = {
     "pct_0-20_20-80_80-100": dict(
         kind="curve_pct", zero_separate=False, edges=[0.2, 0.8],
         names=["0-20%", "20-80%", "80-100%"]),
+    # 4 equal steps of the psychometric curve (contrast 0 falls in the first bin): the ONLY stimulus binning of 2c / 2d
+    "pct_0-25_25-50_50-75_75-100": dict(
+        kind="curve_pct", zero_separate=False, edges=[0.25, 0.5, 0.75],
+        names=["0-25%", "25-50%", "50-75%", "75-100%"]),
     # 3: no stimulus vs any stimulus
     "zero_vs_nonzero": dict(
         kind="contrast", zero_separate=False, edges=[0.0],
         names=["0", ">0"]),
-    # every distinct stimulus value (contrast level) is its own bin: 0, 20, ..., 100 in the DN task (no psychometric grouping)
-    "all_levels": dict(
-        kind="levels", zero_separate=False, edges=[],
-        names=["0", "20", "40", "60", "80", "100"]),
     # the previous hard-coded behaviour, kept for reference/comparison
     "quantile4": dict(kind="quantile", n_bins=4, zero_separate=False, edges=[]),
 }
 
 DEFAULT_STRATEGIES = ["zero_to80_above80", "pct_0-20_20-80_80-100", "zero_vs_nonzero"]
+# the single stimulus binning of the single-cell information scripts 2c and 2d (they must agree before bias correction, project rule 4)
+SIMPLE_STRATEGIES = ["pct_0-25_25-50_50-75_75-100"]
 
 
 def psychometric_pct(signal, mu, sigma):
@@ -83,8 +85,6 @@ def psychometric_pct(signal, mu, sigma):
 
 
 def strategy_names(rule: dict) -> list[str]:
-    if rule["kind"] == "levels":
-        return list(rule.get("names") or [])
     n = len(rule["edges"]) + 1 + (1 if rule.get("zero_separate") else 0)
     if rule["kind"] == "quantile":
         n = rule["n_bins"]
@@ -102,13 +102,6 @@ def bin_stimulus(signal, stim_pct, rule: dict, stim_z=None) -> np.ndarray:
     """
     signal = np.asarray(signal, float)
     kind = rule["kind"]
-    if kind == "levels":        # one bin per distinct stimulus value of the session, in increasing order
-        out = np.full(signal.shape, np.nan)
-        ok = np.isfinite(signal)
-        if ok.any():
-            v = np.round(signal[ok], 6)
-            out[ok] = np.searchsorted(np.unique(v), v).astype(float)
-        return out
     if kind == "quantile":
         from .info_theory import robust_qcut
         try:

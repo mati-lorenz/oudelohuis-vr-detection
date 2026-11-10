@@ -16,7 +16,7 @@ with TWO ways of aggregating the time points of a bin (both shown, side by side)
 Both use the same frames, position bins (infotheory.position_info) and the 2c estimator: histogram MI with RESPONSE_BINS (3)
 quantile bins, bias-corrected by subtracting the mean of N_SHUFFLES shuffles, p = fraction of shuffles >= raw (with 20
 shuffles the null "significant" fraction is about 5%). Behaviour is taken at ZERO lag (2f searches the optimal lag).
-Engaged trials only. Always the six groups.
+Engaged trials only. Always all the groups of the depth rule (the six + deep PM).
 
 Project-wide rules (infotheory/project_config.py) -- what applies here
     * selection : --animals / --sessions restrict the sessions; a restricted run writes to out/selection/<tag>/.
@@ -74,10 +74,10 @@ from infotheory.neural_encoding import load_cell_inclusion, build_session_tables
 from infotheory.continuous import (merge_behavior_video, restrict_to_engaged, remove_pupil_outliers,
                                    build_calcium_continuous)
 from infotheory.celldata_utils import SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GROUP_COLORS
-from infotheory.groups import add_six_group_column, group_key
+from infotheory.groups import add_six_group_column, group_key, group_meta_columns
 from infotheory.plotting import set_style, save_fig, clear_figures
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
-from infotheory.session_jobs import run_sessions
+from infotheory.session_jobs import run_sessions_units
 from infotheory.unit_stats import stable_seed
 from infotheory.unit_plots import mouse_palette
 from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, CHOICE_TARGET, target_signature,
@@ -144,13 +144,14 @@ selected = {f"{a}_{d}": (p, a, d) for p, a, d in select_sessions(all_triples, sc
 session_ids = [s for s in selected if s in included_all]
 mouse_colors = mouse_palette(a for _, a, _ in all_triples)
 cell_inclusion = load_cell_inclusion(cell_dist_out, activity_out)
+cell_group = dict(zip(cell_inclusion["cell_id"], cell_inclusion["group"]))      # per-group cell / pair caps (--max-cells / --max-pairs)
 cells_by_session = {sid: sorted(sub.loc[sub["include"], "cell_id"]) for sid, sub in cell_inclusion.groupby("session_id")
                     if sid in session_ids}
 session_ids = [s for s in session_ids if cells_by_session.get(s)]
 if not session_ids:
     raise SystemExit("No selected session with included cells.")
-cd = add_six_group_column(pd.read_csv(cell_dist_out / "celldata_combined.csv", low_memory=False)[
-    ["session_id", "cell_id", "roi_name", "labeled"]])
+_cd_all = pd.read_csv(cell_dist_out / "celldata_combined.csv", low_memory=False)
+cd = add_six_group_column(_cd_all[["session_id", "cell_id"] + group_meta_columns(_cd_all)])
 group_of = dict(zip(zip(cd["session_id"], cd["cell_id"]), cd["group"]))
 stamps = {s: data_stamp(*selected[s]) for s in session_ids}
 print(f"{len(session_ids)} sessions, {sum(len(v) for v in cells_by_session.values())} included cells")
@@ -159,9 +160,9 @@ print(f"{len(session_ids)} sessions, {sum(len(v) for v in cells_by_session.value
 # --------------------------------------------------------------------- #
 # 2. Per session
 # --------------------------------------------------------------------- #
-def process_session(ses, seed):
+def process_session(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
-    cells = cells_by_session[sid]
+    cells = list(new_cells)          # only the cells not yet in the ledger (session_jobs.run_sessions_units)
     if ses.trialdata is None or ses.behaviordata is None or ses.calciumdata is None or ses.ts_F is None:
         return None
     rng = np.random.default_rng(seed)
@@ -214,19 +215,20 @@ def process_session(ses, seed):
                     rows.append((sid, c, method, var, s_rel) + res)
     df = pd.DataFrame(rows, columns=["session_id", "cell_id", "method", "variable", "s_rel", "n_samples", "n_trials",
                                      "mi_bits", "p_value"])
-    print(f"  [{sid}] {len(cells)} cells, {nb} bins, {len(df)} (cell, bin, variable, method) values")
-    return df
+    print(f"  [{sid}] {len(cells)} new cells, {nb} bins, {len(df)} (cell, bin, variable, method) values")
+    return {"df": df}
 
 
-results = run_sessions(
+results = run_sessions_units(
     session_ids, process_session, [PROTOCOL], paths.store, "position_info",
-    key_params=dict(version="2h-v1", window=(S_PRE, S_POST, BINSIZE), bins=cfg.RESPONSE_BINS, shuffles=args.n_shuffles,
+    key_params=dict(version="2h-v2", face_z=cfg.NORMALIZE_FACE_PER_SESSION, window=(S_PRE, S_POST, BINSIZE), bins=cfg.RESPONSE_BINS, shuffles=args.n_shuffles,
                     targets=target_signature(STRATEGIES + [CHOICE_TARGET]), behavior=BEHAVIOR,
                     min_frames=MIN_FRAMES_PER_BIN, min_trials=cfg.MIN_TRIALS_ANALYSIS,
                     min_per_class=cfg.MIN_TRIALS_PER_TARGET_BIN, fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
-    cells_by_session=cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
-    verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps, flatten=False)
+    cells_by_session=cells_by_session, parts={"df": "cell"}, unwrap="df", groups_by_cell=cell_group, max_cells=scope.max_cells,
+    base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
+    verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps)
 results = [r for r in results if r is not None and len(r)]
 if not results:
     raise SystemExit("No information values (too few trials or frames per position bin).")

@@ -6,10 +6,18 @@ Companion of 1d_performance_predictors (1d is untouched): how well does the anim
 STIMULUS or the CHOICE? One decoder is trained per position bin / time bin (and per protocol DM, DP, DN) and the plot is its
 cross-validated accuracy against position / time.
 
-DECODERS (infotheory/decoder.py, numpy / scipy only; --decoders selects, default all three, compared in figure 0):
-    lda   linear discriminant analysis (shared covariance, ridge 1e-2, equal priors)
-    logr  multinomial logistic regression (L2, C = 1, balanced class weights; matches sklearn's LogisticRegression)
+DECODERS (--decoders selects; default = the two SVMs below, compared in figure 0; lda and logr of infotheory/decoder.py are
+not run -- add them to DECODERS at the top to bring them back):
+    (lda   linear discriminant analysis -- off)
+    (logr  multinomial logistic regression -- off)
     svm   linear SVM (squared hinge, one-vs-rest, C = 1, balanced class weights; a 2-class problem equals sklearn's LinearSVC)
+    svm_rbf  NONLINEAR SVM (RBF kernel, C = 1, gamma = 'scale', balanced class weights; infotheory/decoder_nonlinear.py, needs
+          scikit-learn). Same CV, same balanced accuracy, same within-session permutation null. Hyper-parameters are FIXED (as the
+          linear SVM's C), not tuned on the test folds. Its folds come from the data, so svm and svm_rbf are scored on the same
+          trials; the question "does a nonlinear SVM improve the decoding?" is answered by the paired difference
+          acc(svm_rbf) - acc(svm): behavior_decoding_nonlinear_gain[__<agg>].csv and the figures
+          4_nonlinear_gain (curves) / <target>_nonlinear_gain (3a-3c windows). A gain needs units to be tested: with
+          --aggregate session|mouse a Wilcoxon signed-rank over units is saved (behavior_decoding_nonlinear_gain_test.csv).
 All score BALANCED accuracy (mean recall over classes), so chance = 1 / n_classes whatever the class imbalance; stratified 5-fold CV
 repeated 3 times. The chance level is not assumed: the same CV is run on N_PERM label permutations (grey line + band = mean +- SD
 of the null), per decoder. LOGR and SVM are about 5-10x slower than LDA (--n-perm lowers the cost).
@@ -17,11 +25,13 @@ BINS (set at the top of this script, POSITION_* / TIME_*; they do NOT come from 
 sliding = POSITION_WINDOW cm moved by POSITION_STEP (TIME_* likewise).
 FEATURES: the trial mean of each behavioral variable in the window (runspeed, pupil_area, motionenergy, lick; 1d's variables, the
 engaged trials, each sample inside its own trial), z-scored within session and window. A trial needs finite values of all the
-features of the set. Lick: mean of the 0/1 lick channel over the window's samples (proportional to the lick rate).
-TARGETS (performance added): `outcome` = HIT / MISS / CR / FA (4 classes, chance 0.25; defined only on the 0 % and 100 %
-signal trials, as 1a / behavior.add_trial_outcome) and `correct` (error / correct, every signal level, 1d's definition). The outcome
-is partly choice x stimulus, so read it next to `choice`: what decoding it adds beyond choice is the stimulus part. The stimulus strategies of stim_binning (DEFAULT_STRATEGIES; those defined on the psychometric curve exist only for
-sessions with a 1b fit, i.e. mainly DN) and `choice` (lick / no lick).
+features of the set. Face signals (pupil, motion energy) are z-scored per session BEFORE averaging (continuous.zscore_per_session,
+after blink rejection), as in 1c / 1d. Lick: mean of the 0/1 lick channel over the window's samples (proportional to the lick rate).
+TARGETS: the stimulus strategies of stim_binning (DEFAULT_STRATEGIES; those defined on the psychometric curve exist only for
+sessions with a 1b fit, i.e. mainly DN), `choice` (lick / no lick) and `correct` (error / correct, 1d's definition). With
+NOISE_TRIALS_ONLY = True (default, editable below) EVERY target is decoded on the noise trials only = signal neither 0 nor 100 %.
+Note that on those trials correct = lick, so `correct` and `choice` coincide. `outcome` (HIT / MISS / CR / FA, chance 0.25) exists
+only on the 0 % and 100 % trials, so it is decoded only when NOISE_TRIALS_ONLY = False (then the other targets use all trials).
 FEATURE SETS (STAGE 1 -> 2):
     single          each behavioral variable alone
     cumulative      variables added one at a time in ADD_ORDER (editable below; default runspeed, lick, pupil_area, motionenergy)
@@ -52,6 +62,8 @@ Outputs
             figures/<axis>/<binning>/<target>/0_decoder_comparison.png  (one row per feature set, lines = decoders)
             figures/<axis>/<binning>/<target>/<decoder>/1_single_variables.png, 2_cumulative_sets.png, 3_leave_one_out.png
             figures/position/windows/<target>_by_window_<decoder>.png, <target>_decoders_by_window.png
+            behavior_decoding_nonlinear_gain[__<agg>].csv, _curves.csv, _test.csv   svm_rbf minus the reference decoder, per unit / over units
+            figures/<axis>/<binning>/<target>/4_nonlinear_gain.png, figures/position/windows/<target>_nonlinear_gain.png
     out/selection/<tag>/...                            the same for a restricted run
     store/  behavior_windows_<hash>.pkl                per-session window tables
             decode_<hash>.pkl                          decoding results per (protocol, unit, decoder, target): a rerun, a new
@@ -74,8 +86,10 @@ from infotheory.plotting import set_style, save_fig, clear_figures, PROTOCOL_COL
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
 from infotheory.session_jobs import run_sessions
 from infotheory.unit_stats import stable_seed
-from infotheory.decoder import decode, DECODERS, DECODER_VERSION, C_REG, RIDGE_LDA
+from infotheory.decoder import decode as decode_base, DECODERS as BASE_DECODERS, DECODER_VERSION, C_REG, RIDGE_LDA
+from infotheory.decoder_nonlinear import decode_rbf, RBF_C, RBF_GAMMA, RBF_VERSION, RBF_NAME
 from infotheory.cache import cache_path
+from infotheory.continuous import remove_pupil_outliers, zscore_per_session
 from infotheory.behavior import add_trial_outcome
 from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, CHOICE_TARGET, psychometric_pct, bin_stimulus,
                                      target_signature, target_bin_names)
@@ -88,10 +102,20 @@ N_FOLDS, N_REPEATS, N_PERM = 5, 3, 20
 POSITION_BIN, POSITION_WINDOW, POSITION_STEP = 20.0, 20.0, 5.0     # fixed bin; sliding window and its step
 TIME_BIN, TIME_WINDOW, TIME_STEP = 1.0, 2.0, 0.5
 BIN_DEFAULTS = {"position": (POSITION_BIN, POSITION_WINDOW, POSITION_STEP), "time": (TIME_BIN, TIME_WINDOW, TIME_STEP)}
-DECODER_COLORS = {"lda": "tab:blue", "logr": "tab:orange", "svm": "tab:green"}
+DECODER_COLORS = {"lda": "tab:blue", "logr": "tab:orange", "svm": "tab:green", RBF_NAME: "tab:purple"}
+DECODERS = ["svm", RBF_NAME]          # linear and RBF SVM only (lda / logr of infotheory.decoder are not run; add "lda", "logr" here to bring them back)
+assert "svm" in BASE_DECODERS
 RANDOM_STATE = 0
+
+
+def decode(X, y, method, **kw):
+    """infotheory.decoder.decode for lda / logr / svm; the RBF SVM (decoder_nonlinear) for 'svm_rbf'. Same arguments, same output keys."""
+    return decode_rbf(X, y, **kw) if method == RBF_NAME else decode_base(X, y, method=method, **kw)
+
+
 JOBLIB_VERBOSE = 5
 SHARE_Y = True
+NOISE_TRIALS_ONLY = True      # True: every target on the trials whose signal is neither 0 nor 100 % (no `outcome` target); False: all trials
 VAR_COLORS = {"runspeed": "tab:blue", "pupil_area": "tab:orange", "motionenergy": "tab:green", "lick": "tab:red"}
 
 parser = argparse.ArgumentParser()
@@ -101,6 +125,8 @@ parser.add_argument("--axes", nargs="+", default=list(AXES_DEF), choices=list(AX
 parser.add_argument("--binnings", nargs="+", default=BINNINGS, choices=BINNINGS)
 parser.add_argument("--n-perm", type=int, default=N_PERM, help="label permutations for the null (0 = none)")
 parser.add_argument("--decoders", nargs="+", default=DECODERS, choices=DECODERS)
+parser.add_argument("--gain-reference", default="svm", choices=[d for d in DECODERS if d != RBF_NAME],
+                    help="decoder that svm_rbf is compared with (paired difference of balanced accuracy)")
 for ax_ in AXES_DEF:
     parser.add_argument(f"--{ax_}-bin", type=float, default=BIN_DEFAULTS[ax_][0])
     parser.add_argument(f"--{ax_}-window", type=float, default=BIN_DEFAULTS[ax_][1])
@@ -123,7 +149,7 @@ agg_note = {"pooled": "one decoder per protocol (pooled trials)", "session": "me
 STRATS = args.strategies or STIM_STRATEGIES
 OUTCOME_TARGET, CORRECT_TARGET = "outcome", "correct"
 EXTRA_NAMES = {OUTCOME_TARGET: ["HIT", "MISS", "CR", "FA"], CORRECT_TARGET: ["error", "correct"]}
-TARGETS = STRATS + [CHOICE_TARGET, OUTCOME_TARGET, CORRECT_TARGET]
+TARGETS = STRATS + [CHOICE_TARGET, CORRECT_TARGET] + ([] if NOISE_TRIALS_ONLY else [OUTCOME_TARGET])
 
 
 def bin_names(target):
@@ -173,21 +199,27 @@ print(f"{len(session_ids)} sessions")
 # 2. Stage 1: per session, trial x window x behavior tables (small), cached
 # --------------------------------------------------------------------- #
 def process_session(ses, seed):
+    # face signals (pupil area / x / y, motion energy, video PCs) are z-scored over the whole session BEFORE any window
+    # or trial averaging (same as 1c / 1d); the blink rejection comes first, as there
+    if ses.videodata is not None and len(ses.videodata):
+        ses.videodata = zscore_per_session(remove_pupil_outliers(ses.videodata))
     bw = BehaviorWindows(ses, [], BEHAVIOR_VARS, axes_def, AXES, BINS_RUN, imaging=False)
     if not bw.ok:
         return None
     tr = bw.trials
     ms = mu_sigma.get(ses.session_id, {})
     pct = psychometric_pct(tr["signal"], ms.get("mu"), ms.get("sigma"))
-    labels = {}
-    for s in STRATS:
-        labels[s] = np.asarray(bin_stimulus(tr["signal"], pct, STIM_BINNING_STRATEGIES[s]), float)
-    labels[CHOICE_TARGET] = tr["lickResponse"].to_numpy(float)
-    oc = add_trial_outcome(tr.drop(columns="trialOutcome", errors="ignore"))["trialOutcome"]
-    labels[OUTCOME_TARGET] = oc.map({"HIT": 0, "MISS": 1, "CR": 2, "FA": 3}).to_numpy(float)       # 0% / 100% trials only
     lick = tr["lickResponse"].to_numpy(float)
     sig = tr["signal"].to_numpy(float)
-    labels[CORRECT_TARGET] = np.where(sig > 0, lick, 1.0 - lick)                                    # 1d's definition, every level
+    keep = (sig > 0) & (sig < 100) if NOISE_TRIALS_ONLY else np.ones(len(sig), bool)               # noise trials: neither 0 % nor 100 %
+    labels = {}
+    for s in STRATS:
+        labels[s] = np.where(keep, np.asarray(bin_stimulus(tr["signal"], pct, STIM_BINNING_STRATEGIES[s]), float), np.nan)
+    labels[CHOICE_TARGET] = np.where(keep, lick, np.nan)
+    labels[CORRECT_TARGET] = np.where(keep, np.where(sig > 0, lick, 1.0 - lick), np.nan)            # 1d's definition
+    if not NOISE_TRIALS_ONLY:
+        oc = add_trial_outcome(tr.drop(columns="trialOutcome", errors="ignore"))["trialOutcome"]
+        labels[OUTCOME_TARGET] = oc.map({"HIT": 0, "MISS": 1, "CR": 2, "FA": 3}).to_numpy(float)   # 0 % / 100 % trials only
     wins = []
     for w in bw.windows():
         tmb = np.full((bw.nt, len(BEHAVIOR_VARS)), np.nan, dtype=np.float32)
@@ -195,14 +227,17 @@ def process_session(ses, seed):
             tmb[:, BEHAVIOR_VARS.index(b)] = w["TMB"][:, k]
         tmb[w["cnt"] == 0] = np.nan
         wins.append(dict(axis=w["axis"], binning=w["binning"], window=w["window"], s_rel=round(float(w["s_rel"]), 6), X=tmb))
-    print(f"  [{ses.session_id}] {bw.nt} engaged trials, {len(wins)} windows, variables {bw.behaviors}")
+    face = [b for b in bw.behaviors if b in ("pupil_area", "motionenergy")]          # sanity check of the normalization
+    chk = ", ".join(f"{b} {np.nanmean(wins[0]['X'][:, BEHAVIOR_VARS.index(b)]):+.2f}" for b in face) if wins else ""
+    print(f"  [{ses.session_id}] {bw.nt} engaged trials, {len(wins)} windows, variables {bw.behaviors}"
+          f"{f'; mean of first window (z-scored face signals: ~0) {chk}' if chk else ''}")
     return dict(session_id=ses.session_id, animal_id=ses.animal_id, protocol=ses.protocol, labels=labels, windows=wins)
 
 
 tables = run_sessions(
     session_ids, process_session, list(PROTOCOLS), paths.store, "behavior_windows",
     key_params=dict(axes_def={a: axes_def[a] for a in AXES}, axes=AXES, binnings=BINS_RUN, strategies=target_signature(STRATS),
-                    behaviors=BEHAVIOR_VARS, windows=WINDOWS, version="1e-v2"),
+                    behaviors=BEHAVIOR_VARS, windows=WINDOWS, version="1e-v6"),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True), n_jobs=scope.n_jobs, recompute=args.recompute,
     verbose=JOBLIB_VERBOSE, extra_key_by_session={s: f"{data_stamp(*triple_of[s])}|{mu_sigma.get(s)}" for s in session_ids},
     flatten=False)
@@ -285,15 +320,17 @@ for p in PROTOCOLS:
 print(f"\n{len(units)} decoding units ({UNIT}) x {len(DEC_RUN)} decoders; every decoder: {N_REPEATS} CV repeats + "
       f"{args.n_perm} permutations")
 # one cache file per (unit, decoder): a rerun, a new decoder or a change of figures only computes what is missing
-decode_key = dict(version="1e-v3", decoder_version=DECODER_VERSION, c_reg=C_REG, ridge=RIDGE_LDA, folds=N_FOLDS,
+decode_key = dict(version="1e-v6", decoder_version=DECODER_VERSION, c_reg=C_REG, ridge=RIDGE_LDA, folds=N_FOLDS,
                   repeats=N_REPEATS, n_perm=args.n_perm, sets={k: v for k, v in SETS.items()},
                   min_trials=cfg.MIN_TRIALS_ANALYSIS, min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, seed=RANDOM_STATE)
+RBF_KEY = dict(rbf_c=RBF_C, rbf_gamma=RBF_GAMMA, rbf_version=RBF_VERSION)      # only the RBF caches depend on these
 jobs, cached = [], []
 for p, u, a, st in units:
     for target in TARGETS:
         fp = tables_fingerprint(st, target)
         for dec in DEC_RUN:
-            path = cache_path(paths.store, "decode", protocol=p, unit=u, decoder=dec, target=target, data=fp, **decode_key)
+            path = cache_path(paths.store, "decode", protocol=p, unit=u, decoder=dec, target=target, data=fp, **decode_key,
+                              **(RBF_KEY if dec == RBF_NAME else {}))
             (cached if path.exists() and not args.recompute else jobs).append((p, u, a, st, dec, target, path))
 print(f"{len(cached)}/{len(cached) + len(jobs)} (unit, decoder, target) results cached; computing {len(jobs)}")
 Parallel(n_jobs=scope.n_jobs, backend="loky", verbose=JOBLIB_VERBOSE)(
@@ -332,6 +369,37 @@ if len(loo):
     loo_c.to_csv(table_dir / f"behavior_decoding_leave_one_out{AGG_SUFFIX}.csv", index=False)
 else:
     loo_c = pd.DataFrame()
+
+# nonlinear gain: acc(svm_rbf) - acc(reference) on the SAME unit, window, target and feature set
+gain_c = gain_u = pd.DataFrame()
+REF = args.gain_reference
+if RBF_NAME in DEC_RUN and REF in DEC_RUN:
+    GK = ["protocol", "unit", "axis", "binning", "window", "s_rel", "target", "feature_set", "kind"]
+    gain_u = (res[res["decoder"] == RBF_NAME][GK + ["acc"]].merge(res[res["decoder"] == REF][GK + ["acc"]], on=GK,
+                                                                  suffixes=("_rbf", "_ref")))
+    gain_u["delta"] = gain_u["acc_rbf"] - gain_u["acc_ref"]
+    gain_u.to_csv(table_dir / f"behavior_decoding_nonlinear_gain{AGG_SUFFIX}.csv", index=False)
+    GC = [k for k in GK if k not in ("unit",)]
+    gg = gain_u.groupby(GC)
+    gain_c = gg[["acc_rbf", "acc_ref", "delta"]].mean()
+    gain_c["delta_sem"] = gg["delta"].sem().fillna(0.0) if AGG != "pooled" else 0.0
+    gain_c["frac_units_better"] = gg["delta"].apply(lambda v: float(np.mean(v > 0)))
+    gain_c["n_units"] = gg.size()
+    gain_c = gain_c.reset_index()
+    gain_c.to_csv(table_dir / f"behavior_decoding_nonlinear_gain_curves{AGG_SUFFIX}.csv", index=False)
+    if AGG != "pooled":
+        from scipy.stats import wilcoxon
+        trows = []
+        for key, d in gain_u[gain_u["binning"] == "windows"].groupby(GC):
+            v = d["delta"].to_numpy(float)
+            v = v[np.isfinite(v)]
+            if len(v) >= 4 and np.any(v != 0):
+                trows.append(dict(zip(GC, key), n_units=len(v), mean_delta=v.mean(), p_wilcoxon=wilcoxon(v).pvalue))
+        if trows:
+            pd.DataFrame(trows).to_csv(table_dir / f"behavior_decoding_nonlinear_gain_test{AGG_SUFFIX}.csv", index=False)
+    print(f"\nNonlinear gain ({RBF_NAME} - {REF}), all four variables, mean over windows / protocols / targets: "
+          f"{gain_c[gain_c['feature_set'] == ALL_NAME]['delta'].mean():+.4f} balanced accuracy "
+          f"({(gain_c[gain_c['feature_set'] == ALL_NAME]['delta'] > 0).mean():.0%} of the window x target cells positive)")
 
 
 # --------------------------------------------------------------------- #
@@ -457,6 +525,37 @@ for axis in AXES:
                         save_fig(fig, ddir, "3_leave_one_out")
                         plt.close(fig)
 
+# nonlinear gain curves: svm_rbf minus the reference decoder
+if len(gain_c):
+    for axis in AXES:
+        for binning in BINS_RUN:
+            if binning == "windows":
+                continue
+            for target in TARGETS:
+                cg = gain_c[(gain_c["axis"] == axis) & (gain_c["binning"] == binning) & (gain_c["target"] == target)]
+                prots = [p for p in protocols_present if (cg["protocol"] == p).any()]
+                if not prots:
+                    continue
+                fig, axs = plt.subplots(1, len(prots), figsize=(5.2 * len(prots), 4.4), squeeze=False, sharey=SHARE_Y)
+                for ax, p in zip(axs[0], prots):
+                    cp = cg[cg["protocol"] == p]
+                    for n in SINGLE_NAMES:
+                        line(ax, cp[cp["feature_set"] == n], "delta", "delta_sem", {**VAR_COLORS, ALL_NAME: "k"}[n],
+                             n if n != ALL_NAME else "all four", lw=1.8 if n == ALL_NAME else 1.2)
+                    ax.axhline(0, color="grey", lw=0.8)
+                    decorate(ax, axis, f"balanced acc.: {RBF_NAME} - {REF}")
+                    nu = int(cp["n_units"].max()) if len(cp) else 0
+                    ax.set_title(f"{p} (n={nu} {UNIT}{'s' if nu != 1 else ''})", color=PROTOCOL_COLORS.get(p, "k"), fontsize=10)
+                    ax.legend(fontsize=6, frameon=False)
+                fig.suptitle(f"Does a nonlinear SVM help? {target}, over {axis} ({bn_note(axis, binning)}); >0 = RBF better; "
+                             f"{agg_note}" + ("; pooled = one value per window, no error bars" if AGG == "pooled" else ""),
+                             y=1.03, fontsize=9)
+                fig.tight_layout()
+                tdir = figdir / axis / binning / target
+                tdir.mkdir(parents=True, exist_ok=True)
+                save_fig(fig, tdir, "4_nonlinear_gain")
+                plt.close(fig)
+
 # bars in 3a-3c's three windows
 cw_all = curves[(curves["axis"] == "position") & (curves["binning"] == "windows")]
 if not cw_all.empty:
@@ -506,5 +605,24 @@ if not cw_all.empty:
         fig.suptitle(f"Decoders compared, {target}, position windows; {agg_note}", y=1.03, fontsize=9)
         fig.tight_layout()
         save_fig(fig, wdir, f"{target}_decoders_by_window")
+        plt.close(fig)
+if len(gain_c) and not cw_all.empty:
+    cgw = gain_c[(gain_c["axis"] == "position") & (gain_c["binning"] == "windows")]
+    for target in TARGETS:
+        ct_g = cgw[cgw["target"] == target]
+        prots = [p for p in protocols_present if (ct_g["protocol"] == p).any()]
+        if not prots:
+            continue
+        fig, axs = plt.subplots(1, len(prots), figsize=(5.2 * len(prots), 4.2), squeeze=False, sharey=SHARE_Y)
+        for ax, p in zip(axs[0], prots):
+            cp = ct_g[ct_g["protocol"] == p].assign(_series=lambda d: d["feature_set"], acc=lambda d: d["delta"],
+                                                    acc_sem=lambda d: d["delta_sem"], null_mean=0.0)
+            bars(ax, cp, SINGLE_NAMES, [{**VAR_COLORS, ALL_NAME: "k"}[n] for n in SINGLE_NAMES],
+                 [n if n != ALL_NAME else "all four" for n in SINGLE_NAMES])
+            ax.set_ylabel(f"balanced acc.: {RBF_NAME} - {REF}")
+            ax.set_title(p, color=PROTOCOL_COLORS.get(p, "k"), fontsize=10)
+        fig.suptitle(f"Nonlinear gain, {target}, 3a-3c's position windows (>0 = RBF better); {agg_note}", y=1.03, fontsize=9)
+        fig.tight_layout()
+        save_fig(fig, wdir, f"{target}_nonlinear_gain")
         plt.close(fig)
 print(f"\nWrote tables to {table_dir}, figures to {figdir}")

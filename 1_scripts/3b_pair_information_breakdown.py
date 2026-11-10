@@ -79,7 +79,7 @@ from infotheory import pair_tables as pt
 PROTOCOL = "DN"
 WINDOWS = {"pre_stim": (-30.0, -10.0), "stim": (0.0, 20.0), "reward": (25.0, 45.0)}
 
-MAX_PAIRS_PER_GROUP = 5     # pairs per (session, area, label) taken from 3a's list (cost per pair is high)
+MAX_PAIRS_PER_GROUP = 200     # pairs per (session, area, label) taken from 3a's list (cost per pair is high)
 R_BINS = cfg.RESPONSE_BINS  # shared with 2c / 3c
 MI_SHUFFLES = 4             # bias-correction shuffles for every direct-method MI
 MIN_PAIRS_PER_UNIT = 3
@@ -92,9 +92,9 @@ JOBLIB_VERBOSE = 5
 parser = argparse.ArgumentParser()
 add_scope_args(parser)
 parser.add_argument("--strategies", nargs="+", default=None, choices=sorted(STIM_BINNING_STRATEGIES))
-parser.add_argument("--max-pairs", type=int, default=MAX_PAIRS_PER_GROUP, help="pairs per (session, area, label), from 3a's list")
 parser.add_argument("--mi-shuffles", type=int, default=MI_SHUFFLES)
 args = parser.parse_args()
+MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
 scope = scope_from_args(args)
 AGG = scope.aggregate
 UNIT = unit_noun(AGG)
@@ -131,7 +131,7 @@ all_triples = discover_sessions([PROTOCOL])
 selected = {f"{a}_{d}": (p, a, d) for p, a, d in select_sessions(all_triples, scope)}
 session_ids = [s for s in selected if s in included_all]
 mouse_colors = mouse_palette(a for _, a, _ in all_triples)
-pairs_all = pt.load_pair_list(pair_list_path, session_ids, args.max_pairs)
+pairs_all = pt.load_pair_list(pair_list_path, session_ids, MAX_PAIRS)
 missing = sorted(set(session_ids) - set(pairs_all["session_id"]))
 if missing:
     print(f"WARNING: no pairs in 3a's list for {missing} (rerun 3a on the full dataset); skipped")
@@ -140,7 +140,7 @@ if not session_ids:
     raise SystemExit("No selected session has pairs in 3a's pair_list.csv.")
 pairs_by_session = {sid: sub.reset_index(drop=True) for sid, sub in pairs_all.groupby("session_id")}
 cells_by_session = {sid: sorted(set(sub["cell_i"]) | set(sub["cell_j"])) for sid, sub in pairs_by_session.items()}
-print(f"{len(session_ids)} sessions, {len(pairs_all)} pairs (3a's list, pair_rank < {args.max_pairs})")
+print(f"{len(session_ids)} sessions, {len(pairs_all)} pairs (3a's list, pair_rank < {MAX_PAIRS})")
 pair_hash = {s: hashlib.sha1(pairs_by_session[s].to_csv(index=False).encode()).hexdigest()[:10] for s in session_ids}
 stamps = {s: f"{data_stamp(*selected[s])}-{pair_hash[s]}" for s in session_ids}
 

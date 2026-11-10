@@ -101,7 +101,7 @@ from infotheory.groups import six_panel_figure, group_key
 from infotheory.plotting import set_style, save_fig, clear_figures
 from infotheory.corr_lib import corr_with_shift_null
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
-from infotheory.session_jobs import run_sessions
+from infotheory.session_jobs import run_sessions_units
 from infotheory.unit_plots import group_panels, mouse_palette
 from infotheory import tensors as tn
 from infotheory import cell_tables as ct
@@ -168,6 +168,7 @@ if not session_ids:
     raise SystemExit("None of the selected sessions passed 1b_psychometric's inclusion criteria.")
 mouse_colors = mouse_palette(a for _, a, _ in all_triples)
 cell_inclusion = load_cell_inclusion(cell_dist_out, activity_out)
+cell_group = dict(zip(cell_inclusion["cell_id"], cell_inclusion["group"]))      # per-group cell / pair caps (--max-cells / --max-pairs)
 cells_by_session = {sid: sorted(sub.loc[sub["include"], "cell_id"]) for sid, sub in cell_inclusion.groupby("session_id")
                     if sid in session_ids}
 session_ids = [s for s in session_ids if cells_by_session.get(s)]
@@ -221,9 +222,9 @@ def residualize_by_position(X, rel, mask, bin_cm):
     return (np.where(mask, res[:, 0], np.nan) if X.ndim == 1 else res)
 
 
-def process_session(ses, seed):
+def process_session(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
-    cell_ids = cells_by_session.get(sid, [])
+    cell_ids = list(new_cells)          # only the cells not yet in the ledger (session_jobs.run_sessions_units)
     if (not cell_ids or ses.calciumdata is None or ses.ts_F is None or ses.trialdata is None
             or ses.behaviordata is None or "engaged" not in ses.trialdata.columns):
         return None
@@ -251,17 +252,18 @@ def process_session(ses, seed):
             "session_id": sid, "cell_id": cell_ids, "variable": var,
             "r": res["r"], "lag_s": res["lag"] * dt, "null_lo": res["null_lo"], "null_hi": res["null_hi"],
             "p_value": res["p_value"], "significant": res["significant"], "n_frames": res["n_frames"]}))
-    return pd.concat(records, ignore_index=True) if records else None
+    return {"df": pd.concat(records, ignore_index=True)} if records else None
 
 
-results = run_sessions(
+results = run_sessions_units(
     session_ids, process_session, [PROTOCOL], paths.store, "corr_session",
-    key_params=dict(version="2g-v1", variables=VARIABLES, lick_smooth=LICK_SMOOTH_S, control_bin=CONTROL_POSITION_BIN_CM,
+    key_params=dict(version="2g-v2", variables=VARIABLES, lick_smooth=LICK_SMOOTH_S, control_bin=CONTROL_POSITION_BIN_CM,
                     s_pre=S_PRE, s_post=S_POST, n_shifts=n_shifts, lags_s=LAGS_S, min_shift_s=MIN_SHIFT_S,
                     alpha=ALPHA, qc_mtime=qc_mtime, fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
-    cells_by_session=cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
-    verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps, flatten=False)
+    cells_by_session=cells_by_session, parts={"df": "cell"}, unwrap="df", groups_by_cell=cell_group, max_cells=scope.max_cells,
+    base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
+    verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps)
 results = [r for r in results if r is not None and len(r)]
 if not results:
     raise SystemExit("No correlation results (no sessions with usable cells).")
@@ -340,7 +342,7 @@ print(unit_mean("r").round(3).to_string())
 # --------------------------------------------------------------------- #
 # 1. r histograms (cell level, not aggregated): rows = variables, columns = six groups
 bins = np.linspace(-1, 1, 51)
-fig, axes = plt.subplots(len(variables), 6, figsize=(16, 2.3 * len(variables)), sharex=True, squeeze=False)
+fig, axes = plt.subplots(len(variables), len(SIX_GROUP_ORDER), figsize=(2.7 * len(SIX_GROUP_ORDER), 2.3 * len(variables)), sharex=True, squeeze=False)
 for i, var in enumerate(variables):
     for j, g in enumerate(SIX_GROUP_ORDER):
         ax = axes[i, j]
@@ -411,7 +413,7 @@ for ax, var in zip(axes[0], variables):
     piv = (hm[hm["variable"] == var].groupby(["_unit", "group"])["sig_f"].mean().unstack("group")
            .reindex(columns=GROUP_KEYS))
     im = ax.imshow(piv.to_numpy(float), aspect="auto", cmap="viridis", vmin=0, vmax=1)
-    ax.set_xticks(range(6))
+    ax.set_xticks(range(len(SIX_GROUP_ORDER)))
     ax.set_xticklabels([SIX_GROUP_LABELS[g] for g in SIX_GROUP_ORDER], rotation=45, ha="right", fontsize=7)
     ax.set_yticks(range(len(piv)))
     ax.set_yticklabels(piv.index if ax is axes[0, 0] else [], fontsize=6)

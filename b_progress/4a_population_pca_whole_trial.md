@@ -1,6 +1,76 @@
 # 4a_population_pca_whole_trial
 
-*Auto-generated from `2_pipeline/4a_population_pca_whole_trial/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/4a_population_pca_whole_trial/out/` on 2026-11-10 17:49. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Shuffle comparison pre stim
+
+![1_shuffle_comparison_pre_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/1_shuffle_comparison_pre_stim.png)
+
+### Shuffle comparison reward
+
+![1_shuffle_comparison_reward](../2_pipeline/4a_population_pca_whole_trial/out/figures/1_shuffle_comparison_reward.png)
+
+### Shuffle comparison stim
+
+![1_shuffle_comparison_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/1_shuffle_comparison_stim.png)
+
+### Shuffle comparison whole trial
+
+![1_shuffle_comparison_whole_trial](../2_pipeline/4a_population_pca_whole_trial/out/figures/1_shuffle_comparison_whole_trial.png)
+
+### Dimensionality vs size
+
+![2_dimensionality_vs_size](../2_pipeline/4a_population_pca_whole_trial/out/figures/2_dimensionality_vs_size.png)
+
+### Pca spectrum pre stim
+
+![3_pca_spectrum_pre_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/3_pca_spectrum_pre_stim.png)
+
+### Pca spectrum reward
+
+![3_pca_spectrum_reward](../2_pipeline/4a_population_pca_whole_trial/out/figures/3_pca_spectrum_reward.png)
+
+### Pca spectrum stim
+
+![3_pca_spectrum_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/3_pca_spectrum_stim.png)
+
+### Pca spectrum whole trial
+
+![3_pca_spectrum_whole_trial](../2_pipeline/4a_population_pca_whole_trial/out/figures/3_pca_spectrum_whole_trial.png)
+
+### Pca shuffle effects pre stim
+
+![4_pca_shuffle_effects_pre_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/4_pca_shuffle_effects_pre_stim.png)
+
+### Pca shuffle effects reward
+
+![4_pca_shuffle_effects_reward](../2_pipeline/4a_population_pca_whole_trial/out/figures/4_pca_shuffle_effects_reward.png)
+
+### Pca shuffle effects stim
+
+![4_pca_shuffle_effects_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/4_pca_shuffle_effects_stim.png)
+
+### Pca shuffle effects whole trial
+
+![4_pca_shuffle_effects_whole_trial](../2_pipeline/4a_population_pca_whole_trial/out/figures/4_pca_shuffle_effects_whole_trial.png)
+
+### Pca spectrum population pre stim
+
+![5_pca_spectrum_population_pre_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/5_pca_spectrum_population_pre_stim.png)
+
+### Pca spectrum population reward
+
+![5_pca_spectrum_population_reward](../2_pipeline/4a_population_pca_whole_trial/out/figures/5_pca_spectrum_population_reward.png)
+
+### Pca spectrum population stim
+
+![5_pca_spectrum_population_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/5_pca_spectrum_population_stim.png)
+
+### Pca spectrum population whole trial
+
+![5_pca_spectrum_population_whole_trial](../2_pipeline/4a_population_pca_whole_trial/out/figures/5_pca_spectrum_population_whole_trial.png)
 
 ## Tables
 
@@ -81,73 +151,3 @@
 *(showing first 15 of 16 columns; showing first 30 of 36612 rows -- see the linked CSV for the rest)*
 
 [pca_shuffle_results.csv](../2_pipeline/4a_population_pca_whole_trial/out/pca_shuffle_results.csv)
-
-## Figures
-
-### Shuffle comparison pre stim
-
-![1_shuffle_comparison_pre_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/1_shuffle_comparison_pre_stim.png)
-
-### Shuffle comparison reward
-
-![1_shuffle_comparison_reward](../2_pipeline/4a_population_pca_whole_trial/out/figures/1_shuffle_comparison_reward.png)
-
-### Shuffle comparison stim
-
-![1_shuffle_comparison_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/1_shuffle_comparison_stim.png)
-
-### Shuffle comparison whole trial
-
-![1_shuffle_comparison_whole_trial](../2_pipeline/4a_population_pca_whole_trial/out/figures/1_shuffle_comparison_whole_trial.png)
-
-### Dimensionality vs size
-
-![2_dimensionality_vs_size](../2_pipeline/4a_population_pca_whole_trial/out/figures/2_dimensionality_vs_size.png)
-
-### Pca spectrum pre stim
-
-![3_pca_spectrum_pre_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/3_pca_spectrum_pre_stim.png)
-
-### Pca spectrum reward
-
-![3_pca_spectrum_reward](../2_pipeline/4a_population_pca_whole_trial/out/figures/3_pca_spectrum_reward.png)
-
-### Pca spectrum stim
-
-![3_pca_spectrum_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/3_pca_spectrum_stim.png)
-
-### Pca spectrum whole trial
-
-![3_pca_spectrum_whole_trial](../2_pipeline/4a_population_pca_whole_trial/out/figures/3_pca_spectrum_whole_trial.png)
-
-### Pca shuffle effects pre stim
-
-![4_pca_shuffle_effects_pre_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/4_pca_shuffle_effects_pre_stim.png)
-
-### Pca shuffle effects reward
-
-![4_pca_shuffle_effects_reward](../2_pipeline/4a_population_pca_whole_trial/out/figures/4_pca_shuffle_effects_reward.png)
-
-### Pca shuffle effects stim
-
-![4_pca_shuffle_effects_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/4_pca_shuffle_effects_stim.png)
-
-### Pca shuffle effects whole trial
-
-![4_pca_shuffle_effects_whole_trial](../2_pipeline/4a_population_pca_whole_trial/out/figures/4_pca_shuffle_effects_whole_trial.png)
-
-### Pca spectrum population pre stim
-
-![5_pca_spectrum_population_pre_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/5_pca_spectrum_population_pre_stim.png)
-
-### Pca spectrum population reward
-
-![5_pca_spectrum_population_reward](../2_pipeline/4a_population_pca_whole_trial/out/figures/5_pca_spectrum_population_reward.png)
-
-### Pca spectrum population stim
-
-![5_pca_spectrum_population_stim](../2_pipeline/4a_population_pca_whole_trial/out/figures/5_pca_spectrum_population_stim.png)
-
-### Pca spectrum population whole trial
-
-![5_pca_spectrum_population_whole_trial](../2_pipeline/4a_population_pca_whole_trial/out/figures/5_pca_spectrum_population_whole_trial.png)

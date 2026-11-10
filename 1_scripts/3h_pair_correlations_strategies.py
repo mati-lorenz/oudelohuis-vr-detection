@@ -107,7 +107,6 @@ SHARE_Y = True               # panels of one metric share the y range
 parser = argparse.ArgumentParser()
 add_scope_args(parser)
 parser.add_argument("--strategies", nargs="+", default=None, choices=sorted(STIM_BINNING_STRATEGIES))
-parser.add_argument("--max-pairs", type=int, default=MAX_PAIRS_PER_GROUP, help="pairs per (session, area, label)")
 parser.add_argument("--axes", nargs="+", default=["position", "time"], choices=list(AXES_DEF))
 parser.add_argument("--binnings", nargs="+", default=BINNINGS, choices=BINNINGS)
 parser.add_argument("--position-bin", type=float, default=AXES_DEF["position"]["binsize"], help="fixed position bin (cm)")
@@ -117,6 +116,7 @@ parser.add_argument("--time-bin", type=float, default=AXES_DEF["time"]["binsize"
 parser.add_argument("--time-window", type=float, default=AXES_DEF["time"]["window"], help="sliding window (s)")
 parser.add_argument("--time-step", type=float, default=AXES_DEF["time"]["step"], help="sliding step (s)")
 args = parser.parse_args()
+MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
 for ax_ in ("position", "time"):
     AXES_DEF[ax_]["binsize"] = getattr(args, f"{ax_}_bin")
     AXES_DEF[ax_]["window"] = getattr(args, f"{ax_}_window")
@@ -239,7 +239,7 @@ def process_session(ses, seed):
     if len(celldata) < 2:
         return []
     pairs = pt.sample_session_pairs(celldata, sid, np.random.default_rng(stable_seed(sid, "pairs3h", base=RANDOM_STATE)),
-                                    args.max_pairs)
+                                    MAX_PAIRS)
     if pairs.empty:
         return []
     pairs = add_six_group_column(pairs, area_var="roi_name", label_var="labeled_grouped")
@@ -337,7 +337,7 @@ records = run_sessions(
     session_ids, process_session, [PROTOCOL], paths.store, "strategy_corr",
     key_params=dict(axes={a: AXES_DEF[a] for a in AXES}, binnings=BINS_RUN, targets=target_signature(TARGETS),
                     min_trials=cfg.MIN_TRIALS_ANALYSIS, min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3h-v4",
-                    frames=MIN_FRAMES_POOLED, max_pairs=args.max_pairs, fits_mtime=int(fits_path.stat().st_mtime)),
+                    frames=MIN_FRAMES_POOLED, max_pairs=MAX_PAIRS, fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
     cells_by_session=cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
     verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps, flatten=True)

@@ -103,6 +103,9 @@ Outputs
                                          4_mi_vs_linear_summary_<window>.png
                                          and one
                                          7_multivariate_mi_vs_linear_summary_<window>.png
+                                         9a_pupil_crosscorrelation.png, 9b_pupil_correlations_<window>.png,
+                                         9c_pupil_vs_state_<window>.png   (pupil focus, section 9; tables pupil_correlations*.csv,
+                                         pupil_xcorr_per_session.csv, pupil_xcorr_peaks*.csv)
                                          and one
                                          8_stepwise_dominant_predictor_<window>.png
                                          per MI_WINDOWS entry
@@ -137,7 +140,7 @@ import zlib
 from infotheory.pipeline import get_pipeline_paths
 from infotheory.session import load_sessions, PROTOCOLS
 from infotheory.continuous import (
-    merge_behavior_video, check_zpos_consistency, restrict_to_engaged, remove_pupil_outliers,
+    merge_behavior_video, check_zpos_consistency, restrict_to_engaged, remove_pupil_outliers, zscore_per_session,
     compute_trial_position_window_means, bin_by_position,
 )
 from infotheory.psth import align_trials_time, align_trials_position, derive_onset_time
@@ -160,9 +163,9 @@ from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES
 VARIABLES = ["zpos", "runspeed", "lick", "pupil_area", "pupil_xpos", "pupil_ypos",
              "motionenergy", "videoPC_0", "videoPC_1"]
 VAR_LABELS = {"zpos": "position (cm)", "runspeed": "speed (cm/s)", "lick": "lick rate",
-              "pupil_area": "pupil area (a.u.)", "pupil_xpos": "pupil x (a.u.)",
-              "pupil_ypos": "pupil y (a.u.)", "motionenergy": "motion energy (a.u.)",
-              "videoPC_0": "video PC 1", "videoPC_1": "video PC 2"}
+              "pupil_area": "pupil area (z)", "pupil_xpos": "pupil x (z)",
+              "pupil_ypos": "pupil y (z)", "motionenergy": "motion energy (z)",
+              "videoPC_0": "video PC 1 (z)", "videoPC_1": "video PC 2 (z)"}
 RATE_VARIABLES = ["lick"]  # 0/1 event channels -- binned as counts/width (a rate), never averaged
 
 # MI/regression are computed separately in each of these windows,
@@ -213,6 +216,16 @@ POOLED_MAX_SAMPLES_PER_SESSION = 3000
 # infotheory/stim_binning.py (psychometric-curve based, so only protocols with a 1b fit, i.e. DN, can use
 # the curve_pct strategies). DP has no fit: its (few) raw signal levels are used directly. DM: outcome only.
 PSTH_STIM_STRATEGIES = list(DEFAULT_STRATEGIES)
+
+# --- pupil focus (section 9) ---------------------------------------------------------------------------------------
+PUPIL_VAR = "pupil_area"
+PUPIL_XCORR_PARTNERS = ["runspeed", "motionenergy", "lick", "videoPC_0"]   # whole-session cross-correlation with the pupil
+PUPIL_XCORR_MAX_LAG_S, PUPIL_XCORR_DT_S = 5.0, 0.1       # lags -5..+5 s on a 10 Hz grid (engaged-trial time only)
+PUPIL_LICK_SMOOTH_S = 1.0                                # lick events -> lick rate (boxcar of this width) before correlating
+PUPIL_PARTNERS = ["runspeed", "lick", "motionenergy", "videoPC_0", "videoPC_1", "pupil_xpos", "pupil_ypos"]   # per-trial, section 9b
+PUPIL_CONTROLS = ["runspeed", "motionenergy"]            # partial correlation controls (the partner itself is left out)
+PUPIL_BIN_PARTNERS = ["runspeed", "motionenergy"]        # section 9c: mean pupil per within-session quantile of these
+PUPIL_N_QUANTILES = 5
 
 JOBLIB_VERBOSE = 5   # parallelism: sessions / MI tasks run with --n-jobs (project_config.N_JOBS_SESSIONS)
 
@@ -267,6 +280,68 @@ def _session_key(sid):
     return f"{data_stamp(*triple_of[sid])}|{ms.get('mu')}|{ms.get('sigma')}"
 
 
+def _pupil_xcorr(merged_full, trialdata, ses):
+    """Cross-correlation between the (z-scored) pupil area and each PUPIL_XCORR_PARTNERS signal over the whole session
+    (engaged-trial time only): both signals are put on a PUPIL_XCORR_DT_S grid, and r(lag) is the Pearson correlation of
+    partner(t) with pupil(t + lag) over the grid points of engaged trials. lag > 0: the pupil FOLLOWS the partner
+    (e.g. a peak at +1 s for runspeed = the pupil dilates ~1 s after the animal starts running). Lick events are turned
+    into a rate first (boxcar of PUPIL_LICK_SMOOTH_S). Pupil gaps (blink rejection) are bridged by linear interpolation."""
+    if PUPIL_VAR not in merged_full.columns or "ts" not in merged_full.columns:
+        return None
+    ts = merged_full["ts"].to_numpy(float)
+    grid = np.arange(np.nanmin(ts), np.nanmax(ts), PUPIL_XCORR_DT_S)
+    if len(grid) < 100:
+        return None
+
+    def on_grid(col):
+        y = merged_full[col].to_numpy(float)
+        ok = np.isfinite(y) & np.isfinite(ts)
+        if ok.sum() < 10:
+            return None
+        o = np.argsort(ts[ok])
+        return np.interp(grid, ts[ok][o], y[ok][o])
+
+    pup = on_grid(PUPIL_VAR)
+    if pup is None:
+        return None
+    if "engaged" in trialdata.columns:
+        tr = trialdata[trialdata["engaged"] == 1]
+    else:
+        tr = trialdata
+    t0, t1 = tr["tStart"].to_numpy(float), tr["tEnd"].to_numpy(float)
+    o = np.argsort(t0)
+    t0, t1 = t0[o], t1[o]
+    idx = np.searchsorted(t0, grid, side="right") - 1
+    inside = (idx >= 0) & (grid <= t1[np.clip(idx, 0, None)])
+    L = int(round(PUPIL_XCORR_MAX_LAG_S / PUPIL_XCORR_DT_S))
+    rows = []
+    for partner in PUPIL_XCORR_PARTNERS:
+        if partner not in merged_full.columns:
+            continue
+        x = on_grid(partner)
+        if x is None:
+            continue
+        if partner in RATE_VARIABLES:
+            w = max(1, int(round(PUPIL_LICK_SMOOTH_S / PUPIL_XCORR_DT_S)))
+            x = np.convolve(x, np.ones(w) / w, mode="same")
+        for k in range(-L, L + 1):
+            a = slice(max(0, -k), len(grid) - max(0, k))          # partner index t, pupil index t + k
+            b = slice(max(0, k), len(grid) - max(0, -k))
+            m = inside[a] & inside[b]
+            if m.sum() < 50:
+                continue
+            xa, pb = x[a][m], pup[b][m]
+            if xa.std() == 0 or pb.std() == 0:
+                continue
+            rows.append({"partner": partner, "lag_s": round(k * PUPIL_XCORR_DT_S, 6), "r": float(np.corrcoef(xa, pb)[0, 1]),
+                         "n": int(m.sum())})
+    if not rows:
+        return None
+    out = pd.DataFrame(rows)
+    out["session_id"], out["protocol"] = ses.session_id, ses.protocol
+    return out
+
+
 def process_session(ses, seed):
     """All per-session work for one session, returned as a dict of
     the (up to) six sub-tables this step builds -- None for any
@@ -279,7 +354,7 @@ def process_session(ses, seed):
     """
     result = {"session_id": ses.session_id, "zpos_diag": None, "trial_features": None,
                "position_binned": None, "time_course": None, "pooled": None, "var_stats": None,
-               "psth_time": None, "psth_position": None}
+               "psth_time": None, "psth_position": None, "pupil_xcorr": None}
     if ses.trialdata is None or ses.behaviordata is None:
         return result
 
@@ -288,6 +363,7 @@ def process_session(ses, seed):
 
     merged_full = merge_behavior_video(ses.behaviordata, ses.videodata)
     merged_full = remove_pupil_outliers(merged_full)
+    merged_full = zscore_per_session(merged_full)      # pupil, motion energy, video PCs: z-scored within the session
     if merged_full.empty:
         return result
     # Engaged-only view: for whole-session/pooled stats and the
@@ -415,7 +491,10 @@ def process_session(ses, seed):
             pp["session_id"], pp["protocol"] = ses.session_id, ses.protocol
             result["psth_position"] = pp
 
-    for key in ("trial_features", "position_binned", "time_course", "pooled", "var_stats", "psth_time", "psth_position"):
+    result["pupil_xcorr"] = _pupil_xcorr(merged_full, ses.trialdata, ses)
+
+    for key in ("trial_features", "position_binned", "time_course", "pooled", "var_stats", "psth_time", "psth_position",
+                "pupil_xcorr"):
         if result[key] is not None:
             result[key]["animal_id"] = ses.animal_id
     return result
@@ -423,10 +502,11 @@ def process_session(ses, seed):
 
 session_results = run_sessions(
     included_ids, process_session, list(PROTOCOLS), paths.store, "behavior_session",
-    key_params=dict(version="1c-v2", variables=VARIABLES, rate_variables=RATE_VARIABLES, windows=MI_WINDOWS,
+    key_params=dict(version="1c-v4", variables=VARIABLES, rate_variables=RATE_VARIABLES, windows=MI_WINDOWS,
                     n_pos_bins=N_POSITION_BINS, downsample=DOWNSAMPLE_HZ, pooled_cap=POOLED_MAX_SAMPLES_PER_SESSION,
                     psth_vars=PSTH_VARS, psth_t=(PSTH_T_PRE, PSTH_T_POST, PSTH_T_BINSIZE),
-                    psth_s=(PSTH_S_PRE, PSTH_S_POST, PSTH_S_BINSIZE)),
+                    psth_s=(PSTH_S_PRE, PSTH_S_POST, PSTH_S_BINSIZE),
+                    pupil_xcorr=(PUPIL_XCORR_PARTNERS, PUPIL_XCORR_MAX_LAG_S, PUPIL_XCORR_DT_S, PUPIL_LICK_SMOOTH_S)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True),
     n_jobs=N_JOBS, recompute=args.recompute, verbose=JOBLIB_VERBOSE,
     extra_key_by_session={sid: _session_key(sid) for sid in included_ids}, flatten=False)
@@ -455,6 +535,7 @@ pooled = _concat("pooled")
 var_stats = _concat("var_stats")
 psth_time = _concat("psth_time")
 psth_position = _concat("psth_position")
+pupil_xcorr = _concat("pupil_xcorr")
 del session_results
 
 if not pooled.empty and "zpos" in pooled.columns:
@@ -931,12 +1012,13 @@ if len(mi_table) and np.isfinite(mi_table["mi_reference_bits"]).any():
         fig, axes = plt.subplots(1, len(protocols_present), figsize=(4.3 * len(protocols_present), 4.3), squeeze=False)
         axes = axes[0]
         for ax, protocol in zip(axes, protocols_present):
-            sub = finite[finite["protocol"] == protocol]
+            # ONE point per pair: the mean over the units (sessions / mice) of both axes (pooled: already one row)
+            sub = (finite[finite["protocol"] == protocol]
+                   .groupby(["var_x", "var_y"], as_index=False)[["mi_reference_bits", "mi_bits_from_r2"]].mean())
             for _, row in sub.iterrows():
                 ax.scatter(row["mi_reference_bits"], row["mi_bits_from_r2"],
                            marker=var_marker[row["var_x"]], color=var_color[row["var_y"]],
-                           s=70 if AGG == "pooled" else 30, edgecolor="black", linewidth=0.4,
-                           alpha=1.0 if AGG == "pooled" else 0.6)
+                           s=70, edgecolor="black", linewidth=0.4)
             ax.plot(lims, lims, color="grey", linestyle="--", linewidth=1)
             ax.set_xlim(lims)
             ax.set_ylim(lims)
@@ -944,7 +1026,7 @@ if len(mi_table) and np.isfinite(mi_table["mi_reference_bits"]).any():
             ax.set_xlabel("MI, best available estimate (bits)")
         axes[0].set_ylabel("MI implied by linear r\u00b2 (bits)")
         fig.suptitle(f"Is the linear fit capturing the full relationship? -- {window_name} window"
-                     f" -- one point per pair{'' if AGG == 'pooled' else ' and ' + UNIT}\n"
+                     f" -- one point per pair{'' if AGG == 'pooled' else f' (mean over {UNIT}s)'}\n"
                      "(shape = 1st variable, color = 2nd variable; dashed = linear matches MI exactly)", y=1.08)
 
         shape_handles = [plt.Line2D([0], [0], marker=var_marker[v], linestyle="none", markerfacecolor="white",
@@ -1016,11 +1098,13 @@ if len(multivariate_table) and np.isfinite(multivariate_table["mi_reference_bits
         axes = axes[0]
         handles = {}
         for ax, protocol in zip(axes, protocols_present):
-            sub = finite_mv[finite_mv["protocol"] == protocol]
+            # ONE point per target: mean over the units (sessions / mice) of both axes
+            sub = (finite_mv[finite_mv["protocol"] == protocol]
+                   .groupby("target", as_index=False)[["mi_reference_bits", "mi_bits_from_r2"]].mean())
             for _, row in sub.iterrows():
                 h = ax.scatter(row["mi_reference_bits"], row["mi_bits_from_r2"],
-                                color=target_color[row["target"]], s=90 if AGG == "pooled" else 35,
-                                edgecolor="black", linewidth=0.5, alpha=1.0 if AGG == "pooled" else 0.6)
+                                color=target_color[row["target"]], s=90,
+                                edgecolor="black", linewidth=0.5)
                 handles.setdefault(row["target"], h)
             ax.plot(lims_mv, lims_mv, color="grey", linestyle="--", linewidth=1)
             ax.set_xlim(lims_mv)
@@ -1097,6 +1181,156 @@ if len(stepwise_table):
                      "little beyond that one variable)", y=1.06)
         fig.tight_layout()
         save_fig(fig, figdir, f"8_stepwise_dominant_predictor_{window_name}")
+        plt.close(fig)
+
+
+# --------------------------------------------------------------------- #
+# 9. PUPIL FOCUS: how does the pupil area (z-scored per session) relate to the other variables?
+#    9a  whole-session cross-correlation with running speed / motion energy / licking / video PC 1 (who leads?)
+#    9b  per-trial, per-window correlation of pupil area with every other variable, plain AND partial (controlling
+#        for running speed and motion energy, PUPIL_CONTROLS) -- is the relation with X just locomotion / movement?
+#    9c  mean pupil area per within-session quantile of running speed / motion energy (dose-response, per window)
+#    Same unit of analysis (--aggregate) as everything above; pooled = no error bars.
+# --------------------------------------------------------------------- #
+UNITS = "mice" if UNIT == "mouse" else f"{UNIT}s"
+
+
+def _partial_r(x, y, Z):
+    """Pearson r of x and y after regressing the columns of Z (n x k, may be empty) out of both."""
+    if Z.shape[1]:
+        D = np.column_stack([np.ones(len(x)), Z])
+        x = x - D @ np.linalg.lstsq(D, x, rcond=None)[0]
+        y = y - D @ np.linalg.lstsq(D, y, rcond=None)[0]
+    if x.std() == 0 or y.std() == 0:
+        return np.nan
+    return float(np.corrcoef(x, y)[0, 1])
+
+
+pupil_rows = []
+if PUPIL_VAR in trial_features.columns:
+    for protocol, window_name, unit, sub in mi_groups:
+        for partner in PUPIL_PARTNERS:
+            if partner not in sub.columns or partner == PUPIL_VAR:
+                continue
+            ctrl = [c for c in PUPIL_CONTROLS if c in sub.columns and c not in (partner, PUPIL_VAR)]
+            d = sub[[PUPIL_VAR, partner] + ctrl].dropna()
+            if len(d) < 10 or d[PUPIL_VAR].std() == 0 or d[partner].std() == 0:
+                continue
+            row = {"protocol": protocol, "window": window_name, "partner": partner, "n_trials": len(d),
+                   "r": float(np.corrcoef(d[PUPIL_VAR], d[partner])[0, 1]),
+                   "partial_r": _partial_r(d[PUPIL_VAR].to_numpy(float), d[partner].to_numpy(float),
+                                           d[ctrl].to_numpy(float)),
+                   "controls": ",".join(ctrl)}
+            pupil_rows.extend(_tag_unit([row], unit, sub))
+pupil_corr = pd.DataFrame(pupil_rows)
+pupil_corr.to_csv(table_dir / f"pupil_correlations{AGG_SUFFIX}.csv", index=False)
+
+if len(pupil_corr):
+    print(f"\nPupil area vs the other variables (mean over {UNIT}s; r = plain, partial = controlling for "
+          f"{', '.join(PUPIL_CONTROLS)}):")
+    print(pupil_corr.groupby(["protocol", "window", "partner"])[["r", "partial_r"]].mean().round(3).to_string())
+    lim = float(np.nanmax(np.abs(pupil_corr[["r", "partial_r"]].to_numpy()))) * 1.1 + 1e-6
+    for window_name in MI_WINDOWS:
+        wsub = pupil_corr[pupil_corr["window"] == window_name]
+        if wsub.empty:
+            continue
+        prots = [p for p in PROTOCOLS if p in wsub["protocol"].unique()]
+        fig, axes = plt.subplots(2, len(prots), figsize=(4.3 * len(prots), 6.2), squeeze=False, sharex=True)
+        for j, protocol in enumerate(prots):
+            for i, (col, lab) in enumerate([("r", "correlation with pupil area"),
+                                            ("partial_r", f"partial (control: {', '.join(PUPIL_CONTROLS)})")]):
+                ax = axes[i][j]
+                hbar_units(ax, wsub[wsub["protocol"] == protocol].dropna(subset=[col]), "partner", col, AGG,
+                           colors=PROTOCOL_COLORS[protocol], mouse_colors=mouse_colors)
+                ax.axvline(0, color="grey", linewidth=0.8)
+                ax.set_xlim(-lim, lim)
+                ax.set_xlabel(lab, fontsize=8)
+                if i == 0:
+                    ax.set_title(protocol)
+        fig.suptitle(f"Pupil area vs the other variables -- {window_name} window "
+                     f"({'pooled trials' if AGG == 'pooled' else f'bar: mean over {UNITS}, dots: {UNITS}'})", y=1.0)
+        fig.tight_layout()
+        save_fig(fig, figdir, f"9b_pupil_correlations_{window_name}")
+        plt.close(fig)
+
+# 9a. cross-correlation ------------------------------------------------------------------------------------------
+if len(pupil_xcorr):
+    pupil_xcorr.to_csv(table_dir / "pupil_xcorr_per_session.csv", index=False)
+    partners_present = [p for p in PUPIL_XCORR_PARTNERS if p in pupil_xcorr["partner"].unique()]
+    prots = [p for p in PROTOCOLS if p in pupil_xcorr["protocol"].unique()]
+    fig, axes = plt.subplots(1, len(partners_present), figsize=(4.2 * len(partners_present), 3.8), squeeze=False,
+                             sharey=True)
+    peak_rows = []
+    for ax, partner in zip(axes[0], partners_present):
+        for protocol in prots:
+            d = pupil_xcorr[(pupil_xcorr["partner"] == partner) & (pupil_xcorr["protocol"] == protocol)]
+            if d.empty:
+                continue
+            m, sem = unit_curve(d, "lag_s", "r", AGG)
+            color = PROTOCOL_COLORS[protocol]
+            if AGG != "pooled":
+                key = unit_columns(AGG)
+                for _, u in d.groupby(key[-1]):
+                    um = u.groupby("lag_s")["r"].mean()
+                    ax.plot(um.index, um.values, color=color, alpha=0.15, linewidth=0.7)
+            ax.plot(m.index, m.values, color=color, label=protocol, linewidth=1.8)
+            ax.fill_between(m.index, m - sem, m + sem, color=color, alpha=0.2, linewidth=0)
+            key = unit_columns(AGG)
+            per_unit = (d.groupby(key + ["lag_s"])["r"].mean().reset_index() if key
+                        else d.groupby("lag_s")["r"].mean().reset_index().assign(unit="all"))
+            for uid, u in (per_unit.groupby(key[-1]) if key else per_unit.groupby("unit")):
+                u = u.sort_values("lag_s")
+                i = int(np.nanargmax(np.abs(u["r"].to_numpy())))
+                peak_rows.append({"protocol": protocol, "partner": partner, "unit": uid,
+                                  "peak_lag_s": float(u["lag_s"].iloc[i]), "peak_r": float(u["r"].iloc[i]),
+                                  "r_at_lag0": float(u.loc[u["lag_s"] == 0, "r"].iloc[0]) if (u["lag_s"] == 0).any() else np.nan})
+        ax.axhline(0, color="grey", linewidth=0.8)
+        ax.axvline(0, color="black", linestyle=":", linewidth=1)
+        ax.set_xlabel(f"lag (s): pupil follows {partner} when > 0")
+        ax.set_title(partner, fontsize=10)
+    axes[0][0].set_ylabel("correlation with pupil area")
+    axes[0][0].legend(fontsize=7, frameon=False)
+    fig.suptitle(f"Pupil area vs other signals over the session, cross-correlation (engaged-trial time; "
+                 f"{'mean over sessions' if AGG == 'pooled' else f'mean +- SEM over {UNITS}, thin: {UNIT}s'})", y=1.03)
+    fig.tight_layout()
+    save_fig(fig, figdir, "9a_pupil_crosscorrelation")
+    plt.close(fig)
+    peaks = pd.DataFrame(peak_rows)
+    peaks.to_csv(table_dir / f"pupil_xcorr_peaks{AGG_SUFFIX}.csv", index=False)
+    print(f"\nPupil cross-correlation peaks (mean over {UNIT}s; peak lag > 0 = the pupil follows the partner):")
+    print(peaks.groupby(["protocol", "partner"])[["peak_lag_s", "peak_r", "r_at_lag0"]].mean().round(3).to_string())
+
+# 9c. dose-response ----------------------------------------------------------------------------------------------
+if PUPIL_VAR in trial_features.columns:
+    parts = [p for p in PUPIL_BIN_PARTNERS if p in trial_features.columns]
+    for window_name in MI_WINDOWS:
+        wf = trial_features[trial_features["window"] == window_name]
+        if wf.empty or not parts:
+            continue
+        prots = [p for p in PROTOCOLS if p in wf["protocol"].unique()]
+        fig, axes = plt.subplots(1, len(parts), figsize=(4.3 * len(parts), 3.8), squeeze=False, sharey=True)
+        for ax, partner in zip(axes[0], parts):
+            for protocol in prots:
+                d = wf[wf["protocol"] == protocol][["session_id", "animal_id", PUPIL_VAR, partner]].dropna().copy()
+                # quantile bins WITHIN each session (ranks, so ties are split evenly) -> comparable across sessions
+                d["_bin"] = d.groupby("session_id")[partner].transform(
+                    lambda x: pd.qcut(x.rank(method="first"), PUPIL_N_QUANTILES, labels=False) + 1
+                    if len(x) >= PUPIL_N_QUANTILES * 2 else np.nan)
+                d = d.dropna(subset=["_bin"])
+                if d.empty:
+                    continue
+                m, sem = unit_curve(d, "_bin", PUPIL_VAR, AGG)
+                ax.errorbar(m.index, m.values, yerr=sem.values, color=PROTOCOL_COLORS[protocol], marker="o", markersize=4,
+                            capsize=3, label=protocol)
+            ax.axhline(0, color="grey", linewidth=0.8)
+            ax.set_xticks(range(1, PUPIL_N_QUANTILES + 1))
+            ax.set_xlabel(f"{partner} quantile (within session; 1 = lowest)")
+        axes[0][0].set_ylabel("mean pupil area (z)")
+        axes[0][0].legend(fontsize=7, frameon=False)
+        fig.suptitle(f"Pupil area vs running speed / motion energy -- {window_name} window "
+                     f"({'pooled trials' if AGG == 'pooled' else f'mean +- SEM over {UNITS}'})", y=1.03)
+        fig.tight_layout()
+        save_fig(fig, figdir, f"9c_pupil_vs_state_{window_name}")
         plt.close(fig)
 
 print(f"\nWrote tables to {table_dir}, figures to {figdir}")

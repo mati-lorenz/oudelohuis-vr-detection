@@ -22,9 +22,10 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from . import project_config as cfg
 from .continuous import (
     merge_behavior_video, build_calcium_continuous, restrict_to_engaged, remove_pupil_outliers,
-    compute_trial_position_window_means, restrict_to_trials,
+    compute_trial_position_window_means, restrict_to_trials, zscore_per_session,
 )
 from .psth import derive_onset_time
 
@@ -34,8 +35,7 @@ N_STIM_BINS = 4
 
 
 def load_cell_inclusion(cell_dist_out, activity_stats_out) -> pd.DataFrame:
-    """Combine 2a's proximity filter and 2b's QC pass into one final
-    per-cell inclusion table.
+    """Combine 2a's proximity filter, 2a's depth rule and 2b's QC pass into one final per-cell inclusion table.
 
     Parameters
     ----------
@@ -45,18 +45,33 @@ def load_cell_inclusion(cell_dist_out, activity_stats_out) -> pd.DataFrame:
 
     Returns
     -------
-    DataFrame with session_id, cell_id, include (bool: passes 2a's proximity filter AND 2a's depth filter
-    (unlabeled V1/PM cells only; when 2a wrote it) AND 2b's QC)
-    """
+    DataFrame with session_id, cell_id, group (the project group key, e.g. 'V1_lab', 'PMdeep_unl'; used by the per-group cell caps
+    of session_jobs.run_sessions_units), include (bool: passes 2a's proximity filter AND 2a's depth rule AND 2b's QC).
+    `passes_depth_filter` (2a) is True for cells of the analysed depth classes: shallower than project_config.MAX_DEPTH_UM
+    (all areas) or deep PM (project_config.DEEP_PM_DEPTH_UM); an older celldata_combined.csv without that column is used
+    as it is (rerun 2a)."""
     celldata = pd.read_csv(cell_dist_out / "celldata_combined.csv", low_memory=False)
-    celldata = celldata[["session_id", "cell_id", "passes_proximity_filter"]
-                        + (["passes_depth_filter"] if "passes_depth_filter" in celldata.columns else [])]
+    dcol = ["passes_depth_filter"] if "passes_depth_filter" in celldata.columns else []
+    from .groups import add_six_group_column, group_meta_columns          # local import (groups imports plotting)
+    gtab = add_six_group_column(celldata[["session_id", "cell_id"] + group_meta_columns(celldata)])[["session_id", "cell_id", "group"]]
+    celldata = celldata[["session_id", "cell_id", "passes_proximity_filter"] + dcol].merge(gtab, on=["session_id", "cell_id"])
     qc = pd.read_csv(activity_stats_out / "qc_per_cell.csv")[["session_id", "cell_id", "qc_pass"]]
     merged = celldata.merge(qc, on=["session_id", "cell_id"], how="inner")
     merged["include"] = merged["passes_proximity_filter"] & merged["qc_pass"]
-    if "passes_depth_filter" in merged.columns:        # 2a >= v3: unlabeled V1/PM cells must also be superficial
+    if dcol:
         merged["include"] &= merged["passes_depth_filter"].astype(bool)
-    return merged[["session_id", "cell_id", "include"]]
+    return merged[["session_id", "cell_id", "include", "group"]]
+
+
+def prepare_behavior_trace(ses) -> pd.DataFrame:
+    """The session's behavior + video trace as the analyses use it: pupil blinks removed, then (project_config.
+    NORMALIZE_FACE_PER_SESSION) the face quantities -- pupil area / x / y, motion energy, video PCs -- z-scored over the
+    WHOLE session. Running speed and licks stay in physical units. Used by build_session_tables and build_window_frames so the
+    per-trial and the pooled-frame analyses see identical values."""
+    merged_full = remove_pupil_outliers(merge_behavior_video(ses.behaviordata, ses.videodata))
+    if cfg.NORMALIZE_FACE_PER_SESSION and not merged_full.empty:
+        merged_full = zscore_per_session(merged_full)
+    return merged_full
 
 
 def build_session_tables(ses, mu_sigma_lookup: dict, windows: dict,
@@ -97,8 +112,7 @@ def build_session_tables(ses, mu_sigma_lookup: dict, windows: dict,
     cell_ids = celldata.loc[keep_mask, "cell_id"].to_numpy()
     calciumdata = ses.calciumdata.loc[:, cell_ids]
 
-    merged_full = merge_behavior_video(ses.behaviordata, ses.videodata)
-    merged_full = remove_pupil_outliers(merged_full)
+    merged_full = prepare_behavior_trace(ses)
     if merged_full.empty:
         return {}
     if trial_numbers is None:
@@ -170,3 +184,57 @@ def build_session_tables(ses, mu_sigma_lookup: dict, windows: dict,
         tables[window_name] = table
 
     return tables
+
+
+def build_window_frames(ses, windows: dict, included_cell_ids: set | None = None,
+                        behavior_predictors=BEHAVIOR_PREDICTORS, rate_predictors=RATE_PREDICTORS,
+                        trial_numbers=None) -> dict:
+    """Pooled-frames counterpart of build_session_tables: for every window, one row per IMAGING FRAME that lies inside the
+    position window ([stimStart + start, stimStart + end) cm) of one of the trials (engaged trials, or `trial_numbers`).
+
+    Columns: trialNumber, cur_<behavior> (the behavior on the imaging clock: mean of the samples in the frame; lick = events/s;
+    same face normalization as the per-trial tables) and one column per included cell (its activity in that frame).
+    Returns {} when the session lacks calcium / behavior data or has no frames in any window. Frames of different trials are
+    stacked in trial order, so a circular shift of a column moves whole stretches of trials against each other."""
+    from . import tensors as tn
+    td = ses.trialdata
+    if (td is None or ses.behaviordata is None or ses.celldata is None or ses.calciumdata is None or ses.ts_F is None
+            or "stimStart" not in td.columns):
+        return {}
+    celldata = ses.celldata.reset_index(drop=True)
+    keep = (celldata["cell_id"].isin(included_cell_ids).to_numpy() if included_cell_ids is not None
+            else np.ones(len(celldata), bool))
+    if not keep.any():
+        return {}
+    cell_ids = celldata.loc[keep, "cell_id"].to_numpy()
+    merged = prepare_behavior_trace(ses)
+    if merged.empty:
+        return {}
+    tr = (td[td["engaged"] == 1] if (trial_numbers is None and "engaged" in td.columns)
+          else td[td["trialNumber"].isin(list(trial_numbers))] if trial_numbers is not None else td)
+    tr = tr.sort_values("stimStart")
+    if tr.empty:
+        return {}
+    ts_F = np.asarray(ses.ts_F, float)
+    zpos_F = tn.interp_to_imaging_frames(ses.behaviordata["ts"], ses.behaviordata["zpos"], ts_F)
+    lo = min(w[0] for w in windows.values())
+    hi = max(w[1] for w in windows.values())
+    k, rel = tn.position_relative_to_stim(zpos_F, tr["stimStart"].to_numpy(float), max(0.0, -lo), max(0.0, hi))
+    available = [v for v in behavior_predictors if v in merged.columns]
+    beh = {f"cur_{v}": tn.behavior_to_imaging_frames(merged["ts"], merged[v], ts_F,
+                                                     mode="rate" if v in rate_predictors else "mean")
+           for v in available}
+    A = ses.calciumdata.loc[:, cell_ids].to_numpy(dtype=float)
+    tnum = tr["trialNumber"].to_numpy()
+    out = {}
+    for name, (s0, s1) in windows.items():
+        m = (k >= 0) & np.isfinite(rel) & (rel >= s0) & (rel < s1)
+        if not m.any():
+            continue
+        df = pd.DataFrame({"trialNumber": tnum[k[m]]})
+        for c, x in beh.items():
+            df[c] = x[m]
+        cells_df = pd.DataFrame(A[m], columns=list(cell_ids))
+        out[name] = pd.concat([df, cells_df], axis=1)
+    return out
+

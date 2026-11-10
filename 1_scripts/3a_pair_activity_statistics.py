@@ -83,7 +83,7 @@ from infotheory import pair_tables as pt
 PROTOCOL = "DN"
 WINDOWS = {"pre_stim": (-30.0, -10.0), "stim": (0.0, 20.0), "reward": (25.0, 45.0)}
 
-MAX_PAIRS_PER_GROUP = 8     # per (session, area, label); 3b/3c use a subset (--max-pairs)
+MAX_PAIRS_PER_GROUP = 200     # per (session, area, label); 3b/3c use a subset (--max-pairs)
 N_SHUFFLES = 10             # per shuffle test (4 modes x pairs x windows x targets of them per session)
 MIN_PAIRS_PER_UNIT = 3      # session / mouse aggregate: pairs needed in a group for a unit's value to be used
 ALPHA = 0.05
@@ -98,7 +98,6 @@ add_scope_args(parser)
 parser.add_argument("--strategies", nargs="+", default=None, choices=sorted(STIM_BINNING_STRATEGIES),
                     help=f"stimulus binning strategies (default {BINNING_STRATEGIES})")
 parser.add_argument("--n-shuffles", type=int, default=N_SHUFFLES)
-parser.add_argument("--max-pairs", type=int, default=MAX_PAIRS_PER_GROUP, help="pairs sampled per (session, area, label)")
 args = parser.parse_args()
 scope = scope_from_args(args)
 AGG = scope.aggregate
@@ -108,7 +107,7 @@ AGG_SUFFIX = "" if AGG == "pooled" else f"__{AGG}"
 STRATEGIES = args.strategies or BINNING_STRATEGIES
 TARGETS = STRATEGIES + ([CHOICE_TARGET] if INCLUDE_CHOICE_TARGET else [])
 N_SHUF = args.n_shuffles
-MAX_PAIRS = args.max_pairs
+MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
 
 paths = get_pipeline_paths(__file__)
 table_dir, figdir = scoped_dirs(paths, scope)

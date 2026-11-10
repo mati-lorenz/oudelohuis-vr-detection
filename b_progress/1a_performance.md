@@ -1,6 +1,48 @@
 # 1a_performance
 
-*Auto-generated from `2_pipeline/1a_performance/out/` on 2026-10-30 11:38. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/1a_performance/out/` on 2026-11-10 17:48. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Dataset overview
+
+![1_dataset_overview](../2_pipeline/1a_performance/out/figures/1_dataset_overview.png)
+
+### Engagement overview
+
+![2_engagement_overview](../2_pipeline/1a_performance/out/figures/2_engagement_overview.png)
+
+### Engagement timeline DM
+
+![3_engagement_timeline_DM](../2_pipeline/1a_performance/out/figures/3_engagement_timeline_DM.png)
+
+### Engagement timeline DN page1
+
+![3_engagement_timeline_DN_page1](../2_pipeline/1a_performance/out/figures/3_engagement_timeline_DN_page1.png)
+
+### Engagement timeline DN page2
+
+![3_engagement_timeline_DN_page2](../2_pipeline/1a_performance/out/figures/3_engagement_timeline_DN_page2.png)
+
+### Engagement timeline DP
+
+![3_engagement_timeline_DP](../2_pipeline/1a_performance/out/figures/3_engagement_timeline_DP.png)
+
+### Performance trajectory
+
+![4_performance_trajectory](../2_pipeline/1a_performance/out/figures/4_performance_trajectory.png)
+
+### Trial outcomes
+
+![5_trial_outcomes](../2_pipeline/1a_performance/out/figures/5_trial_outcomes.png)
+
+### Dprime criterion
+
+![6_dprime_criterion](../2_pipeline/1a_performance/out/figures/6_dprime_criterion.png)
+
+### Signal level balance
+
+![7_signal_level_balance](../2_pipeline/1a_performance/out/figures/7_signal_level_balance.png)
 
 ## Tables
 
@@ -87,45 +129,3 @@
 *(showing first 15 of 21 columns; showing first 30 of 75 rows -- see the linked CSV for the rest)*
 
 [unit_summary_session.csv](../2_pipeline/1a_performance/out/unit_summary_session.csv)
-
-## Figures
-
-### Dataset overview
-
-![1_dataset_overview](../2_pipeline/1a_performance/out/figures/1_dataset_overview.png)
-
-### Engagement overview
-
-![2_engagement_overview](../2_pipeline/1a_performance/out/figures/2_engagement_overview.png)
-
-### Engagement timeline DM
-
-![3_engagement_timeline_DM](../2_pipeline/1a_performance/out/figures/3_engagement_timeline_DM.png)
-
-### Engagement timeline DN page1
-
-![3_engagement_timeline_DN_page1](../2_pipeline/1a_performance/out/figures/3_engagement_timeline_DN_page1.png)
-
-### Engagement timeline DN page2
-
-![3_engagement_timeline_DN_page2](../2_pipeline/1a_performance/out/figures/3_engagement_timeline_DN_page2.png)
-
-### Engagement timeline DP
-
-![3_engagement_timeline_DP](../2_pipeline/1a_performance/out/figures/3_engagement_timeline_DP.png)
-
-### Performance trajectory
-
-![4_performance_trajectory](../2_pipeline/1a_performance/out/figures/4_performance_trajectory.png)
-
-### Trial outcomes
-
-![5_trial_outcomes](../2_pipeline/1a_performance/out/figures/5_trial_outcomes.png)
-
-### Dprime criterion
-
-![6_dprime_criterion](../2_pipeline/1a_performance/out/figures/6_dprime_criterion.png)
-
-### Signal level balance
-
-![7_signal_level_balance](../2_pipeline/1a_performance/out/figures/7_signal_level_balance.png)

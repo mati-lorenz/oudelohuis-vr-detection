@@ -58,7 +58,7 @@ from infotheory import pair_temporal as ptt
 
 PROTOCOL = "DN"
 S_PRE, S_POST, BINSIZE = -60.0, 80.0, 25.0
-MAX_PAIRS_PER_GROUP = 150   # per (session, area, label)
+MAX_PAIRS_PER_GROUP = 200   # per (session, area, label)
 WINDOW, STEP = 20.0, 5.0     # sliding window and step (cm)
 BINNINGS = ["fixed", "sliding"]
 R_BINS = cfg.RESPONSE_BINS
@@ -76,12 +76,12 @@ STORE_VALUES = VALUES + ["I_corind", "I_cordep"]
 parser = argparse.ArgumentParser()
 add_scope_args(parser)
 parser.add_argument("--strategies", nargs="+", default=None, choices=sorted(STIM_BINNING_STRATEGIES))
-parser.add_argument("--max-pairs", type=int, default=MAX_PAIRS_PER_GROUP, help="pairs per (session, area, label)")
 parser.add_argument("--binnings", nargs="+", default=BINNINGS, choices=BINNINGS)
 parser.add_argument("--window", type=float, default=WINDOW, help="sliding window (cm)")
 parser.add_argument("--step", type=float, default=STEP, help="sliding step (cm)")
 parser.add_argument("--mi-shuffles", type=int, default=MI_SHUFFLES)
 args = parser.parse_args()
+MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
 scope = scope_from_args(args)
 AGG = scope.aggregate
 UNIT = unit_noun(AGG)
@@ -108,7 +108,7 @@ def process_session(ses, seed):
     cells = inp.cells_by_session.get(sid)
     if not cells or ses.celldata is None or ses.calciumdata is None or ses.behaviordata is None:
         return []
-    pairs = ptt.sample_group_pairs(ses, cells, args.max_pairs, "pairs3e", RANDOM_STATE)
+    pairs = ptt.sample_group_pairs(ses, cells, MAX_PAIRS, "pairs3e", RANDOM_STATE)
     if pairs is None:
         return []
     use = sorted(set(pairs["cell_i"]) | set(pairs["cell_j"]))
@@ -140,7 +140,7 @@ def process_session(ses, seed):
 records = run_sessions(
     inp.session_ids, process_session, [PROTOCOL], paths.store, "breakdown_temporal",
     key_params=dict(s_pre=S_PRE, s_post=S_POST, binsize=BINSIZE, window=args.window, step=args.step, binnings=BINS_RUN,
-                    r_bins=R_BINS, mi_shuffles=args.mi_shuffles, max_pairs=args.max_pairs,
+                    r_bins=R_BINS, mi_shuffles=args.mi_shuffles, max_pairs=MAX_PAIRS,
                     targets=target_signature(TARGETS), min_trials=cfg.MIN_TRIALS_ANALYSIS,
                     min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3e-v8", fits_mtime=int(inp.fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),

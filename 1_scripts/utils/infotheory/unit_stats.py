@@ -95,6 +95,8 @@ def group_unit_table(cells: pd.DataFrame, values: list, aggregate: str) -> pd.Da
     """Reporting table for per-cell variables: mean of each of `values` and the number of cells, per project
     group (column `group`) and analysis unit. pooled: one row per group (original-style, no unit columns);
     session / mouse: adds `unit` and `animal_id`."""
+    from .celldata_utils import SIX_GROUP_ORDER
+    cells = cells[cells["group"].isin([f"{a}_{l}" for a, l in SIX_GROUP_ORDER])]   # cells under no group (depth rule) are not summarised
     keys = {"pooled": [], "session": ["animal_id", "session_id"], "mouse": ["animal_id"]}[aggregate]
     g = cells.groupby(["group"] + keys)
     out = g[list(values)].mean()

@@ -18,6 +18,8 @@ import itertools
 import numpy as np
 import pandas as pd
 
+from . import project_config as cfg
+
 DEFAULT_AREA_ORDER = ["V1", "PM", "AL", "RSP"]
 DEFAULT_LABEL_ORDER = ["unl", "lab"]
 
@@ -45,19 +47,61 @@ LABEL_MARKERS = {"unl": "o", "lab": "^"}
 #: silently collapsed to whichever one happens to come first in a
 #: group-by -- always 6 lines/panels, never 4 with two of them secretly
 #: representing only half their data.
-SIX_GROUP_ORDER = [("V1", "lab"), ("V1", "unl"), ("PM", "lab"), ("PM", "unl"),
-                    ("AL", "unl"), ("RSP", "unl")]
-SIX_GROUP_LABELS = {g: (f"{a}-{l}" if a in ("V1", "PM") else a) for g, (a, l) in
-                     zip(SIX_GROUP_ORDER, SIX_GROUP_ORDER)}
+#: NOTE (depth rule, project_config.MAX_DEPTH_UM / DEEP_PM_DEPTH_UM): the name SIX_GROUP_ORDER is kept so no script has to change,
+#: but when the rule is active the list holds EIGHT entries: the six groups of cells shallower than MAX_DEPTH_UM plus two EXTRA
+#: groups for deep PM cells (area token "PMdeep", labeled / unlabeled). Set project_config.DEEP_PM_DEPTH_UM = None (or
+#: MAX_DEPTH_UM = None) to get the plain six back.
+_SIX = [("V1", "lab"), ("V1", "unl"), ("PM", "lab"), ("PM", "unl"), ("AL", "unl"), ("RSP", "unl")]
+DEEP_PM_GROUPS = [("PMdeep", "lab"), ("PMdeep", "unl")]
+SIX_GROUP_ORDER = _SIX + (DEEP_PM_GROUPS if (cfg.MAX_DEPTH_UM is not None and cfg.DEEP_PM_DEPTH_UM) else [])
+SIX_GROUP_LABELS = {g: (f"{g[0]}-{g[1]}" if g[0] in ("V1", "PM") else f"PM-{g[1]} (deep)" if g[0] == "PMdeep" else g[0])
+                    for g in _SIX + DEEP_PM_GROUPS}
 #: distinct color per group -- same hue per area (matching AREA_COLORS)
 #: with lab/unl distinguished by shade, so V1-lab and V1-unl read as
-#: "the same area, two subpopulations" rather than unrelated colors
+#: "the same area, two subpopulations" rather than unrelated colors.
+#: Deep PM = purple pair (dark = labeled, light = unlabeled), clearly apart from the orange shallow PM.
 SIX_GROUP_COLORS = {
     ("V1", "lab"): "#0d3d61", ("V1", "unl"): "#6baed6",
     ("PM", "lab"): "#a33f00", ("PM", "unl"): "#fdae6b",
     ("AL", "unl"): "#2ca02c",
     ("RSP", "unl"): "#d62728",
+    ("PMdeep", "lab"): "#5b1a8f", ("PMdeep", "unl"): "#c39be0",
 }
+
+
+def apply_depth_correction(celldata: pd.DataFrame, session_id: str) -> pd.DataFrame:
+    """Copy of one session's celldata with its depth corrected by project_config.DEPTH_OFFSET_CORRECTIONS_UM[session_id]
+    (corrected = recorded - offset). Adds `depth_recorded` (the original) and `depth_offset_um` (0 when nothing applies) so the
+    correction is visible downstream. Idempotent only on RAW celldata: call it once, on the table straight from the loader."""
+    out = celldata.copy()
+    offset = float(cfg.DEPTH_OFFSET_CORRECTIONS_UM.get(session_id, 0.0))
+    if "depth" in out.columns:
+        out["depth_recorded"] = out["depth"]
+        out["depth_offset_um"] = offset
+        if offset:
+            out["depth"] = out["depth"].astype(float) - offset
+    return out
+
+
+def classify_depth(area, depth, suspect=None) -> np.ndarray:
+    """Depth class of every cell under the project's depth rule (project_config): "shallow" / "deep_pm" / "excluded"
+    (see project_config section 5). `area` and `depth` are array-likes of the same length; `suspect` (bool array-like or None)
+    marks cells of depth-suspect sessions (excluded when project_config.DEPTH_SUSPECT_POLICY == "exclude").
+    A missing depth cannot be verified and is "excluded". Rule off (MAX_DEPTH_UM None): everything is "shallow"."""
+    area = np.asarray(area).astype(str)
+    depth = np.asarray(depth, dtype=float)
+    if cfg.MAX_DEPTH_UM is None:
+        return np.full(len(area), "shallow", dtype=object)
+    cls = np.full(len(area), "excluded", dtype=object)
+    ok = np.isfinite(depth)
+    cls[ok & (depth < cfg.MAX_DEPTH_UM)] = "shallow"
+    if cfg.DEEP_PM_DEPTH_UM:
+        lo, hi = cfg.DEEP_PM_DEPTH_UM
+        cls[ok & (area == "PM") & (depth >= lo) & (depth < hi)] = "deep_pm"
+    if suspect is not None and cfg.DEPTH_SUSPECT_POLICY == "exclude":
+        cls[np.asarray(suspect, dtype=bool)] = "excluded"
+    return cls
+
 
 #: areas where deliberate labeling actually happens by this project's
 #: design (see make_fake_data.py's recombinase-by-area convention) --

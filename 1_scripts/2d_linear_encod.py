@@ -46,7 +46,7 @@ Project-wide rules (infotheory/project_config.py)
                   Part 1's MI comparison reads the FULL 2c out/ and merges on (session, cell, window, predictor).
     * aggregate : --aggregate pooled|session|mouse for every group figure and summary table: pooled = all cells of a
                   group together (no error bars); session / mouse = one value per unit (MIN_CELLS_PER_UNIT cells in
-                  the group needed), bar = mean +- SEM over units, dots = units coloured by mouse. Always the six groups.
+                  the group needed), bar = mean +- SEM over units, dots = units coloured by mouse. Always all the groups of the depth rule (the six + deep PM).
                   Cell-level figures (selectivity-index histograms, stim-vs-choice scatters, MI-vs-linear scatter) show
                   cells and are not aggregated. ROC summaries: roc_summary_pooled / _by_session / _by_mouse.csv.
     * memory    : one session in RAM per worker (--n-jobs); per-session results cached in store/.
@@ -94,10 +94,10 @@ from infotheory.celldata_utils import SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GRO
 from infotheory.groups import six_panel_figure, group_key, summarize_significance
 from infotheory.plotting import set_style, save_fig, clear_figures
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
-from infotheory.session_jobs import run_sessions
+from infotheory.session_jobs import run_sessions_units
 from infotheory.unit_stats import stable_seed
 from infotheory.unit_plots import group_panels, mouse_palette
-from infotheory.stim_binning import STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, target_signature
+from infotheory.stim_binning import STIM_BINNING_STRATEGIES, SIMPLE_STRATEGIES, target_signature
 from infotheory.roc import auc_permutation_test, template_auc_permutation_test
 from infotheory import tensors as tn
 from infotheory import cell_tables as ct
@@ -107,8 +107,8 @@ PROTOCOL = "DN"
 WINDOWS = {"pre_stim": (-30.0, -10.0), "stim": (0.0, 20.0), "reward": (25.0, 45.0)}   # as 2c
 
 # ---- part 1 ----
-BINNING_STRATEGIES = list(DEFAULT_STRATEGIES)
-MV_STIM_STRATEGY = "pct_0-20_20-80_80-100"   # the one stimulus binning used in the multivariate fit
+BINNING_STRATEGIES = list(SIMPLE_STRATEGIES)      # the same single stimulus binning as 2c (rule 4)
+MV_STIM_STRATEGY = "pct_0-25_25-50_50-75_75-100"   # the one stimulus binning used in the multivariate fit
 LINEAR_SUFFICIENT_FRAC = 0.8
 
 # ---- part 2 (ROC) ----
@@ -192,6 +192,7 @@ if not session_ids:
     raise SystemExit("None of the selected sessions passed 1b_psychometric's inclusion criteria.")
 mouse_colors = mouse_palette(a for _, a, _ in all_triples)
 cell_inclusion = load_cell_inclusion(cell_dist_out, activity_out)
+cell_group = dict(zip(cell_inclusion["cell_id"], cell_inclusion["group"]))      # per-group cell / pair caps (--max-cells / --max-pairs)
 cells_by_session = {sid: sorted(sub.loc[sub["include"], "cell_id"]) for sid, sub in cell_inclusion.groupby("session_id")
                     if sid in session_ids}
 session_ids = [s for s in session_ids if cells_by_session.get(s)]
@@ -275,9 +276,9 @@ def roc_block(ses, activity, zpos_F, trials, masks, cell_ids, n_perm, n_perm_tmp
     return out
 
 
-def process_session(ses, seed):
+def process_session(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
-    cells = set(cells_by_session.get(sid, []))
+    cells = set(new_cells)          # only the cells not yet in the ledger (session_jobs.run_sessions_units)
     td = ses.trialdata
     if not cells or td is None or "engaged" not in td.columns:
         return None
@@ -324,17 +325,18 @@ def process_session(ses, seed):
                 trials=td[["trialNumber", "engaged"]].copy())
 
 
-results = run_sessions(
+results = run_sessions_units(
     session_ids, process_session, [PROTOCOL], paths.store, "linear_roc_session",
-    key_params=dict(version="2d-v3", bins=cfg.RESPONSE_BINS, windows=WINDOWS, strategies=target_signature(STRATEGIES), mv=MV_PREDICTORS,
+    key_params=dict(version="2d-v4", face_z=cfg.NORMALIZE_FACE_PER_SESSION, bins=cfg.RESPONSE_BINS, windows=WINDOWS, strategies=target_signature(STRATEGIES), mv=MV_PREDICTORS,
                     min_trials=cfg.MIN_TRIALS_ANALYSIS, min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN,
                     roc=[RUN_ROC, args.n_perm, args.n_perm_template, args.n_perm_tail, args.n_perm_template_tail,
                          list(ANALYSES.items()), METHODS, N_TEMPLATE_BINS, ALPHA, MIN_PER_CLASS, EQUALIZE_QUANTILE,
                          S_PRE, S_POST],
                     tail=[RUN_TAIL, args.tail_min_frac, args.tail_min_trials], fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
-    cells_by_session=cells_by_session, base_seed=RANDOM_STATE, n_jobs=N_JOBS, recompute=args.recompute,
-    verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps, flatten=False)
+    cells_by_session=cells_by_session, parts={"pairwise": "cell", "multivariate": "cell", "roc": "cell"},
+    groups_by_cell=cell_group, max_cells=scope.max_cells, base_seed=RANDOM_STATE, n_jobs=N_JOBS, recompute=args.recompute,
+    verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps)
 results = [r for r in results if r is not None]
 if not results:
     raise SystemExit("No session produced tables.")
@@ -490,7 +492,7 @@ if len(roc_all) and (roc_all["condition"] == "engaged").any():
     bins_ = np.linspace(-1, 1, 41)
     safe = lambda a: a.replace("|", "_given_").replace(" [tmpl]", "_tmpl")  # noqa: E731
     for aname in ANALYSIS_NAMES:                                    # 04: cell-level SI histograms
-        fig, axes = plt.subplots(len(windows), 6, figsize=(16, 2.4 * len(windows)), sharex=True, squeeze=False)
+        fig, axes = plt.subplots(len(windows), len(SIX_GROUP_ORDER), figsize=(2.7 * len(SIX_GROUP_ORDER), 2.4 * len(windows)), sharex=True, squeeze=False)
         for i, w in enumerate(windows):
             for j, g in enumerate(SIX_GROUP_ORDER):
                 ax = axes[i, j]
@@ -642,7 +644,7 @@ if len(roc_all) and (roc_all["condition"] == "engaged").any():
             piv = (h[h["analysis"] == an].groupby(["_unit", "group"])["sig"].mean().unstack("group")
                    .reindex(columns=GROUP_KEYS))
             im = ax.imshow(piv.to_numpy(float), aspect="auto", cmap="viridis", vmin=0, vmax=1)
-            ax.set_xticks(range(6))
+            ax.set_xticks(range(len(SIX_GROUP_ORDER)))
             ax.set_xticklabels([SIX_GROUP_LABELS[g] for g in SIX_GROUP_ORDER], rotation=45, ha="right", fontsize=7)
             ax.set_yticks(range(len(piv)))
             ax.set_yticklabels(piv.index if ax is axes[0, 0] else [], fontsize=6)

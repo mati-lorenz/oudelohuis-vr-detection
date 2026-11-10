@@ -139,6 +139,30 @@ def remove_pupil_outliers(continuous: pd.DataFrame, column: str = "pupil_area",
     continuous.loc[(z > z_thresh) | (z < -z_thresh), column] = np.nan
     return continuous
 
+# Paste this block into YOUR utils/infotheory/continuous.py (e.g. right after remove_pupil_outliers). Needs: numpy as np, pandas as pd (already imported there).
+
+NORMALIZED_COLUMNS = ("pupil_area", "pupil_xpos", "pupil_ypos", "motionenergy")   # + every "videoPC_<k>" column
+NORMALIZED_PREFIXES = ("videoPC_",)
+
+
+def zscore_per_session(continuous: pd.DataFrame, columns: list[str] | None = None) -> pd.DataFrame:
+    """Z-score (mean 0, SD 1, NaN-aware) each of `columns` over THIS session's whole trace.
+    Call it once per session (the trace of one session is what is passed in), after the pupil blink
+    rejection. Default columns: pupil area / x / y, motion energy and every videoPC_<k>. Columns that are
+    missing or constant in the session are left untouched (constant) / skipped (missing)."""
+    if columns is None:
+        columns = [c for c in continuous.columns
+                   if c in NORMALIZED_COLUMNS or c.startswith(NORMALIZED_PREFIXES)]
+    continuous = continuous.copy()
+    for c in columns:
+        if c not in continuous.columns:
+            continue
+        x = continuous[c].astype(float)
+        sd = x.std(skipna=True)
+        if not np.isfinite(sd) or sd == 0:
+            continue
+        continuous[c] = (x - x.mean(skipna=True)) / sd
+    return continuous
 
 def compute_trial_position_window_means(trialdata: pd.DataFrame, continuous: pd.DataFrame,
                                          columns: list[str], s_start: float, s_end: float,

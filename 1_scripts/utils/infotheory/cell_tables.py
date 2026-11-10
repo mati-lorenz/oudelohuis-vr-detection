@@ -79,13 +79,14 @@ def cell_columns(table: pd.DataFrame, cell_ids) -> list:
 
 
 def attach_cell_meta(df: pd.DataFrame, celldata_combined: pd.DataFrame) -> pd.DataFrame:
-    """Add roi_name, labeled, area, label, group, group_name and animal_id (from the session id) to a
+    """Add roi_name, labeled, area, label, depth_class, group, group_name and animal_id (from the session id) to a
     per-cell table that has session_id and cell_id."""
-    from .groups import add_six_group_column
-    meta = celldata_combined[["session_id", "cell_id", "roi_name", "labeled"]].drop_duplicates(
-        ["session_id", "cell_id"])
-    stale = [c for c in ("roi_name", "labeled", "area", "label", "group", "group_name") if c in df.columns]
-    out = add_six_group_column(df.drop(columns=stale).merge(meta, on=["session_id", "cell_id"], how="left"))
+    from .groups import add_six_group_column, group_meta_columns
+    meta_cols = group_meta_columns(celldata_combined)
+    meta = celldata_combined[["session_id", "cell_id"] + meta_cols].drop_duplicates(["session_id", "cell_id"])
+    stale = [c for c in ("roi_name", "labeled", "area", "label", "depth_class", "group", "group_name") + tuple(meta_cols)
+             if c in df.columns]
+    out = add_six_group_column(df.drop(columns=list(dict.fromkeys(stale))).merge(meta, on=["session_id", "cell_id"], how="left"))
     if "animal_id" not in out.columns:
         out["animal_id"] = out["session_id"].str.split("_").str[0]
     return out
@@ -94,6 +95,8 @@ def attach_cell_meta(df: pd.DataFrame, celldata_combined: pd.DataFrame) -> pd.Da
 def unit_group_summary(df: pd.DataFrame, by: list, aggregate: str, mean_cols: list, sig_col: str | None = None):
     """Per project group x `by` x analysis unit: n_cells, mean of each of `mean_cols`, and (if `sig_col`, a bool
     column) n_sig and frac_sig. pooled: no unit columns; session / mouse: `unit` and `animal_id` added."""
+    from .celldata_utils import SIX_GROUP_ORDER
+    df = df[df["group"].isin([f"{a}_{l}" for a, l in SIX_GROUP_ORDER])]   # cells under no group (depth rule) are not summarised
     keys = {"pooled": [], "session": ["animal_id", "session_id"], "mouse": ["animal_id"]}[aggregate]
     g = df.groupby(["group"] + list(by) + keys, observed=True)
     out = g[list(mean_cols)].mean()
