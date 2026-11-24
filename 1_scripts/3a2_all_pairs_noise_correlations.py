@@ -30,7 +30,8 @@ Project-wide rules (infotheory/project_config.py) -- what applies here
                   session = each session's mean over its pairs, mouse = a mouse's sessions' pairs pooled first; bar = mean +- SEM over
                   units, dots = units (units with fewer than MIN_PAIRS_PER_UNIT pairs in the group are left out). Always the six groups.
     * memory    : one session in RAM per worker (--n-jobs); only small summaries (counts, sums, histograms) leave the worker and are
-                  cached per session in store/. A session's cell x cell matrix is trials x cells at most (hundreds of cells).
+                  cached per session in store/ (NO per-pair ledger: nothing per pair is stored; a changed --max-cells / --max-pairs
+                  simply recomputes the session). A session's cell x cell matrix is trials x cells at most (hundreds of cells).
                   --save-matrices writes the full matrices to store/ (float32 .npy + cell table) for later steps.
     * binning   : targets / windows / strategies as 3a.
 
@@ -49,6 +50,7 @@ Outputs
 from __future__ import annotations
 
 import argparse
+import hashlib
 
 import numpy as np
 import pandas as pd
@@ -62,7 +64,7 @@ from infotheory.celldata_utils import SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GRO
 from infotheory.groups import group_key, add_six_group_column
 from infotheory.plotting import set_style, save_fig, clear_figures
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
-from infotheory.session_jobs import run_sessions_units
+from infotheory.session_jobs import run_sessions, requested_units
 from infotheory.unit_stats import stable_seed
 from infotheory.unit_plots import group_panels, mouse_palette
 from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, CHOICE_TARGET, target_signature,
@@ -135,6 +137,17 @@ print(f"{len(session_ids)} sessions, {sum(len(v) for v in cells_by_session.value
 stamps = {s: data_stamp(*selected[s]) for s in session_ids}
 MIN_TRIALS, MIN_PER_BIN = cfg.MIN_TRIALS_ANALYSIS, cfg.MIN_TRIALS_PER_TARGET_BIN
 
+# caps (--max-cells / --max-pairs, per group as everywhere): the selection is fixed HERE and hashed into the cache key; without a
+# ledger a changed cap recomputes the session (cheap: matrix products), nothing per pair is stored
+pairs_by_session, cap_stamp = {}, {}
+for sid in session_ids:
+    req_c, req_p = requested_units(sid, cells_by_session[sid], scope.max_cells, need_pairs=bool(scope.max_pairs),
+                                   max_pairs=scope.max_pairs, groups=cell_group)
+    cells_by_session[sid] = sorted(req_c)
+    pairs_by_session[sid] = req_p if scope.max_pairs else None
+    cap_stamp[sid] = (hashlib.sha1(repr((sorted(req_c), sorted(req_p) if scope.max_pairs else None)).encode()).hexdigest()[:10]
+                      if (scope.max_cells or scope.max_pairs) else "full")
+
 
 # --------------------------------------------------------------------- #
 # 2. The all-pairs noise-correlation matrix
@@ -189,17 +202,19 @@ def noise_corr_3a(table, target, ci, cj):
 # --------------------------------------------------------------------- #
 # 3. Per session (one in RAM at a time): all pairs -> small summaries
 # --------------------------------------------------------------------- #
-def process_session(ses, seed, new_cells, new_pairs, req_cells):
-    """Noise correlation of the NEW pairs only (session_jobs.run_sessions_units); one row per pair, window, target."""
+def process_session(ses, seed):
+    """All requested pairs of ONE session at once (no per-pair ledger: only the group-pair sums, the histograms and the checks
+    are returned and cached, a few kB per session)."""
     sid = ses.session_id
-    cells = {c for q in new_pairs for c in q}
+    cells = set(cells_by_session.get(sid, []))
     if not cells or ses.celldata is None:
         return None
+    sel_pairs = pairs_by_session.get(sid)          # None = every pair among the cells (no pair cap)
     rng = np.random.default_rng(seed)
     tables = build_session_tables(ses, mu_sigma_lookup, WINDOWS, included_cell_ids=cells)
     celldata = ses.celldata[ses.celldata["cell_id"].isin(cells)].reset_index(drop=True)
     celldata = add_six_group_column(celldata, area_var="roi_name", label_var="labeled")
-    prows, checks = [], []
+    rows, hists, checks = [], {}, []
     for window, table in tables.items():
         if table.empty or "signal" not in table.columns:
             continue
@@ -207,11 +222,14 @@ def process_session(ses, seed, new_cells, new_pairs, req_cells):
         if len(cell_ids) < 2:
             continue
         pos = {c: i for i, c in enumerate(cell_ids)}
-        pr = [q for q in new_pairs if q[0] in pos and q[1] in pos]
-        if not pr:
-            continue
-        pi = np.array([pos[q[0]] for q in pr])
-        pj = np.array([pos[q[1]] for q in pr])
+        if sel_pairs is None:
+            pi, pj = np.triu_indices(len(cell_ids), k=1)
+        else:
+            pr = [q for q in sel_pairs if q[0] in pos and q[1] in pos]
+            if not pr:
+                continue
+            pi = np.array([pos[q[0]] for q in pr])
+            pj = np.array([pos[q[1]] for q in pr])
         grp = celldata.set_index("cell_id").loc[cell_ids, "group"].to_numpy()
         X = table[cell_ids].to_numpy(float)
         table = pt.add_target_columns(table, STRATEGIES)
@@ -224,18 +242,22 @@ def process_session(ses, seed, new_cells, new_pairs, req_cells):
             C = noise_corr_matrix(X, lab)
             if C is None:
                 continue
-            if args.save_matrices:        # only the cells of the pairs computed in THIS call
+            if args.save_matrices:
                 np.save(paths.store / f"noise_corr_matrix__{sid}__{window}__{target}.npy", C.astype(np.float32))
                 pd.DataFrame({"cell_id": cell_ids, "group": grp}).to_csv(
                     paths.store / f"noise_corr_cells__{sid}__{window}.csv", index=False)
             r = C[pi, pj]
             ok = np.isfinite(r)
-            prows.append(pd.DataFrame({"session_id": sid, "window": window, "target": target,
-                                       "cell_i": [pr[k][0] for k in np.flatnonzero(ok)],
-                                       "cell_j": [pr[k][1] for k in np.flatnonzero(ok)],
-                                       "group_a": lo_g[ok], "group_b": hi_g[ok], "r": r[ok]}))
+            if not ok.any():
+                continue
+            df = pd.DataFrame({"a": lo_g[ok], "b": hi_g[ok], "r": r[ok]})
+            for (a_, b_), g_ in df.groupby(["a", "b"]):
+                rows.append(dict(session_id=sid, animal_id=ses.animal_id, window=window, target=target, group_a=a_, group_b=b_,
+                                 n_pairs=len(g_), sum_r=float(g_["r"].sum()), sum_r2=float((g_["r"] ** 2).sum())))
+                if a_ == b_:
+                    hists[(window, target, a_)] = np.histogram(g_["r"], HIST_BINS)[0]
             if N_CHECK:
-                pick = rng.choice(np.flatnonzero(ok), size=min(N_CHECK, int(ok.sum())), replace=False) if ok.any() else []
+                pick = rng.choice(np.flatnonzero(ok), size=min(N_CHECK, int(ok.sum())), replace=False)
                 diffs = []
                 for k in pick:
                     ref = noise_corr_3a(table, target, cell_ids[pi[k]], cell_ids[pj[k]])
@@ -244,33 +266,19 @@ def process_session(ses, seed, new_cells, new_pairs, req_cells):
                 if diffs:
                     checks.append(dict(session_id=sid, window=window, target=target, n_checked=len(diffs),
                                        max_abs_diff=max(diffs)))
-    print(f"  [{sid}] {len(new_pairs)} new pairs among {len(cells)} cells")
-    return dict(session_id=sid, animal_id=ses.animal_id,
-                pairs=pd.concat(prows, ignore_index=True) if prows else pd.DataFrame(), checks=checks)
+    print(f"  [{sid}] {len(cells)} cells, {sum(r_['n_pairs'] for r_ in rows if r_['window'] == next(iter(WINDOWS)) and r_['target'] == TARGETS[0])} pairs")
+    return dict(session_id=sid, animal_id=ses.animal_id, rows=rows, hists=hists, checks=checks)
 
 
-results = run_sessions_units(
-    session_ids, process_session, [PROTOCOL], paths.store, "noise_corr_all",
+results = run_sessions(
+    session_ids, process_session, [PROTOCOL], paths.store, "noise_corr_all_summary",
     key_params=dict(windows=WINDOWS, targets=target_signature(TARGETS), min_trials=MIN_TRIALS, min_per_bin=MIN_PER_BIN,
-                    hist_bins=len(HIST_BINS), check=N_CHECK, save_matrices=args.save_matrices, version="3a2-v2", face_z=cfg.NORMALIZE_FACE_PER_SESSION,
-                    fits_mtime=int(fits_path.stat().st_mtime)),
+                    hist_bins=len(HIST_BINS), check=N_CHECK, save_matrices=args.save_matrices, version="3a2-v3",
+                    face_z=cfg.NORMALIZE_FACE_PER_SESSION, fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
-    cells_by_session=cells_by_session, parts={"pairs": "pair"}, extras={"checks": "extend"},
-    groups_by_cell=cell_group, max_cells=scope.max_cells, max_pairs=scope.max_pairs, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs,
-    recompute=args.recompute, verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps)
+    cells_by_session=cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
+    verbose=JOBLIB_VERBOSE, extra_key_by_session={s: f"{stamps[s]}-{cap_stamp[s]}" for s in session_ids}, flatten=False)
 results = [r for r in results if r is not None]
-# group-pair summaries + histograms of the REQUESTED pairs, rebuilt from the per-pair rows (ledger: results per pair)
-for r in results:
-    r["rows"], r["hists"] = [], {}
-    r.setdefault("checks", [])
-    bp = r.get("pairs")
-    if bp is None or not len(bp):
-        continue
-    for (w_, t_, a_, b_), g_ in bp.groupby(["window", "target", "group_a", "group_b"]):
-        r["rows"].append(dict(session_id=r["session_id"], animal_id=r["animal_id"], window=w_, target=t_, group_a=a_,
-                              group_b=b_, n_pairs=len(g_), sum_r=float(g_["r"].sum()), sum_r2=float((g_["r"] ** 2).sum())))
-        if a_ == b_:
-            r["hists"][(w_, t_, a_)] = np.histogram(g_["r"], HIST_BINS)[0]
 rows = [x for r in results for x in r["rows"]]
 if not rows:
     raise SystemExit("No session had enough valid trials.")

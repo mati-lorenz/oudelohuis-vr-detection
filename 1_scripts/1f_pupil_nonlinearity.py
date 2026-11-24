@@ -6,8 +6,12 @@ Is the relationship between PUPIL AREA and other variables NON-LINEAR -- specifi
 (Yerkes-Dodson: best performance / most "engaged" behavior at intermediate arousal)? Across DP and DN (PROTOCOLS_USED, edit at the top).
 
 PERFORMANCE vs PUPIL (figure 2, separate from everything above): ALL engaged trials. hit rate = P(lick | signal > 0) over every signal
-strength, FA rate = P(lick | signal = 0) (the only no-signal trials), balanced accuracy = (hit + 1 - FA) / 2; d' and criterion are
-signal-detection measures and use the 0 % / 100 % trials only. A bin needs >= MIN_PER_CLASS_BIN trials of each class, one subplot per window (D_WINDOWS: pre_stim,
+strength, FA rate = P(lick | signal = 0) (the only no-signal trials), balanced accuracy = (hit + 1 - FA) / 2. d' and criterion use
+the NOISE trials only (0 < signal < 100 %, no 0 % / 100 % trials): a psychometric (probit) fit per session and pupil bin, with the
+floor / lapse fixed from 1b, gives the predicted 0 % / 100 % hit and FA rates, from which the classical d' and criterion follow
+(DPRIME_METHOD / CRITERION_METHOD; infotheory/noise_sdt.py explains the variants and what cannot be recovered without the 0 % trials). Figure 2b puts the
+variants and the classical 0 % / 100 % version side by side. A bin needs >= MIN_PER_CLASS_BIN trials of each class (hit / FA) and
+>= MIN_NOISE_PER_BIN noise trials (d' / criterion), one subplot per window (D_WINDOWS: pre_stim,
 stim, reward), x = the pupil of THAT window (not the whole-trial mean), DPRIME_BINS quantile bins within session.
 
 TRIALS: only NOISE trials, 0 < signal < 100 % (NOISE_TRIALS_ONLY = True, edit at the top). On those trials every lick is a response to
@@ -31,23 +35,55 @@ y  = one trial-level variable at a time (Y_VARIABLES):
 An inverted U is NOT a correlation: a perfect inverted U has r ~ 0. Four complementary checks, per unit
 (session / mouse / pooled, --aggregate):
   A. QUADRATIC     y ~ 1 + z + z^2 (z standardized within the unit; y standardized too, so coefficients are
-                   comparable between variables). beta_quadratic < 0 = inverted U, > 0 = U.
+                   comparable between variables). CROSS-VALIDATED (see below): beta_quadratic_cv < 0 = inverted
+                   U, > 0 = U. The in-sample beta_quadratic / p_quadratic (full-sample fit, HC3 SEs) are kept
+                   as a reference column but are no longer what is tested or plotted.
   B. LIND-MEHLUM   the proper "is it really a hump" test: the quadratic coefficient alone can be significant
                    for a curve that is merely saturating. Inverted U requires the fitted slope at the LOW end
                    of the pupil range to be significantly > 0 AND at the HIGH end significantly < 0
-                   (one-sided, heteroscedasticity-robust HC3 SEs; intersection-union, so no extra correction),
-                   with the turning point inside the range. Range = RANGE_PCT percentiles of z (not the
-                   extremes, which are leverage points).
+                   (intersection-union, so no extra correction), with the turning point inside the range.
+                   Range = RANGE_PCT percentiles of z (not the extremes, which are leverage points; this
+                   endpoint definition is fixed in advance and is not itself cross-validated -- see the CV note
+                   below for why).
   C. TWO HALVES    linear slope in the lower and in the upper half of the session's pupil (split at the
                    within-session median -- fixed in advance, so no breakpoint hunting). Inverted U =
-                   slope_low > 0 and slope_high < 0. Shown as paired lines per unit (figure 3).
+                   slope_low > 0 and slope_high < 0. Shown as paired lines per unit (figure 3). Each half is
+                   fit AND read off its own, disjoint trials, so there is no fit-on-what-you-score-on bias here
+                   and this check is NOT cross-validated (same scoping rule as 2j/2k's fixed-bin statistics).
   D. MODEL-FREE    bias-corrected histogram MI(pupil; y) with the SHARED project bins (RESPONSE_BINS) versus
                    the MI implied by the LINEAR r^2: the excess is information a straight line cannot see.
                    (Same estimator as 1d / 2c / 3a-3c, so the numbers are comparable before bias correction.)
-  + CV gain        5-fold cross-validated gain in squared error of the quadratic over the linear model,
-                   1 - MSE_quad / MSE_lin (> 0 = the curvature generalizes to held-out trials).
-Group level (needs >= MIN_UNITS units): Wilcoxon signed-rank across units for beta_quadratic != 0, slope_low
-> 0, slope_high < 0, CV gain > 0 and MI excess > 0, Holm-corrected across the y variables within a protocol
+                   Not cross-validated: this is the same per-pair, no-extra-selection Pearson r/MI comparison
+                   used throughout the project; there is no multi-parameter in-sample fit to inflate here.
+
+CROSS-VALIDATION (A and B; fit_cv, 2-fold, odd/even trial index parity, mirroring 2j_pupil_activity_shape.py):
+the quadratic (and linear) model is fit on one half of the unit's trials and scored on the OTHER half, in both
+directions, pooling SSE/SST before computing R2 -- the same pattern as 2j and 2k. beta_linear_cv/beta_quadratic_cv
+are the mean of the two half-fits' coefficients (never a coefficient fit on the same trials it is tested against).
+dR2_cv = R2_quad_cv - R2_lin_cv can now be NEGATIVE (impossible for an in-sample nested-model comparison, where
+adding the z^2 term can only reduce or keep the same in-sample SSE). cv_gain = 1 - SSE_quad_cv / SSE_lin_cv is kept
+under its previous name for continuity, but is now computed on the SAME odd/even split as everything else here,
+not an independent random 5-fold split. Significance (p_quadratic_cv, p_low_end_positive_cv, p_high_end_negative_cv,
+p_cv_gain) comes from a trial-label permutation null that recomputes the WHOLE cross-validated statistic
+(fit_cv on the shuffled labels, same odd/even split) at every one of N_SHUFFLES draws -- never from the old HC3
+sandwich-SE formula, which assumes a single in-sample fit and would be the wrong reference distribution for an
+averaged, cross-validated coefficient. inverted_U_cv / U_shape_cv / turning_point_z_cv are the CV analogues of
+inverted_U / U_shape / turning_point_z, using the averaged CV coefficients and the permutation p-values.
+SUPPLEMENTARY 5-FOLD (fit_kfold, idea 2/3): the same fit-on-the-other-folds/score-on-the-held-out-fold logic,
+generalised from 2 to 5 folds -- beta_linear_5fold/beta_quadratic_5fold (idea 3: averaged over the 5 per-fold
+training fits), dR2_5fold/cv_gain_5fold (idea 2: held-out loss averaged/pooled over the 5 folds), p_quadratic_5fold/
+p_dR2_5fold. Kept alongside the odd/even fit_cv headline as a cross-check (the two should agree), not a replacement.
+Figure 1{a..d}_cv_fit_vs_heldout_points_<x> (idea 1): the quadratic fit on the protocol's ODD trials (pooled across
+units) plotted as a line against the EVEN-trial bin means it did not see (points) -- a visual version of what
+beta_quadratic_cv/dR2_cv already test numerically: if the line and the points disagree, the curve does not replicate.
+Why beta_quadratic itself needed this (unlike C and D): fitting the quadratic on ALL of a unit's trials and then
+testing it with a sandwich SE is standard regression inference and is not, by itself, biased -- but the Lind-Mehlum
+slopes and the turning point are all read off that SAME single fit, and cv_gain already existed as a reminder that
+the project treats "does the curvature generalize" as a question that needs held-out trials, not an in-sample
+R2 comparison. Cross-validating the coefficients and the associated tests keeps every A/B number consistent with
+cv_gain's held-out logic instead of mixing an in-sample estimate with a held-out one for the same curve.
+Group level (needs >= MIN_UNITS units): Wilcoxon signed-rank across units for beta_quadratic_cv != 0, slope_low
+> 0, slope_high < 0, cv_gain > 0 and MI excess > 0, Holm-corrected across the y variables within a protocol
 (and x). Pooled = a single unit per protocol, so only the per-unit (trial-level) tests are available there.
 
 Project-wide rules (infotheory/project_config.py)
@@ -63,6 +99,15 @@ BEHAVIORAL PCA (section 9, figures 9a-9c, pupil_pca_*.csv): PCA of runspeed, mot
 window, z-scored within session; PCA_VARIABLES), pupil AREA excluded; then each component's score is related to pupil area
 (correlation, quadratic fit, group test across units).
 
+TUNING CURVES (section 11, figures 11-13, pupil_tuning_curves[__<aggregate>].csv; the MIRROR of 1g, which does the same vs running speed, code in
+infotheory/tuning_common.py): every other variable (speed, pupil position, motion energy, lick rate, video PCs, position in the trial,
+P(lick) per window) against N_QUANTILE_BINS pupil quantile bins within session. Figure 11 = the whole trial as POOLED FRAMES, figure 12 =
+the windows (TUNING_WINDOWS), figure 13 = the whole trial as SECTION means (SECTION_WIDTH cm sections; independent-ish samples, the
+version to use for any test, since frames are autocorrelated). Figures 11w-13w = the SAME curves with FIXED, EQUAL-WIDTH pupil bins
+(EQUALWIDTH_RANGE, same z range in every session) instead of the within-session quantiles -- equipopulated bins give every bin the
+same power but distort the x-axis spacing where the pupil distribution isn't uniform; equal-width bins keep the real spacing but can
+leave a sparse bin noisy. Both are shown; 11-13 stay the default (unchanged), 11w-13w are the additional check.
+
 POSITION IN THE CORRIDOR (section 10, figures 10a-10d, pupil_position_*.csv): the pupil-vs-y relation (quadratic coefficient, linear r,
 inverted-U fraction; POS_Y) and the performance measures, recomputed in sliding POS_WINDOW cm windows along the corridor
 (POS_RANGE, step POS_STEP, cm from the stimulus onset). In each window x = the pupil of THAT window and y is measured in the same window.
@@ -75,11 +120,14 @@ Outputs
 -------
 2_pipeline/1f_pupil_nonlinearity/
     out/    pupil_nonlinearity_per_unit[__<aggregate>].csv   one row per (protocol, [unit], x, y): n, quadratic /
-                         linear coefficients, p-values, slopes at the range ends, turning point, inverted-U flags,
-                         two-halves slopes, CV gain, MI / MI-from-r2 / excess
+                         linear coefficients, p-values, slopes at the range ends, turning point, inverted-U flags
+                         (in-sample, reference only) AND their _cv cross-validated counterparts (headline: fit
+                         on odd/even trials, scored on the other half, permutation p-values -- see docstring),
+                         plus the supplementary _5fold columns (idea 2/3), two-halves slopes (not cross-validated),
+                         cv_gain / dR2_cv, MI / MI-from-r2 / excess
             pupil_nonlinearity_group_tests[__<aggregate>].csv  Wilcoxon tests across units, Holm-corrected
             pupil_nonlinearity_curves[__<aggregate>].csv      mean +- SEM of each y per pupil quantile bin
-            pupil_performance_by_quantile_windows[__<aggregate>].csv   hit / FA rate, balanced accuracy (all trials), d', criterion (0 % / 100 % trials) per pupil quantile, per window
+            pupil_performance_by_quantile_windows[__<aggregate>].csv   hit / FA rate, balanced accuracy (all trials), d' / criterion (noise trials: DPRIME_METHOD / CRITERION_METHOD in `dprime`/`criterion`, every variant in dprime_<method>/criterion_<method>; classical 0/100 in *_0_100) per pupil quantile, per window
             figures/*.png
     out/selection/<tag>/...  the same for a restricted run
     store/  pupil_trials_<hash>.pkl     per-session trial table (reused unless --recompute)
@@ -96,10 +144,13 @@ from joblib import Parallel, delayed
 
 from infotheory.pipeline import get_pipeline_paths
 from infotheory.session import discover_sessions, PROTOCOLS
-from infotheory.continuous import merge_behavior_video, restrict_to_engaged, remove_pupil_outliers, \
+from infotheory.continuous import merge_behavior_video, restrict_to_engaged, restrict_to_trials, remove_pupil_outliers, \
     zscore_per_session, compute_trial_position_window_means
 from infotheory.info_theory import mutual_information_shuffle, compare_mi_to_linear, linear_fit
 from infotheory.behavior import compute_dprime
+from infotheory.noise_sdt import noise_sdt_session, NOISE_COLS, NOISE_METHODS
+from infotheory import tuning_common as tc
+from infotheory import performance_common as pc
 from infotheory.plotting import set_style, save_fig, clear_figures, PROTOCOL_COLORS
 from infotheory import project_config as cfg
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, \
@@ -123,7 +174,31 @@ TRUSTED_POSITION_RANGE = (-40.0, 40.0)    # windows reaching outside are shaded 
 POS_WINDOWS = [(float(lo), float(lo + POS_WINDOW)) for lo in np.arange(POS_RANGE[0], POS_RANGE[1] - POS_WINDOW + 1e-9, POS_STEP)]
 POS_Y = ["cur_runspeed", "cur_motionenergy", "cur_lick", "cur_pupil_xpos", "cur_pupil_ypos", "lick_any"]   # lick_any = the trial's response
 MIN_PER_CLASS_BIN = 3                 # 0 % and 100 % trials each needed in a pupil bin for its performance measures
+TUNING_WINDOWS = D_WINDOWS            # the tuning curves of figures 11-13 use the same windows as figure 2 (and as 1g)
+SECTION_RANGE, SECTION_WIDTH = POS_RANGE, POS_WINDOW     # the whole trial as section means (figure 13)
+X_VAR = "pupil_area"                  # x of the tuning curves of figures 11-13 (1g: runspeed)
+TUNING_Y = [v for v in tc.TUNING_VARS if v != X_VAR]     # the SAME y variables as 1g
+LICK_SMOOTH_S = 1.0                   # lick events -> lick rate (Hz) for the Spearman values of figure 11
+MIN_PER_BIN_FRAMES = 30               # whole-trial (frame) level: samples needed in a bin of a session
+MIN_PER_BIN_TRIALS = 5                # window / section level: trials (samples) needed in a bin of a session
 DPRIME_BINS = 6                       # pupil quantile bins (within session, among ALL engaged trials) of the performance figure
+# d' and criterion are computed on NOISE trials only (0 < signal < 100 %; see infotheory/noise_sdt.py for the methods and what is lost):
+#   "probit_pred"   psychometric fit on the noise trials of each (session, bin), floor / lapse fixed from 1b, 0 % / 100 % rates predicted
+#                   from the fit, classical formulas -> same scale as the classical d' / criterion (recommended)
+#   "probit_shift"  scale-free, interpolated: criterion = threshold shift of the bin's curve in units of the session's 1b sigma
+#                   (> 0 = conservative, 0 = session average), d' = slope relative to the session's 1b slope (1 = average)
+#   "split"         weak vs strong noise trials as the two classes (model-free; d' is much smaller)
+DPRIME_METHOD = "probit_shift"        # d' drawn in figure 2 and figure 10d (all variants are in figure 2b and the csv)
+# "probit_shift" is the inverse-sigma sensitivity: dprime_probit_shift = b / b0 = (1/sigma of this bin's psychometric fit) /
+# (1/sigma of the session's own 1b curve), i.e. sensitivity relative to the session's own baseline (1 = average, >1 = more
+# sensitive than usual) -- not an absolute 1/sigma, which would not be comparable across sessions of different difficulty.
+# The classical criterion from 0 % / 100 % rates is dominated by the floor / lapse balance, so a shift of the psychometric THRESHOLD barely
+# moves it -- and so does "probit_pred". "probit_shift" follows threshold shifts and stays inside the tested stimulus range.
+CRITERION_METHOD = "probit_shift"    # criterion drawn in figure 2 and figure 10d
+MIN_NOISE_PER_BIN = 20                # noise trials needed in one (session, pupil bin) for its d' / criterion
+PROBIT_PRIOR_A_SD = 1.0               # sd of the prior on the probit offset a (z units), centred on the session's 1b curve
+PROBIT_PRIOR_B_FRAC = 0.75            # sd of the prior on the probit slope b, as a fraction of the session's 1b slope (smaller = more shrinkage)
+RATE_CLIP = 0.005                     # predicted hit / FA rates are clipped to [RATE_CLIP, 1 - RATE_CLIP] before the z transform
 # x: pupil AREA of this / the previous trial, and the pupil POSITION (eye position, horizontal / vertical; z-scored within session) of
 # this trial, to compare the two. Figures are numbered 1a, 1b, ... in this order.
 PUPIL_PREDICTORS = ["cur_pupil_area", "prev_pupil_area", "cur_pupil_xpos", "cur_pupil_ypos"]
@@ -151,8 +226,10 @@ MI_BINS = cfg.RESPONSE_BINS
 MIN_TRIALS_ANALYSIS = cfg.MIN_TRIALS_ANALYSIS
 
 # --- local to this script ---------------------------------------------------------------------------------
-N_QUANTILE_BINS = 6                   # pupil quantile bins for the curves (within session)
+N_QUANTILE_BINS = 8                   # pupil quantile bins for the curves (within session); the same as 1g's speed bins
 RANGE_PCT = (5, 95)                   # percentiles of z that define the "low" and "high" end of the range
+EQUALWIDTH_RANGE = (-3.0, 3.0)        # pupil area (z): FIXED range for the equal-width tuning-curve bins (figures 11w-13w),
+                                       # alongside the default N_QUANTILE_BINS within-session quantile bins (figures 11-13)
 ALPHA = 0.05
 MIN_TRIALS_FIT = 40                   # trials needed for a quadratic fit in one unit
 MIN_UNITS = 4                         # units needed for a group test
@@ -208,6 +285,7 @@ def process_session(ses, seed):
     merged_full = zscore_per_session(remove_pupil_outliers(merge_behavior_video(ses.behaviordata, ses.videodata)))
     if merged_full.empty or "pupil_area" not in merged_full.columns:
         return None
+    merged_full = tc.add_lick_rate(merged_full, LICK_SMOOTH_S)          # smoothed lick rate (Hz), before any trial restriction
     merged = restrict_to_engaged(merged_full, ses.trialdata)
     if merged.empty:
         return None
@@ -236,22 +314,46 @@ def process_session(ses, seed):
     t["lick_nosignal"] = np.where(t["signal"] == 0, t["lickResponse"], np.nan)
     t["hit_100"] = np.where(t["signal"] == 100, t["lickResponse"], np.nan)
     t["session_id"], t["animal_id"], t["protocol"] = ses.session_id, ses.animal_id, ses.protocol
-    return t
+
+    # tuning curves vs X_VAR (figures 11-13, shared with 1g via infotheory/tuning_common.py): whole trial (frames), windows, sections
+    sel = ses.trialdata[ses.trialdata["engaged"] == 1] if "engaged" in ses.trialdata.columns else ses.trialdata
+    if NOISE_TRIALS_ONLY:
+        sel = sel[(sel["signal"] > 0) & (sel["signal"] < 100)]
+    tun, spm = pd.DataFrame(), pd.DataFrame()
+    if len(sel):
+        mt = restrict_to_trials(merged_full, ses.trialdata, sel["trialNumber"])
+        if len(mt) and X_VAR in mt.columns:
+            mt = tc.add_pos_rel(mt, sel)
+            ys_t = [v for v in TUNING_Y if v in mt.columns and mt[v].notna().any()]
+            tun = tc.session_tuning(mt, sel, x_var=X_VAR, y_vars=ys_t, rate_vars=RATE_VARIABLES, fs=tc.sampling_rate(merged_full),
+                                    windows=TUNING_WINDOWS, section_range=SECTION_RANGE, section_width=SECTION_WIDTH,
+                                    n_bins=N_QUANTILE_BINS, stop_bin=False, min_frames=MIN_PER_BIN_FRAMES,
+                                    min_trials=MIN_PER_BIN_TRIALS, fixed_range=EQUALWIDTH_RANGE)
+            spm = tc.spearman_with_x(mt, X_VAR, ys_t)
+    for tbl in (tun, spm):
+        if len(tbl):
+            tbl["session_id"], tbl["animal_id"], tbl["protocol"] = ses.session_id, ses.animal_id, ses.protocol
+    return dict(trials=t, tuning=tun, spearman=spm)
 
 
 session_tables = run_sessions(
     included_ids, process_session, list(PROTOCOLS), paths.store, "pupil_trials",
-    key_params=dict(version="1f-v4", variables=BEHAVIOR_VARS, rate_variables=RATE_VARIABLES, window=PRESTIM_WINDOW,
+    key_params=dict(version="1f-v6", tuning=(X_VAR, TUNING_Y, N_QUANTILE_BINS, SECTION_RANGE, SECTION_WIDTH, LICK_SMOOTH_S, MIN_PER_BIN_FRAMES, MIN_PER_BIN_TRIALS, NOISE_TRIALS_ONLY, EQUALWIDTH_RANGE), variables=BEHAVIOR_VARS, rate_variables=RATE_VARIABLES, window=PRESTIM_WINDOW,
                     d_windows=D_WINDOWS, pos_windows=POS_WINDOWS),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True),
     n_jobs=N_JOBS, recompute=args.recompute, verbose=JOBLIB_VERBOSE,
     extra_key_by_session={sid: data_stamp(*triple_of[sid]) for sid in included_ids}, flatten=False)
-session_tables = [t for t in session_tables if t is not None and len(t)]
-if not session_tables:
+session_results = [r for r in session_tables if r is not None and len(r["trials"])]
+if not session_results:
     raise SystemExit("No selected session had behavior + video data -- nothing to analyze.")
-trials = pd.concat(session_tables, ignore_index=True)
-del session_tables
-trials_all = trials                    # every engaged trial (the d' / criterion figure needs the 0 % / 100 % ones)
+trials = pd.concat([r["trials"] for r in session_results], ignore_index=True)
+_cat = lambda k: pd.concat([r[k] for r in session_results if len(r[k])], ignore_index=True) if any(len(r[k]) for r in session_results) else pd.DataFrame()
+tuning_all, spearman_all = _cat("tuning"), _cat("spearman")
+del session_tables, session_results
+trials_all = trials                    # every engaged trial (hit / FA / balanced accuracy and the classical d' need the 0 % / 100 % ones)
+FIT_PARAMS = fits_df.set_index("session_id")[["mu", "sigma", "lapse_rate", "guess_rate"]].to_dict("index")
+_noise_all = trials_all[(trials_all["signal"] > 0) & (trials_all["signal"] < 100)]
+SPLIT_AT = _noise_all.groupby("session_id")["signal"].median().to_dict()      # weak / strong split of the noise trials, per session
 if NOISE_TRIALS_ONLY:
     trials = trials[(trials["signal"] > 0) & (trials["signal"] < 100)].copy()
 protocols_present = [p for p in PROTOCOLS if (trials["protocol"] == p).any()]
@@ -291,21 +393,68 @@ def _slope_test(beta, cov, z0):
     return float(g @ beta), float(np.sqrt(max(g @ cov @ g, 1e-18)))
 
 
-def _cv_gain(z, y, seed):
-    n = len(z)
-    folds = np.random.default_rng(seed).permutation(n) % CV_FOLDS
-    se_lin = se_quad = 0.0
-    for k in range(CV_FOLDS):
-        tr, te = folds != k, folds == k
-        for deg, acc in ((1, "lin"), (2, "quad")):
-            X = np.vander(z, deg + 1, increasing=True)
-            b = np.linalg.lstsq(X[tr], y[tr], rcond=None)[0]
-            err = float(np.sum((y[te] - X[te] @ b) ** 2))
-            if acc == "lin":
-                se_lin += err
-            else:
-                se_quad += err
-    return 1.0 - se_quad / se_lin if se_lin > 0 else np.nan
+def _fit_half(z, yy):
+    """Quadratic and linear OLS fit on one half of the trials. Returns (beta_quad[3], beta_lin[2])."""
+    X = np.column_stack([np.ones_like(z), z, z ** 2])
+    bq = np.linalg.lstsq(X, yy, rcond=None)[0]
+    bl = np.linalg.lstsq(X[:, :2], yy, rcond=None)[0]
+    return bq, bl
+
+
+def _score_half(bq, bl, z, yy):
+    """Held-out SSE (quadratic, linear model) and SST of yy at z, using coefficients fit on the OTHER half."""
+    X = np.column_stack([np.ones_like(z), z, z ** 2])
+    sse_q = float(np.sum((yy - X @ bq) ** 2))
+    sse_l = float(np.sum((yy - X[:, :2] @ bl) ** 2))
+    sst = float(np.sum((yy - yy.mean()) ** 2))
+    return sse_q, sse_l, sst
+
+
+def fit_cv(z, yy, odd):
+    """2-FOLD (odd/even trials) CROSS-VALIDATED quadratic-vs-linear fit of yy ~ z (see module docstring). Fit on
+    one half, score the OTHER half, in both directions, pooling SSE/SST before computing R2 -- the same pattern
+    as 2j_pupil_activity_shape.py's fit_cv. Returns the CV-averaged coefficients (mean of the two half-fits, never
+    fit on the trials they are tested against), the pooled held-out R2 of each model, their difference dR2 (can
+    be negative), and cv_gain (the SSE-ratio version of the same comparison, kept for continuity)."""
+    bq_o, bl_o = _fit_half(z[odd], yy[odd])
+    bq_e, bl_e = _fit_half(z[~odd], yy[~odd])
+    sse_q1, sse_l1, sst1 = _score_half(bq_o, bl_o, z[~odd], yy[~odd])
+    sse_q2, sse_l2, sst2 = _score_half(bq_e, bl_e, z[odd], yy[odd])
+    sst = sst1 + sst2
+    sse_q, sse_l = sse_q1 + sse_q2, sse_l1 + sse_l2
+    with np.errstate(invalid="ignore", divide="ignore"):
+        r2q = 1.0 - sse_q / sst
+        r2l = 1.0 - sse_l / sst
+        cvg = 1.0 - sse_q / sse_l if sse_l > 0 else np.nan
+    return dict(beta1=(bq_o[1] + bq_e[1]) / 2.0, beta2=(bq_o[2] + bq_e[2]) / 2.0,
+                dR2=r2q - r2l, cv_gain=cvg)
+
+
+def fit_kfold(z, yy, fold, K):
+    """K-FOLD generalisation of fit_cv (idea 2/3): each fold's quadratic/linear coefficients are fit on the OTHER
+    K-1 folds and scored on the held-out fold, SSE/SST pooled over all K held-out scorings (idea 2: the mean of the
+    K held-out losses); beta1/beta2 are the average of the K per-fold TRAINING coefficients (idea 3: the average
+    curve across the subset fits). `fold` in 0..K-1. K=2 with fold=odd.astype(int) reproduces fit_cv exactly.
+    Supplementary cross-check alongside the odd/even fit_cv headline, not a replacement for it."""
+    bqs, bls = [], []
+    for f in range(K):
+        tr = fold != f
+        bq, bl = _fit_half(z[tr], yy[tr])
+        bqs.append(bq)
+        bls.append(bl)
+    sse_q = sse_l = sst = 0.0
+    for f in range(K):
+        te = fold == f
+        sq, sl, ss = _score_half(bqs[f], bls[f], z[te], yy[te])
+        sse_q += sq
+        sse_l += sl
+        sst += ss
+    with np.errstate(invalid="ignore", divide="ignore"):
+        r2q = 1.0 - sse_q / sst
+        r2l = 1.0 - sse_l / sst
+        cvg = 1.0 - sse_q / sse_l if sse_l > 0 else np.nan
+    return dict(beta1=float(np.mean([b[1] for b in bqs])), beta2=float(np.mean([b[2] for b in bqs])),
+                dR2=r2q - r2l, cv_gain=cvg)
 
 
 def fit_unit(protocol, unit, sub, x, y, seed):
@@ -316,8 +465,10 @@ def fit_unit(protocol, unit, sub, x, y, seed):
     z = (z - z.mean()) / z.std()
     yy = d[f"{y}__c"].to_numpy(float)
     yy = (yy - yy.mean()) / yy.std()
+    odd = (np.arange(len(d)) % 2 == 1)        # project convention (2j/2k): trial-index parity, not trial number
+    fold5 = (np.arange(len(d)) % 5)           # supplementary 5-fold split (idea 2/3), same trial-index convention
     X = np.column_stack([np.ones(len(z)), z, z ** 2])
-    beta, cov = _hc3_ols(X, yy)
+    beta, cov = _hc3_ols(X, yy)                # in-sample fit, kept as a REFERENCE column only (see docstring)
     se = np.sqrt(np.clip(np.diag(cov), 1e-18, None))
     p_quad = 2 * sps.norm.sf(abs(beta[2] / se[2]))
     lo, hi = np.percentile(z, RANGE_PCT)
@@ -329,7 +480,41 @@ def fit_unit(protocol, unit, sub, x, y, seed):
     inv_u = bool(beta[2] < 0 and p_lo < ALPHA and p_hi < ALPHA and lo < turning < hi)
     u_shape = bool(beta[2] > 0 and sps.norm.cdf(s_lo / se_lo) < ALPHA and sps.norm.sf(s_hi / se_hi) < ALPHA
                    and lo < turning < hi)
-    # two halves, split at the within-unit median of z
+
+    # CROSS-VALIDATED quadratic fit (headline): fit_cv on the observed labels, then on N_SHUFFLES permutations of
+    # yy (same odd/even split every time) for a null that recomputes the WHOLE cv statistic at each draw.
+    obs = fit_cv(z, yy, odd)
+    obs5 = fit_kfold(z, yy, fold5, 5)         # supplementary 5-fold cross-check (idea 2/3), see module docstring
+    turning_cv = -obs["beta1"] / (2 * obs["beta2"]) if obs["beta2"] != 0 else np.nan
+    s_lo_cv = obs["beta1"] + 2 * obs["beta2"] * lo
+    s_hi_cv = obs["beta1"] + 2 * obs["beta2"] * hi
+    rng = np.random.default_rng(seed)
+    null_b2 = np.empty(N_SHUFFLES)
+    null_lo = np.empty(N_SHUFFLES)
+    null_hi = np.empty(N_SHUFFLES)
+    null_dR2 = np.empty(N_SHUFFLES)
+    null_b2_5 = np.empty(N_SHUFFLES)
+    null_dR2_5 = np.empty(N_SHUFFLES)
+    for i in range(N_SHUFFLES):
+        yp = rng.permutation(yy)
+        f = fit_cv(z, yp, odd)
+        null_b2[i], null_dR2[i] = f["beta2"], f["dR2"]
+        null_lo[i] = f["beta1"] + 2 * f["beta2"] * lo
+        null_hi[i] = f["beta1"] + 2 * f["beta2"] * hi
+        f5 = fit_kfold(z, yp, fold5, 5)       # same permutation draw as the 2-fold null, no extra rng calls
+        null_b2_5[i], null_dR2_5[i] = f5["beta2"], f5["dR2"]
+    p_quad_cv = (1 + (np.abs(null_b2) >= abs(obs["beta2"])).sum()) / (1 + N_SHUFFLES)
+    p_quad_5fold = (1 + (np.abs(null_b2_5) >= abs(obs5["beta2"])).sum()) / (1 + N_SHUFFLES)
+    p_dR2_5fold = (1 + (null_dR2_5 >= obs5["dR2"]).sum()) / (1 + N_SHUFFLES)
+    p_lo_pos_cv = (1 + (null_lo >= s_lo_cv).sum()) / (1 + N_SHUFFLES)     # H1 (inverted U): low end slope > 0
+    p_hi_neg_cv = (1 + (null_hi <= s_hi_cv).sum()) / (1 + N_SHUFFLES)     # H1 (inverted U): high end slope < 0
+    p_lo_neg_cv = (1 + (null_lo <= s_lo_cv).sum()) / (1 + N_SHUFFLES)     # H1 (U shape): low end slope < 0
+    p_hi_pos_cv = (1 + (null_hi >= s_hi_cv).sum()) / (1 + N_SHUFFLES)     # H1 (U shape): high end slope > 0
+    p_cv_gain = (1 + (null_dR2 >= obs["dR2"]).sum()) / (1 + N_SHUFFLES)   # H1: curvature generalizes, dR2 > chance
+    inv_u_cv = bool(obs["beta2"] < 0 and p_lo_pos_cv < ALPHA and p_hi_neg_cv < ALPHA and lo < turning_cv < hi)
+    u_shape_cv = bool(obs["beta2"] > 0 and p_lo_neg_cv < ALPHA and p_hi_pos_cv < ALPHA and lo < turning_cv < hi)
+
+    # two halves, split at the within-unit median of z (fixed, disjoint subsets -- no CV needed, see docstring)
     med = np.median(z)
     lowm, highm = z <= med, z > med
     slope_low = np.polyfit(z[lowm], yy[lowm], 1)[0] if lowm.sum() >= 10 else np.nan
@@ -338,8 +523,8 @@ def fit_unit(protocol, unit, sub, x, y, seed):
     mi_bits = mi_lin = excess = np.nan
     r = r2 = np.nan
     if len(d) >= MIN_TRIALS_ANALYSIS:
-        rng = np.random.default_rng(seed)
-        mi = mutual_information_shuffle(d[x], d[y], bins=MI_BINS, n_shuffles=N_SHUFFLES, rng=rng)
+        rng2 = np.random.default_rng(seed)
+        mi = mutual_information_shuffle(d[x], d[y], bins=MI_BINS, n_shuffles=N_SHUFFLES, rng=rng2)
         lin = linear_fit(d[x], d[y])
         cmp = compare_mi_to_linear(mi.bits_corrected, lin.r2)
         mi_bits, mi_lin, r, r2 = mi.bits_corrected, cmp.mi_from_r2_bits, lin.r, lin.r2
@@ -348,8 +533,16 @@ def fit_unit(protocol, unit, sub, x, y, seed):
            "beta_quadratic": beta[2], "p_quadratic": p_quad, "slope_low_end": s_lo, "slope_high_end": s_hi,
            "p_low_end_positive": p_lo, "p_high_end_negative": p_hi, "turning_point_z": turning,
            "range_low_z": lo, "range_high_z": hi, "inverted_U": inv_u, "U_shape": u_shape,
+           "beta_linear_cv": obs["beta1"], "beta_quadratic_cv": obs["beta2"], "p_quadratic_cv": p_quad_cv,
+           "slope_low_end_cv": s_lo_cv, "slope_high_end_cv": s_hi_cv, "p_low_end_positive_cv": p_lo_pos_cv,
+           "p_high_end_negative_cv": p_hi_neg_cv, "turning_point_z_cv": turning_cv,
+           "inverted_U_cv": inv_u_cv, "U_shape_cv": u_shape_cv,
            "slope_lower_half": slope_low, "slope_upper_half": slope_high,
-           "cv_gain": _cv_gain(z, yy, seed), "r": r, "r2": r2, "mi_bits_corrected": mi_bits,
+           "dR2_cv": obs["dR2"], "cv_gain": obs["cv_gain"], "p_cv_gain": p_cv_gain,
+           "beta_linear_5fold": obs5["beta1"], "beta_quadratic_5fold": obs5["beta2"],
+           "dR2_5fold": obs5["dR2"], "cv_gain_5fold": obs5["cv_gain"],
+           "p_quadratic_5fold": p_quad_5fold, "p_dR2_5fold": p_dR2_5fold,
+           "r": r, "r2": r2, "mi_bits_corrected": mi_bits,
            "mi_bits_from_r2": mi_lin, "mi_excess_bits": excess}
     row["unit"] = unit
     row["animal_id"] = sub["animal_id"].iloc[0]
@@ -401,7 +594,7 @@ def _wilcoxon(v, alternative):
 
 group_rows = []
 if AGG != "pooled":
-    tests = [("beta_quadratic", "two-sided"), ("slope_lower_half", "greater"), ("slope_upper_half", "less"),
+    tests = [("beta_quadratic_cv", "two-sided"), ("slope_lower_half", "greater"), ("slope_upper_half", "less"),
              ("cv_gain", "greater"), ("mi_excess_bits", "greater")]
     for (protocol, x), g in per_unit.groupby(["protocol", "x"]):
         for stat, alt in tests:
@@ -411,7 +604,7 @@ if AGG != "pooled":
                 recs.append({"protocol": protocol, "x": x, "y": y, "statistic": stat, "alternative": alt,
                              "n_units": len(v), "mean": v.mean() if len(v) else np.nan,
                              "median": v.median() if len(v) else np.nan, "p": _wilcoxon(v, alt),
-                             "frac_inverted_U": float(gy["inverted_U"].mean())})
+                             "frac_inverted_U": float(gy["inverted_U_cv"].mean())})
             ps = _holm([r["p"] for r in recs])
             for r, pa in zip(recs, ps):
                 r["p_holm"] = pa
@@ -419,10 +612,10 @@ if AGG != "pooled":
 group_tests = pd.DataFrame(group_rows)
 group_tests.to_csv(table_dir / f"pupil_nonlinearity_group_tests{AGG_SUFFIX}.csv", index=False)
 
-print(f"\nPer-unit summary (mean over {UNIT}s; beta_quadratic < 0 = inverted U):")
+print(f"\nPer-unit summary (mean over {UNIT}s; beta_quadratic_cv < 0 = inverted U; cross-validated):")
 summ = (per_unit.groupby(["protocol", "x", "y"])
-        .agg(n_units=("n_trials", "size"), beta_quadratic=("beta_quadratic", "mean"),
-             frac_inverted_U=("inverted_U", "mean"), cv_gain=("cv_gain", "mean"),
+        .agg(n_units=("n_trials", "size"), beta_quadratic_cv=("beta_quadratic_cv", "mean"),
+             frac_inverted_U=("inverted_U_cv", "mean"), cv_gain=("cv_gain", "mean"),
              mi_excess_bits=("mi_excess_bits", "mean")).round(4))
 print(summ.to_string())
 
@@ -470,7 +663,7 @@ for xi, x in enumerate(xs):
             for b, v in m.items():
                 curve_rows.append({"protocol": protocol, "x": x, "y": y, "pupil_bin": int(b),
                                    "mean_centered": v, "sem": sem.get(b, 0.0)})
-            star = sig_star(sig_lookup(protocol, x, y, "beta_quadratic"))
+            star = sig_star(sig_lookup(protocol, x, y, "beta_quadratic_cv"))
             if star:
                 ax.text(0.02 + 0.2 * protocols_present.index(protocol), 0.96, f"{protocol}{star}",
                         transform=ax.transAxes, color=PROTOCOL_COLORS[protocol], fontsize=8, va="top")
@@ -490,35 +683,66 @@ for xi, x in enumerate(xs):
     plt.close(fig)
 pd.DataFrame(curve_rows).to_csv(table_dir / f"pupil_nonlinearity_curves{AGG_SUFFIX}.csv", index=False)
 
+# idea 1: cross-validated check on figure 1 -- NOT tied to the quadratic model (that's what beta_quadratic_cv /
+# dR2_cv already test numerically): here the curve itself is just the ODD trials' own bin means (whatever shape
+# they take, like figure 1), plotted as a line against the EVEN-trial bin means it did not see (points). If the two
+# don't resemble each other, that (protocol, y)'s tuning does not replicate on independent trials -- true regardless
+# of whether the disagreement looks quadratic, linear, or anything else.
+for xi, x in enumerate(xs):
+    ncol = 4
+    nrow = int(np.ceil(len(ys) / ncol))
+    fig, axes = plt.subplots(nrow, ncol, figsize=(4.0 * ncol, 3.4 * nrow), squeeze=False, sharex=True)
+    for ax, y in zip(axes.ravel(), ys):
+        if y == x:
+            ax.axis("off")
+            continue
+        for protocol in protocols_present:
+            d = add_bins(trials[trials["protocol"] == protocol], x).dropna(subset=[f"{y}__c", x]).reset_index(drop=True)
+            if len(d) < 2 * MIN_TRIALS_FIT:
+                continue
+            oddp = (np.arange(len(d)) % 2 == 1)           # project convention, pooled across the protocol's trials
+            m_odd, _ = unit_curve(d[oddp], "pupil_bin", f"{y}__c", AGG)           # ODD trials' own bin means, trained
+            ax.plot(m_odd.index, m_odd.values, color=PROTOCOL_COLORS[protocol], lw=1.3, alpha=0.9, zorder=2)
+            m_even, sem_even = unit_curve(d[~oddp], "pupil_bin", f"{y}__c", AGG)  # EVEN-trial points, held out
+            ax.errorbar(m_even.index, m_even.values, yerr=sem_even.values, color=PROTOCOL_COLORS[protocol],
+                        marker="o", markersize=4, lw=0, capsize=3, alpha=0.9, zorder=3)
+        ax.axhline(0, color="grey", ls="--", lw=0.8)
+        ax.set_title(Y_LABELS.get(y, y), fontsize=9)
+        ax.set_xticks(range(1, N_QUANTILE_BINS + 1))
+        ax.set_ylabel("change from session mean", fontsize=8)
+    for ax in axes.ravel()[len(ys):]:
+        ax.axis("off")
+    for ax in axes[-1]:
+        ax.set_xlabel(f"{X_LABELS.get(x, x)} quantile (within session; 1 = smallest)", fontsize=8)
+    handles = [plt.Line2D([0], [0], color="grey", lw=1.3, label="odd trials' own bin-mean curve"),
+               plt.Line2D([0], [0], color="grey", marker="o", lw=0, markersize=4, label="even-trial points (held out)")]
+    axes[0][0].legend(handles=handles, fontsize=7, frameon=False, loc="lower left")
+    fig.suptitle(f"{X_LABELS.get(x, x)}: cross-validated check on figure 1 -- the ODD trials' own tuning curve (line, "
+                 f"no shape assumed) vs EVEN-trial points it did not see (idea 1; unit = {UNIT})", y=1.0)
+    fig.tight_layout()
+    save_fig(fig, figdir, f"1{'abcd'[xi]}_cv_fit_vs_heldout_points_{x}")
+    plt.close(fig)
+
 # d' and criterion per pupil quantile, 0 % and 100 % trials ONLY, one subplot per window (pre_stim / stim / reward); the x of each
 # subplot is the pupil of THAT window (z-scored within session), quantile bins within session among all engaged trials
 d01 = trials_all[trials_all["protocol"].isin(PROTOCOLS_USED)]          # ALL engaged trials (bins, hit rate, FA rate, balanced accuracy)
 
 
+def _pupil_bin(v):
+    """Pupil quantile bin (1..DPRIME_BINS) of the trials of ONE session (equal occupancy, ties broken in time order)."""
+    if len(v) < 4 * DPRIME_BINS:
+        return np.full(len(v), np.nan)
+    return pd.qcut(pd.Series(v).rank(method="first"), DPRIME_BINS, labels=False).to_numpy() + 1.0
+
+
 def perf_by_bins(d01, xcol):
-    """Performance measures per (protocol, unit, pupil quantile bin of `xcol`); bins within session among all engaged trials."""
-    out = []
-    dw = d01.dropna(subset=[xcol]).copy()
-    if dw.empty:
-        return out
-    dw["pupil_bin"] = dw.groupby("session_id")[xcol].transform(
-        lambda v: pd.qcut(v.rank(method="first"), DPRIME_BINS, labels=False) + 1 if len(v) >= 4 * DPRIME_BINS else np.nan)
-    dw = dw.dropna(subset=["pupil_bin"])
-    for protocol in [q for q in PROTOCOLS_USED if (dw["protocol"] == q).any()]:
-        d = dw[dw["protocol"] == protocol]
-        for keys, g in d.groupby(UNIT_KEYS + ["pupil_bin"] if UNIT_KEYS else ["pupil_bin"]):
-            keys = keys if isinstance(keys, tuple) else (keys,)
-            n0, n100, npos = int((g["signal"] == 0).sum()), int((g["signal"] == 100).sum()), int((g["signal"] > 0).sum())
-            ok_hf = min(npos, n0) >= MIN_PER_CLASS_BIN
-            hit = float(g.loc[g["signal"] > 0, "lickResponse"].mean()) if ok_hf else np.nan        # any signal > 0
-            fa = float(g.loc[g["signal"] == 0, "lickResponse"].mean()) if ok_hf else np.nan
-            dp, crit = compute_dprime(g["signal"], g["lickResponse"]) if min(n100, n0) >= MIN_PER_CLASS_BIN else (np.nan, np.nan)
-            rec = {"protocol": protocol, "pupil_bin": int(keys[-1]), "dprime": dp, "criterion": crit,
-                   "hit_rate": hit, "fa_rate": fa, "balanced_accuracy": (hit + 1.0 - fa) / 2.0,
-                   "n_trials_0": n0, "n_trials_100": n100, "n_trials_signal_pos": npos}
-            rec.update(dict(zip(UNIT_KEYS, keys[:-1])))
-            out.append(rec)
-    return out
+    """Performance per (protocol, unit, pupil quantile bin of `xcol`): hit / FA / balanced accuracy on all engaged trials, d' and
+    criterion on the NOISE trials (DPRIME_METHOD / CRITERION_METHOD), classical 0/100 d' for reference. Shared with 1g
+    (infotheory/performance_common.py)."""
+    return pc.perf_by_bins(d01, xcol, _pupil_bin, protocols=PROTOCOLS_USED, unit_keys=UNIT_KEYS, fit_params=FIT_PARAMS, split_at=SPLIT_AT,
+                           dprime_method=DPRIME_METHOD, criterion_method=CRITERION_METHOD, min_per_class=MIN_PER_CLASS_BIN,
+                           min_noise=MIN_NOISE_PER_BIN, sd_a=PROBIT_PRIOR_A_SD, sd_b_frac=PROBIT_PRIOR_B_FRAC, rate_clip=RATE_CLIP,
+                           bin_col="pupil_bin")
 
 
 dp_rows = []
@@ -528,39 +752,9 @@ for w in D_WINDOWS:
 dp_df = pd.DataFrame(dp_rows)
 if len(dp_df):
     dp_df.to_csv(table_dir / f"pupil_performance_by_quantile_windows{AGG_SUFFIX}.csv", index=False)
-    wins = [w for w in D_WINDOWS if (dp_df["window"] == w).any()]
-    MEASURES = [("hit_rate", "hit rate  P(lick | signal>0)\n(all signal strengths)"), ("fa_rate", "FA rate  P(lick | 0 %)"),
-                ("balanced_accuracy", "balanced accuracy\n(hit[signal>0] + CR) / 2"), ("dprime", "d'"), ("criterion", "criterion")]
-    fig, axes = plt.subplots(len(MEASURES), len(wins), figsize=(4.4 * len(wins), 2.9 * len(MEASURES)), squeeze=False, sharey="row")
-    for r, (col, lab) in enumerate(MEASURES):
-        for ax, w in zip(axes[r], wins):
-            for protocol in [q for q in PROTOCOLS_USED if ((dp_df["window"] == w) & (dp_df["protocol"] == protocol)).any()]:
-                dd = dp_df[(dp_df["window"] == w) & (dp_df["protocol"] == protocol)].dropna(subset=[col])
-                if dd.empty:
-                    continue
-                if UNIT_KEYS:
-                    per = dd.groupby(UNIT_KEYS + ["pupil_bin"])[col].mean().reset_index()
-                    g = per.groupby("pupil_bin")[col]
-                    m, sem = g.mean(), g.sem().fillna(0)
-                else:
-                    m, sem = dd.groupby("pupil_bin")[col].mean(), None
-                ax.errorbar(m.index, m.values, yerr=None if sem is None else sem.values, color=PROTOCOL_COLORS[protocol],
-                            marker="o", markersize=4, capsize=3, label=protocol)
-            ax.set_xticks(range(1, DPRIME_BINS + 1))
-            ax.set_ylabel(lab)
-            if r == 0:
-                lo, hi = D_WINDOWS[w]
-                ax.set_title(f"{w} ({lo:g}..{hi:g} cm)", fontsize=10)
-            if col == "balanced_accuracy":
-                ax.axhline(0.5, color="grey", lw=0.8, ls="--")
-            if r == len(MEASURES) - 1:
-                ax.set_xlabel(f"pupil quantile in the {w} window\n(within session)")
-    axes[0][0].legend(fontsize=7, frameon=False)
-    fig.suptitle(f"Performance by pupil quantile; hit / FA / balanced accuracy on ALL engaged trials, d' and criterion on the 0 % / 100 % trials (unit = {UNIT}; "
-                 f"{'one value per bin, no error bars' if not UNIT_KEYS else 'mean +- SEM over units'})", y=1.0, fontsize=9)
-    fig.tight_layout()
-    save_fig(fig, figdir, "2_pupil_performance_windows")
-    plt.close(fig)
+    pc.plot_performance_figures(dp_df, figdir=figdir, names=("2_pupil_performance_windows", "2b_pupil_dprime_criterion_methods"),
+                                windows=D_WINDOWS, protocols=PROTOCOLS_USED, unit_keys=UNIT_KEYS, unit=UNIT, n_bins=DPRIME_BINS,
+                                x_name="pupil", dprime_method=DPRIME_METHOD, criterion_method=CRITERION_METHOD, bin_col="pupil_bin")
 
 
 # --------------------------------------------------------------------- #
@@ -570,8 +764,8 @@ for xi, x in enumerate(xs):
     px = per_unit[per_unit["x"] == x]
     fig, axes = plt.subplots(1, 3, figsize=(17, 4.2))
     width = 0.8 / max(len(protocols_present), 1)
-    for ax, col, lab, hl in [(axes[0], "beta_quadratic", "standardized quadratic coefficient\n(< 0 = inverted U)", 0),
-                              (axes[1], "inverted_U", f"fraction of {UNIT}s with a Lind-Mehlum inverted U", None),
+    for ax, col, lab, hl in [(axes[0], "beta_quadratic_cv", "cross-validated quadratic coefficient\n(< 0 = inverted U)", 0),
+                              (axes[1], "inverted_U_cv", f"fraction of {UNIT}s with a cross-validated Lind-Mehlum inverted U", None),
                               (axes[2], "mi_excess_bits", "MI - MI implied by linear r$^2$ (bits)", 0)]:
         for pi, protocol in enumerate(protocols_present):
             for yi, y in enumerate(ys):
@@ -581,7 +775,7 @@ for xi, x in enumerate(xs):
                 xpos = yi + (pi - (len(protocols_present) - 1) / 2) * width
                 ax.bar(xpos, v.mean(), width=width * 0.9, color=PROTOCOL_COLORS[protocol], alpha=0.5,
                        edgecolor="black", linewidth=0.4, label=protocol if yi == 0 else None)
-                if AGG != "pooled" and col != "inverted_U" and len(v) > 1:
+                if AGG != "pooled" and col != "inverted_U_cv" and len(v) > 1:
                     sub = px[(px["protocol"] == protocol) & (px["y"] == y)].dropna(subset=[col])
                     dot_c = [mouse_colors.get(a, "k") for a in sub["animal_id"]]
                     ax.scatter(xpos + np.random.default_rng(yi).uniform(-width / 3, width / 3, len(v)), v,
@@ -592,7 +786,7 @@ for xi, x in enumerate(xs):
         ax.set_xticks(range(len(ys)))
         ax.set_xticklabels([Y_LABELS.get(y, y) for y in ys], rotation=40, ha="right", fontsize=8)
         ax.set_ylabel(lab, fontsize=9)
-        if col == "inverted_U":
+        if col == "inverted_U_cv":
             ax.set_ylim(0, 1)
     axes[0].legend(fontsize=7, frameon=False)
     if AGG != "pooled":
@@ -652,11 +846,11 @@ for xi, x in enumerate(xs):
 # 8. Where is the peak? Turning points of the units that show an inverted U
 # --------------------------------------------------------------------- #
 fig, ax = plt.subplots(figsize=(1.6 * max(len(ys), 4) + 2, 4))
-tp = per_unit[(per_unit["x"] == "cur_pupil_area") & per_unit["inverted_U"]]
+tp = per_unit[(per_unit["x"] == "cur_pupil_area") & per_unit["inverted_U_cv"]]
 width = 0.8 / max(len(protocols_present), 1)
 for pi, protocol in enumerate(protocols_present):
     for yi, y in enumerate(ys):
-        v = tp[(tp["protocol"] == protocol) & (tp["y"] == y)]["turning_point_z"]
+        v = tp[(tp["protocol"] == protocol) & (tp["y"] == y)]["turning_point_z_cv"]
         if v.empty:
             continue
         xpos = yi + (pi - (len(protocols_present) - 1) / 2) * width
@@ -668,7 +862,7 @@ ax.axhline(0, color="grey", ls="--", lw=1)
 ax.set_xticks(range(len(ys)))
 ax.set_xticklabels([Y_LABELS.get(y, y) for y in ys], rotation=40, ha="right", fontsize=8)
 ax.set_ylabel("peak location (pupil z within the unit)")
-ax.set_title(f"Peak of the inverted U, {UNIT}s that pass the Lind-Mehlum test (black = median)", fontsize=9)
+ax.set_title(f"Peak of the inverted U, {UNIT}s that pass the cross-validated Lind-Mehlum test (black = median)", fontsize=9)
 handles, labels = ax.get_legend_handles_labels()
 if handles:
     ax.legend(dict(zip(labels, handles)).values(), dict(zip(labels, handles)).keys(), fontsize=7, frameon=False)
@@ -755,8 +949,8 @@ else:
                 v = gp["r"].dropna()
                 recs.append(dict(protocol=protocol, pc=nm, n_units=len(v), mean_r=v.mean() if len(v) else np.nan,
                                  frac_positive=float((v > 0).mean()) if len(v) else np.nan, p=_wilcoxon(v, "two-sided"),
-                                 mean_beta_quadratic=gp["beta_quadratic"].mean(),
-                                 p_quadratic=_wilcoxon(gp["beta_quadratic"].dropna(), "two-sided")))
+                                 mean_beta_quadratic_cv=gp["beta_quadratic_cv"].mean(),
+                                 p_quadratic=_wilcoxon(gp["beta_quadratic_cv"].dropna(), "two-sided")))
             for r_, ph in zip(recs, _holm([r_["p"] for r_ in recs])):
                 r_["p_holm"] = ph
             trows.extend(recs)
@@ -854,7 +1048,7 @@ else:
 # Window k: x = pupil area of the window, y = the variable in the SAME window (POS_Y; lick_any = the trial's response). Same fit as
 # everywhere above (fit_unit: standardized quadratic, linear r, Lind-Mehlum inverted U, CV gain, MI excess), per unit and window; group
 # level = Wilcoxon over units of the quadratic coefficient per window (Holm across windows within protocol and y). Performance
-# (hit / FA / balanced accuracy / d' / criterion, all engaged trials as in figure 2): top-minus-bottom pupil bin and
+# (hit / FA / balanced accuracy: all engaged trials; d' / criterion: noise trials only, DPRIME_METHOD, as in figure 2): top-minus-bottom pupil bin and
 # centre-minus-edges (mean of the middle bins - mean of the two outer bins, > 0 = inverted U) per window.
 XCOL = "cur_pupil_area"
 win_k = [k for k in range(len(POS_WINDOWS)) if f"pupil_area@{k}" in trials.columns]
@@ -894,11 +1088,11 @@ else:
     grows = []
     for (protocol, y, k), g in pos_fit.groupby(["protocol", "y", "window_k"]):
         grows.append(dict(protocol=protocol, y=y, window_k=k, win_center=g["win_center"].iloc[0], n_units=len(g),
-                          mean_beta_quadratic=g["beta_quadratic"].mean(),
-                          sem_beta_quadratic=g["beta_quadratic"].sem() if len(g) > 1 else 0.0,
+                          mean_beta_quadratic=g["beta_quadratic_cv"].mean(),
+                          sem_beta_quadratic=g["beta_quadratic_cv"].sem() if len(g) > 1 else 0.0,
                           mean_r=g["r"].mean(), sem_r=g["r"].sem() if len(g) > 1 else 0.0,
-                          frac_inverted_U=float(g["inverted_U"].mean()), mean_cv_gain=g["cv_gain"].mean(),
-                          p_beta_quadratic=_wilcoxon(g["beta_quadratic"].dropna(), "two-sided") if AGG != "pooled" else np.nan,
+                          frac_inverted_U=float(g["inverted_U_cv"].mean()), mean_cv_gain=g["cv_gain"].mean(),
+                          p_beta_quadratic=_wilcoxon(g["beta_quadratic_cv"].dropna(), "two-sided") if AGG != "pooled" else np.nan,
                           p_r=_wilcoxon(g["r"].dropna(), "two-sided") if AGG != "pooled" else np.nan))
     pos_group = pd.DataFrame(grows)
     for col in ("p_beta_quadratic", "p_r"):
@@ -909,10 +1103,11 @@ else:
 
     def shade_untrusted(ax):
         lo_t, hi_t = TRUSTED_POSITION_RANGE
-        ax.axvspan(-1e9, lo_t + POS_WINDOW / 2, color="grey", alpha=0.12, lw=0)
-        ax.axvspan(hi_t - POS_WINDOW / 2, 1e9, color="grey", alpha=0.12, lw=0)
+        ax.axvspan(-30, -10, color="grey", alpha=0.12, lw=0)
+        ax.axvspan(0, 20, color="grey", alpha=0.12, lw=0)
+        ax.axvspan(25, 45, color="grey", alpha=0.12, lw=0)
         ax.axvline(0, color="black", ls=":", lw=0.8)
-        ax.set_xlim(POS_WINDOWS[0][0] + POS_WINDOW / 2 - POS_STEP / 2, POS_WINDOWS[-1][1] - POS_WINDOW / 2 + POS_STEP / 2)
+        ax.set_xlim(-40, 50)
 
     def line_by_position(ax, df, col, sem_col, color, label, p_col=None):
         if AGG != "pooled":
@@ -929,10 +1124,10 @@ else:
                            zorder=4)
 
     stat_figs = [("10a_pupil_effect_by_position_quadratic", "mean_beta_quadratic", "sem_beta_quadratic", "p_beta_quadratic_holm",
-                  "standardized quadratic coefficient (< 0 = inverted U)", 0.0),
+                  "cross-validated quadratic coefficient (< 0 = inverted U)", 0.0),
                  ("10b_pupil_effect_by_position_linear", "mean_r", "sem_r", "p_r_holm", "linear r with pupil area", 0.0),
                  ("10c_pupil_inverted_u_by_position", "frac_inverted_U", None, None,
-                  f"fraction of {UNIT}s with a Lind-Mehlum inverted U", None)]
+                  f"fraction of {UNIT}s with a cross-validated Lind-Mehlum inverted U", None)]
     for fname, col, sem_col, p_col, lab, hl in stat_figs:
         ncol = 3
         nrow = int(np.ceil(len(pos_ys) / ncol))
@@ -963,8 +1158,8 @@ else:
     for k in win_k:
         pb += [dict(r_, window_k=k, win_center=(POS_WINDOWS[k][0] + POS_WINDOWS[k][1]) / 2)
                for r_ in perf_by_bins(d01, f"pupil_area@{k}")]
-    MEAS = [("hit_rate", "hit rate"), ("fa_rate", "FA rate"), ("balanced_accuracy", "balanced accuracy"), ("dprime", "d'"),
-            ("criterion", "criterion")]
+    MEAS = [("hit_rate", "hit rate"), ("fa_rate", "FA rate"), ("balanced_accuracy", "balanced accuracy"), ("dprime", "d' (noise)"),
+            ("criterion", "criterion (noise)")]
     prow_ = []
     if pb:
         pbd = pd.DataFrame(pb)
@@ -1013,10 +1208,67 @@ else:
         axes[0][0].legend(fontsize=7, frameon=False)
         for ax in axes[-1]:
             ax.set_xlabel("window centre (cm from stimulus onset)", fontsize=8)
-        fig.suptitle(f"Performance vs pupil area by position window (all engaged trials; {DPRIME_BINS} pupil bins; unit = {UNIT}; "
+        fig.suptitle(f"Performance vs pupil area by position window (hit / FA / balanced accuracy: all engaged trials; d' / criterion: noise trials, {DPRIME_METHOD} / {CRITERION_METHOD}; {DPRIME_BINS} pupil bins; unit = {UNIT}; "
                      f"circle = Holm-corrected Wilcoxon p < {ALPHA})", y=1.0, fontsize=9)
         fig.tight_layout()
         save_fig(fig, figdir, "10d_pupil_performance_by_position")
         plt.close(fig)
+
+# --------------------------------------------------------------------- #
+# 11. Tuning curves vs pupil area -- the mirror of 1g (everything vs speed): same y variables, levels, bins and figures
+# --------------------------------------------------------------------- #
+#   figure 11  whole trial, POOLED FRAMES (every time sample of the selected trials)
+#   figure 12  per-trial window means (TUNING_WINDOWS) and P(lick)
+#   figure 13  whole trial as SECTION means (SECTION_WIDTH cm, SECTION_RANGE): the independent-sample version of figure 11
+# Bins = N_QUANTILE_BINS quantiles of the pupil WITHIN session (no stationary bin: pupil is not zero-inflated). Each curve = the mean over
+# units of the unit's bin means (+- SEM); pooled = sample-weighted over every session, no error bars.
+if len(tuning_all):
+    tuning_curves = tc.unit_curves(tuning_all, UNIT_KEYS, AGG, "pupil_area")
+    tuning_curves.to_csv(table_dir / f"pupil_tuning_curves{AGG_SUFFIX}.csv", index=False)
+    if len(spearman_all):
+        tuning_corr = tc.corr_summary(spearman_all, AGG)
+        tuning_corr.to_csv(table_dir / f"pupil_tuning_correlations{AGG_SUFFIX}.csv", index=False)
+    else:
+        tuning_corr = pd.DataFrame()
+
+    def _rho(protocol, y):
+        if tuning_corr.empty:
+            return np.nan
+        m = tuning_corr[(tuning_corr["protocol"] == protocol) & (tuning_corr["var_b"] == y)]
+        return float(m["rho"].iloc[0]) if len(m) else np.nan
+
+    tc.plot_tuning_figures(
+        tuning_curves, figdir=figdir, names=("11_pupil_tuning_whole_trial", "12_pupil_tuning_by_window", "13_pupil_tuning_sections"),
+        x_col="pupil_area", x_label="pupil area (z)", x_name="pupil area",
+        protocols=[q for q in PROTOCOLS_USED if (tuning_curves["protocol"] == q).any()], agg=AGG, unit=UNIT,
+        ys=[y for y in TUNING_Y if (tuning_curves["y"] == y).any()], windows=TUNING_WINDOWS, rho_lookup=_rho,
+        bins_note=f"Pupil bins: {N_QUANTILE_BINS} quantiles within session",
+        trial_note="noise trials (0 < signal < 100 %)" if NOISE_TRIALS_ONLY else "all engaged trials",
+        section_range=SECTION_RANGE, section_width=SECTION_WIDTH)
+    # the same figures with the QUANTILE (bin number) on the x axis instead of the mean pupil of the bin
+    tc.plot_tuning_figures(
+        tuning_curves, figdir=figdir, names=("11q_pupil_tuning_whole_trial_by_quantile", "12q_pupil_tuning_by_window_by_quantile",
+                                             "13q_pupil_tuning_sections_by_quantile"),
+        x_col="pupil_area", x_label="pupil area (z)", x_name="pupil",
+        protocols=[q for q in PROTOCOLS_USED if (tuning_curves["protocol"] == q).any()], agg=AGG, unit=UNIT,
+        ys=[y for y in TUNING_Y if (tuning_curves["y"] == y).any()], windows=TUNING_WINDOWS, rho_lookup=_rho,
+        bins_note=f"Pupil bins: {N_QUANTILE_BINS} quantiles within session",
+        trial_note="noise trials (0 < signal < 100 %)" if NOISE_TRIALS_ONLY else "all engaged trials",
+        section_range=SECTION_RANGE, section_width=SECTION_WIDTH, x_mode="quantile", stop_bin=False)
+    # the same figures again with FIXED, EQUAL-WIDTH pupil bins (same z range in every session) instead of the default
+    # within-session quantiles -- does the curve's shape depend on which binning scheme is used? (older figures above
+    # are unchanged; this is an additional view, not a replacement)
+    tc.plot_tuning_figures(
+        tuning_curves, figdir=figdir, names=("11w_pupil_tuning_whole_trial_equal_width", "12w_pupil_tuning_by_window_equal_width",
+                                             "13w_pupil_tuning_sections_equal_width"),
+        x_col="pupil_area", x_label="pupil area (z)", x_name="pupil area",
+        protocols=[q for q in PROTOCOLS_USED if (tuning_curves["protocol"] == q).any()], agg=AGG, unit=UNIT,
+        ys=[y for y in TUNING_Y if (tuning_curves["y"] == y).any()], windows=TUNING_WINDOWS, rho_lookup=_rho,
+        bins_note=f"Pupil bins: {N_QUANTILE_BINS} FIXED equal-width bins over z in [{EQUALWIDTH_RANGE[0]:g}, {EQUALWIDTH_RANGE[1]:g}) "
+                  f"(same range in every session, unlike the within-session quantiles of figure 11-13)",
+        trial_note="noise trials (0 < signal < 100 %)" if NOISE_TRIALS_ONLY else "all engaged trials",
+        section_range=SECTION_RANGE, section_width=SECTION_WIDTH, scheme="equal_width")
+else:
+    print("\nTuning curves vs pupil: no session had samples in the selected trials.")
 
 print(f"\nWrote tables to {table_dir}, figures to {figdir}")

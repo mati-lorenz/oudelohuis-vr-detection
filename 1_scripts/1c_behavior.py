@@ -755,6 +755,11 @@ def plot_trial_aligned(psth_long: pd.DataFrame, x_col: str, x_label: str, prefix
                     ax.set_ylabel(VAR_LABELS.get(var, var))
                 ax.set_xlabel(x_label)
                 ax.legend(fontsize=6, frameon=False, ncol=2 if len(levels) > 6 else 1)
+                if prefix.split('_')[-1] == 'position':
+                    ax.axvspan(-30, -10, color="grey", alpha=0.12, lw=0)
+                    ax.axvspan(0, 20, color="grey", alpha=0.12, lw=0)
+                    ax.axvspan(25, 45, color="grey", alpha=0.12, lw=0)
+
 
         fig.suptitle(f"Trial-aligned {prefix.split('_')[-1]} -- {protocol} (0 = stimulus onset)"
                      + ("" if AGG == "pooled" else f"; mean +- SEM over {UNIT}s"), y=1.02)

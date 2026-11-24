@@ -1,0 +1,21 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+110488/116755 significant (cell, predictor, window) pairs with a refit-able predictor are candidates (linear captures <80% of the MI); 469497 pairs in 2d's table for the selected sessions
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/externals/loky/process_executor.py:787: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed:  1.8min
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed:  3.0min remaining:   40.0s
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed:  3.4min finished
+
+110488 pairs refit (100.0% with exactly the trial count of 2d). Nonlinear (adjusted R²) vs linear (adjusted R²):
+(mean over sessions of the per-session value)
+                                   median improvement  fraction gap closed
+predictor                                                                 
+cur_lick                                      -0.0022               0.0375
+cur_motionenergy                               0.0008               0.0561
+cur_pupil_area                                 0.0001               0.0907
+cur_runspeed                                   0.0020               0.0443
+stim__pct_0-25_25-50_50-75_75-100              0.0003               0.0549
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2e_nonlinear_encod/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2e_nonlinear_encod/out/figures

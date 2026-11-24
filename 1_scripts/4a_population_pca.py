@@ -1,548 +1,465 @@
 # -*- coding: utf-8 -*-
 """
 4a_population_pca
-====================
-Population-level PCA within each (area, label) group: how many
-effective dimensions does the population's trial-to-trial activity
-occupy, and how much of that structure survives destroying correlated
-variability at a fixed stimulus, a fixed choice, or both?
+===================
+STEP 1 of the population-level ("section 4") analyses: how many dimensions does the SHARED (noise) variability of a
+group's simultaneously recorded cells actually have, and what is its leading shared mode -- the same leave-pair-out
+"global" signal that 2l/3m found dominates pairwise correlations, a state/arousal/locomotion signal, or something
+tied to the stimulus/choice? This is purely descriptive/diagnostic and comes BEFORE any coding-axis or inter-area
+("communication subspace") analysis (4b/4c), which need to know first whether there is anything low-dimensional to
+find, and in what.
 
-CONDITIONED SHUFFLES (see infotheory.shuffling /
-infotheory.population.build_standard_condition_specs): for each
-population, PCA is run on the REAL data once, and on N_SHUFFLES
-realizations of each of:
-    global      : every cell independently, fully randomized -- destroys
-                  ALL trial-to-trial structure, including each cell's
-                  own stimulus/choice tuning
-    stim        : each cell independently shuffled WITHIN each stimulus
-                  bin -- destroys cross-cell correlations, keeps each
-                  cell's own stimulus tuning
-    choice      : same, within choice
-    stim_choice : same, within the joint (stimulus, choice)
-If the population's low-dimensional structure survives the "stim"
-shuffle (participation ratio barely changes), that structure is mostly
-explained by shared TUNING, not genuine noise correlations; if it
-collapses toward the "global" shuffle's dimensionality, the low-D
-structure depends on real correlated trial-to-trial variability. This
-is the same logic as 3a/3b/3c's pairwise conditioned-shuffle tests,
-scaled up to the population.
+PER (session, group, window): the included (and --max-cells-capped, per group) cells' responses are residualised
+against their own TARGET_STRATEGY bin mean (same convention/target as 3a's noise correlation -- project rule #4:
+shared binning before bias correction) and z-scored per cell. Call this matrix R (trials x cells); only trials with
+every one of the group's cells finite are kept.
+    DIMENSIONALITY      plain PCA of R: participation_ratio = (sum lambda)^2 / sum(lambda^2) (effective number of
+                         dimensions, 1 = one dominates, n_cells = all equal), frac_var_pc1, n_dims_90 (components for
+                         90% of the variance) -- fast, always computed.
+                         CROSS-VALIDATED factor-analysis dimensionality (the one that actually asks "is this
+                         low-dimensional structure real, or does it just look that way on the same trials it was
+                         found in"): k-fold CV, FactorAnalysis(n_components=k) for k = 0 (independent cells, the
+                         per-cell-variance-only baseline) .. MAX_K, scored by held-out average log-likelihood.
+                         cv_k_star = the k with the best held-out likelihood; cv_ll_gain = its advantage over k=0
+                         (k_star == 0 or ll_gain <= 0 means: no reliable shared dimension in this group/window/session).
+    LEADING MODE         PC1 (sign fixed so it correlates positively with the simple row-mean of R, a stable anchor)
+                         correlated with: the LEAVE-GROUP-OUT global signal (mean z-scored residual of every OTHER
+                         included cell of the session, same window -- generalises 3m/pair_state's leave-pair-out
+                         "global" from a pair to a whole group), the STATE_WINDOW (pre-stim) pupil / running speed,
+                         and, in the SAME window, choice. (NOT the stimulus target bin: R is already residualised
+                         against it, so corr(any linear combination of R, target bin) = 0 by construction --
+                         correlating PC1 with it would be a tautology, not a finding.)
 
-MODULARITY: which conditions to shuffle within is entirely defined by
-infotheory.population.build_standard_condition_specs (stim/choice/
-stim_choice right now) -- to add a behavioral variable later, build an
-equivalent dict with one more named entry and pass it in; nothing else
-in this script, or in infotheory.population/shuffling, needs to change.
+Does NOT yet build coding axes / decoders (4b) or compare across groups (4c, inter-area communication subspace) --
+this step only establishes the dimensionality and identity of each group's own shared variability, which those need
+as a starting point (per the person's own proposed order: within-area dimensionality first).
 
-Uses scikit-learn's PCA directly (this is exactly the kind of
-well-established numerical method not worth reimplementing).
+Project-wide rules: --animals / --sessions / --aggregate / --max-cells (cap PER GROUP and session; a changed cap
+recomputes the session) / --noise-only (0 < signal < 100 %) / --window LO HI (the pre-stim STATE_WINDOW the
+pupil/speed/choice/target correlations use the SAME window's own target/choice, see below -- --window only moves
+where pupil/speed come from). One session in RAM per worker (--n-jobs). Target strategy/binning = 3a's (TARGET_STRATEGY).
 
-Dataset, sessions/cells: same filters as 3a/3b/3c (1b's included
-sessions, engaged trials, cells passing 2a's proximity filter AND 2b's
-QC). PCA is run within one (area, label) population at a time (never
-mixing areas).
-
-Outputs
--------
-2_pipeline/4a_population_pca/
-    out/    pca_shuffle_results.csv   one row per (session, window, area,
-                                       label, condition, rep): participation
-                                       ratio, top-3 variance explained
-            pca_real_summary.csv       one row per (session, window,
-                                       area, label): population size,
-                                       real (unshuffled) metrics, plus
-                                       full per-PC variance (as a
-                                       comma-joined string -- for a later
-                                       script to reload and re-plot
-                                       without recomputing PCA)
-            trajectory_scores.csv      PART 2 (trial-averaged PCA) --
-                                       one row per (session, area, label,
-                                       position bin): PC1..PCk scores
-            trajectory_variance.csv    PART 2 -- one row per (session,
-                                       area, label, PC): variance explained
-            figures/*.png
-    store/  pca.pkl   cached (reused unless --recompute; PART 2 does not
-                       cache separately, see that section's own comments)
+Reads: 1b psychometric_fits.csv, 2a celldata_combined.csv, 2b qc_per_cell.csv.
+Outputs  2_pipeline/4a_population_pca/out/
+    population_dimensionality_by_session.csv   one row per (session, group, window): n_cells, n_trials,
+                                                participation_ratio, frac_var_pc1, n_dims_90, cv_k_star, cv_ll_gain,
+                                                corr_pc1_global/_pupil/_speed/_choice
+    population_dimensionality_tests.csv        one-sample tests of each corr_pc1_* measure across sessions/mice
+                                                (BH q across the 8 groups, within window x measure)
+    figures/ 1_dimensionality_by_group, 1b_cv_dimensionality_by_group, 2_mode_identity_correlations,
+             3_dimensionality_vs_ncells
 """
 from __future__ import annotations
 
 import argparse
+import warnings
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from joblib import Parallel, delayed
-from sklearn.decomposition import PCA
+from scipy import stats as sps
+from sklearn.decomposition import FactorAnalysis
 
+from infotheory import project_config as cfg
 from infotheory.pipeline import get_pipeline_paths
-from infotheory.session import load_sessions
-from infotheory.neural_encoding import load_cell_inclusion
-from infotheory.celldata_utils import get_area_label, AREA_COLORS, LABEL_SPLIT_AREAS, DEFAULT_AREA_ORDER, \
-    SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GROUP_COLORS
-from infotheory.population import (
-    zscore_population, build_standard_condition_specs, run_across_shuffle_conditions,
-    plot_shuffle_condition_comparison, plot_metric_vs_population_size, iterate_population_groups,
-)
+from infotheory.session import discover_sessions
+from infotheory.neural_encoding import load_cell_inclusion, build_session_tables
+from infotheory.celldata_utils import SIX_GROUP_ORDER, SIX_GROUP_LABELS, SIX_GROUP_COLORS
+from infotheory.groups import group_key
 from infotheory.plotting import set_style, save_fig, clear_figures
+from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
+from infotheory.session_jobs import run_sessions
+from infotheory.unit_stats import stable_seed
+from infotheory.unit_plots import mouse_palette, group_panels
+from infotheory.population import plot_metric_vs_population_size
+from infotheory.stim_binning import SIMPLE_STRATEGIES
+from infotheory import pair_tables as pt
+
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 PROTOCOL = "DN"
 WINDOWS = {"pre_stim": (-30.0, -10.0), "stim": (0.0, 20.0), "reward": (25.0, 45.0)}
-
-MIN_CELLS_PER_GROUP = 10
-N_SHUFFLES = 20
+STATE_WINDOW = (-30.0, -10.0)                 # pre-stim window pupil/speed are read from
+TARGET_STRATEGY = SIMPLE_STRATEGIES[0]        # residualisation + target_bin correlation target (matches 3a/3n)
+MIN_CELLS_PCA = 5                             # cells needed in a (session, group, window) to run PCA/FA
+MIN_OTHER_CELLS = 5                           # cells needed OUTSIDE the group for the leave-group-out global
+MIN_TRIALS_PCA = 60                           # trials (after dropping incomplete rows) needed to run PCA/FA
+MAX_K = 8                                     # upper cap on the cross-validated FA dimensionality search
+CV_FOLDS = 5                                  # k-fold CV for the FA dimensionality search (fewer if few trials)
+MIN_TRIALS_PER_FOLD = 20
+VAR_FLOOR = 1e-3                              # floor on the k=0 (independent-cell) baseline variance
+MIN_SESSIONS_TEST = 4
+ALPHA = 0.05
 RANDOM_STATE = 0
-
-N_JOBS_SESSIONS = -1
 JOBLIB_VERBOSE = 5
+CORR_MEASURES = ["corr_pc1_global", "corr_pc1_pupil", "corr_pc1_speed", "corr_pc1_choice"]
+MEASURE_COLORS = {"global": "#1f77b4", "pupil": "#2ca02c", "speed": "#9467bd", "choice": "#d62728"}
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--recompute", action="store_true",
-                     help="Reload sessions from 0_data/ instead of reusing the cached "
-                          "store/pca.pkl")
+add_scope_args(parser)
+parser.add_argument("--window", type=float, nargs=2, metavar=("LO", "HI"), default=None,
+                    help="pre-stim state window (pupil/speed) in cm rel. to stimStart (default STATE_WINDOW); outputs go to out/window_<lo>_<hi>/")
+parser.add_argument("--noise-only", action="store_true", help="only the noise trials (0 < signal < 100 %); outputs go to out/noise_only/")
+parser.add_argument("--max-k", type=int, default=MAX_K, help="upper cap on the cross-validated factor-analysis dimensionality search")
+parser.add_argument("--cv-folds", type=int, default=CV_FOLDS)
 args = parser.parse_args()
+NOISE_ONLY = bool(args.noise_only)
+if args.window:
+    STATE_WINDOW = (float(args.window[0]), float(args.window[1]))
+MAX_K, CV_FOLDS = args.max_k, args.cv_folds
+scope = scope_from_args(args)
+AGG = scope.aggregate
+UNIT = unit_noun(AGG)
+MAX_CELLS = scope.max_cells
 
 paths = get_pipeline_paths(__file__)
-figdir = paths.out / "figures"
+table_dir, figdir = scoped_dirs(paths, scope)
+for sub in ([f"window_{STATE_WINDOW[0]:g}_{STATE_WINDOW[1]:g}"] if args.window else []) + (["noise_only"] if NOISE_ONLY else []):
+    table_dir, figdir = table_dir / sub, figdir / sub
+    table_dir.mkdir(parents=True, exist_ok=True)
+    figdir.mkdir(parents=True, exist_ok=True)
 clear_figures(figdir)
 set_style()
-
+print(scope.describe())
+print(f"{'NOISE TRIALS ONLY' if NOISE_ONLY else 'all engaged trials'}; state window {STATE_WINDOW}; response windows {list(WINDOWS)}; "
+      f"target strategy {TARGET_STRATEGY}; cells per group and session: {MAX_CELLS or 'all'}; max-k {MAX_K}, cv-folds {CV_FOLDS}")
 
 # --------------------------------------------------------------------- #
-# 1. Included sessions/cells -- same filters as 3a/3b/3c
+# 1. Inputs
 # --------------------------------------------------------------------- #
 fits_path = paths.out_from("1b_psychometric") / "psychometric_fits.csv"
-fits_df = pd.read_csv(fits_path)
-included = fits_df[fits_df["included"] & (fits_df["protocol"] == PROTOCOL)]
-included_ids = included["session_id"].tolist()
-if not included_ids:
-    raise SystemExit(f"No {PROTOCOL} sessions passed 1b_psychometric's inclusion criteria.")
-mu_sigma_lookup = fits_df.set_index("session_id")[["mu", "sigma"]].to_dict("index")
-
 cell_dist_out = paths.out_from("2a_cell_distribution")
 activity_out = paths.out_from("2b_activity_statistics")
+for f, hint in [(fits_path, "1b_psychometric.py"), (cell_dist_out / "celldata_combined.csv", "2a_cell_distribution.py"),
+                (activity_out / "qc_per_cell.csv", "2b_activity_statistics.py")]:
+    if not f.exists():
+        raise SystemExit(f"Run {hint} first -- expected {f}")
+fits_df = pd.read_csv(fits_path)
+mu_sigma_lookup = fits_df.set_index("session_id")[["mu", "sigma"]].to_dict("index")
+included_all = set(fits_df[fits_df["included"] & (fits_df["protocol"] == PROTOCOL)]["session_id"])
+all_triples = discover_sessions([PROTOCOL])
+selected = {f"{a}_{d}": (p, a, d) for p, a, d in select_sessions(all_triples, scope)}
+session_ids = [s for s in selected if s in included_all]
+if not session_ids:
+    raise SystemExit("None of the selected sessions passed 1b_psychometric's inclusion criteria.")
+mouse_colors = mouse_palette(a for _, a, _ in all_triples)
 cell_inclusion = load_cell_inclusion(cell_dist_out, activity_out)
-included_cell_ids_by_session = {
-    sid: set(sub.loc[sub["include"], "cell_id"]) for sid, sub in cell_inclusion.groupby("session_id")
-}
-celldata_combined = pd.read_csv(cell_dist_out / "celldata_combined.csv")
-print(f"Using {len(included_ids)} included {PROTOCOL} sessions, "
-      f"{int(cell_inclusion['include'].sum())}/{len(cell_inclusion)} cells included")
-
-
-def pca_metrics(matrix: np.ndarray) -> dict:
-    """Analysis function for run_across_shuffle_conditions: z-score,
-    fit PCA, return scalar summary metrics. Participation ratio
-    (Gao & Ganguli-style effective dimensionality: (sum lambda)^2 /
-    sum(lambda^2)) is the headline metric -- a single population with
-    lambda concentrated in few PCs has a LOW participation ratio (very
-    low-dimensional); one with evenly spread variance has a HIGH one
-    (close to the number of cells)."""
-    z = zscore_population(matrix)
-    n_components = min(z.shape)
-    pca = PCA(n_components=n_components, random_state=RANDOM_STATE)
-    pca.fit(z)
-    eigenvalues = pca.explained_variance_
-    pr = float((eigenvalues.sum() ** 2) / (eigenvalues ** 2).sum())
-    var_ratio = pca.explained_variance_ratio_
-    return {"participation_ratio": pr, "var_pc1": float(var_ratio[0]),
-            "var_top3": float(var_ratio[:min(3, len(var_ratio))].sum())}
+cell_group = dict(zip(cell_inclusion["cell_id"], cell_inclusion["group"]))
+cells_by_session = {sid: sorted(sub.loc[sub["include"], "cell_id"]) for sid, sub in cell_inclusion.groupby("session_id") if sid in session_ids}
+session_ids = [s for s in session_ids if cells_by_session.get(s)]
+GROUP_KEYS = [group_key(g) for g in SIX_GROUP_ORDER]
+GLABEL = {group_key(g): SIX_GROUP_LABELS[g] for g in SIX_GROUP_ORDER}
+GCOLOR = {group_key(g): SIX_GROUP_COLORS[g] for g in SIX_GROUP_ORDER}
+stamps = {s: data_stamp(*selected[s]) for s in session_ids}
+qc_mtime = int((activity_out / "qc_per_cell.csv").stat().st_mtime)
+print(f"{len(session_ids)} sessions, {sum(len(v) for v in cells_by_session.values())} included cells")
 
 
 # --------------------------------------------------------------------- #
-# 2. Run PCA (real + shuffle conditions) for every (session, window,
-#    area, label) population -- or reuse the cache
+# 2. Helpers
 # --------------------------------------------------------------------- #
-pca_cache = paths.store / "pca.pkl"
-REQUIRED_COLUMNS = ["session_id", "window", "roi_name", "labeled_grouped", "condition", "rep",
-                    "participation_ratio"]
+def zvec(v):
+    v = np.asarray(v, float)
+    sd = np.nanstd(v)
+    return (v - np.nanmean(v)) / sd if sd > 0 else np.full_like(v, np.nan)
 
-shuffle_results = real_summary = None
-if not args.recompute and pca_cache.exists():
+
+def zscore_cols(M):
+    M = np.asarray(M, float)
+    mean = np.nanmean(M, axis=0)
+    std = np.nanstd(M, axis=0)
+    std = np.where(std > 0, std, np.nan)
+    return (M - mean) / std
+
+
+def residualize(X, labels):
+    """Subtract each column's within-label (target-bin) mean; NaN wherever the label is NaN."""
+    X = np.asarray(X, float)
+    labels = np.asarray(labels)
+    out = np.full_like(X, np.nan)
+    ok = pd.notna(labels)
+    if not ok.any():
+        return out
+    lab_ok = labels[ok]
+    for j in range(X.shape[1]):
+        s = pd.Series(X[ok, j])
+        out[ok, j] = (s - s.groupby(lab_ok).transform("mean")).to_numpy()
+    return out
+
+
+def participation_ratio(eigvals):
+    ev = np.asarray(eigvals, float)
+    ev = ev[ev > 0]
+    if len(ev) == 0:
+        return np.nan
+    return float((ev.sum() ** 2) / (ev ** 2).sum())
+
+
+def fa_cv_loglik(R, k_grid, n_folds, rng):
+    """{k: mean held-out per-sample log-likelihood} over `n_folds` CV folds; k=0 = independent-Gaussian baseline
+    (no shared structure). NaN for a k with no valid fold."""
+    n = R.shape[0]
+    idx = rng.permutation(n)
+    folds = np.array_split(idx, n_folds)
+    out = {k: [] for k in k_grid}
+    for i in range(n_folds):
+        test_idx = folds[i]
+        train_idx = np.concatenate([folds[j] for j in range(n_folds) if j != i])
+        if len(train_idx) < 10 or len(test_idx) < 3:
+            continue
+        train, test = R[train_idx], R[test_idx]
+        for k in k_grid:
+            if k == 0:
+                mu = train.mean(0)
+                var = np.maximum(train.var(0, ddof=1), VAR_FLOOR)
+                ll = -0.5 * (np.log(2 * np.pi * var) + (test - mu) ** 2 / var).sum(1)
+                out[k].append(float(ll.mean()))
+            else:
+                try:
+                    fa = FactorAnalysis(n_components=k, random_state=0).fit(train)
+                    out[k].append(float(fa.score(test)))
+                except Exception:
+                    pass
+    return {k: (float(np.mean(v)) if v else np.nan) for k, v in out.items()}
+
+
+def corr(a, b):
+    m = np.isfinite(a) & np.isfinite(b)
+    if m.sum() < 10 or np.std(a[m]) == 0 or np.std(b[m]) == 0:
+        return np.nan
+    return float(np.corrcoef(a[m], b[m])[0, 1])
+
+
+# --------------------------------------------------------------------- #
+# 3. Per session (one in RAM at a time)
+# --------------------------------------------------------------------- #
+def process_session(ses, seed):
+    sid = ses.session_id
+    cells = list(cells_by_session.get(sid, []))
+    if not cells or ses.celldata is None:
+        return None
+    rng = np.random.default_rng(seed)
+    wins = dict(WINDOWS)
+    wins["_state"] = STATE_WINDOW
+    tables = build_session_tables(ses, mu_sigma_lookup, wins, included_cell_ids=set(cells))
+    if not tables or "_state" not in tables:
+        return None
+    st = tables.pop("_state").sort_values("trialNumber").reset_index(drop=True)
+    cells = [c for c in cells if c in st.columns]
+    if not cells:
+        return None
+    # analysed cells: all, or the first MAX_CELLS of each group in a fixed pseudo-random order (never the whole dataset at once)
+    analysed = []
+    for g in GROUP_KEYS:
+        gc = [c for c in cells if cell_group.get(c) == g]
+        if MAX_CELLS and len(gc) > MAX_CELLS:
+            order = np.random.default_rng(stable_seed(sid, "cells", g, base=RANDOM_STATE)).permutation(len(gc))[:MAX_CELLS]
+            gc = [gc[i] for i in sorted(order)]
+        analysed += gc
+    if not analysed:
+        return None
+    pupil_state = zvec(st["cur_pupil_area"].to_numpy()) if "cur_pupil_area" in st else None
+    speed_state = zvec(st["cur_runspeed"].to_numpy()) if "cur_runspeed" in st else None
+    st_tn = st["trialNumber"].to_numpy()
+
+    rows = []
+    for window, table in tables.items():
+        if table.empty or "signal" not in table.columns:
+            continue
+        if NOISE_ONLY:
+            table = table[(table["signal"] > 0) & (table["signal"] < 100)]
+        table = pt.add_target_columns(table, [TARGET_STRATEGY]).reset_index(drop=True)
+        cells_here = [c for c in analysed if c in table.columns]
+        if len(cells_here) < MIN_CELLS_PCA:
+            continue
+        labels = table[pt.target_column(TARGET_STRATEGY)].to_numpy()
+        X = table[cells_here].to_numpy(float)
+        R = residualize(X, labels)
+        Z = zscore_cols(R)
+        Z0 = np.nan_to_num(Z)
+        C = np.isfinite(Z).astype(float)
+        Sall, Nall = Z0.sum(1), C.sum(1)
+        choice = table["choice"].to_numpy(float)
+        tnum = table["trialNumber"].to_numpy()
+        srow = pd.Index(st_tn).get_indexer(tnum)
+        has_state = srow >= 0
+
+        def state_aligned(v):
+            out_ = np.full(len(tnum), np.nan)
+            if v is not None:
+                out_[has_state] = v[srow[has_state]]
+            return out_
+        pupil_w, speed_w = state_aligned(pupil_state), state_aligned(speed_state)
+
+        for g in GROUP_KEYS:
+            in_g = np.array([cell_group.get(c) == g for c in cells_here])
+            n_cells_g = int(in_g.sum())
+            if n_cells_g < MIN_CELLS_PCA:
+                continue
+            row_ok = np.isfinite(Z[:, in_g]).all(axis=1)
+            n_trials_g = int(row_ok.sum())
+            if n_trials_g < MIN_TRIALS_PCA:
+                continue
+            Rg = Z[row_ok][:, in_g]
+            Sg, Ng = Z0[:, in_g].sum(1), C[:, in_g].sum(1)
+            n_other = Nall - Ng
+            global_full = np.where(n_other >= MIN_OTHER_CELLS, (Sall - Sg) / np.maximum(n_other, 1), np.nan)
+            global_g, choice_g = global_full[row_ok], choice[row_ok]
+            pupil_g, speed_g = pupil_w[row_ok], speed_w[row_ok]
+
+            Rc = Rg - Rg.mean(0)
+            try:
+                U, S_, Vt = np.linalg.svd(Rc, full_matrices=False)
+            except np.linalg.LinAlgError:
+                continue
+            eig = (S_ ** 2) / max(n_trials_g - 1, 1)
+            eig_sum = eig.sum()
+            if eig_sum <= 0:
+                continue
+            pr = participation_ratio(eig)
+            frac_pc1 = float(eig[0] / eig_sum)
+            cumvar = np.cumsum(eig) / eig_sum
+            n_dims_90 = int(np.searchsorted(cumvar, 0.9) + 1)
+            pc1 = U[:, 0] * S_[0]
+            row_mean = Rc.mean(1)
+            if np.std(pc1) > 0 and np.std(row_mean) > 0 and np.corrcoef(pc1, row_mean)[0, 1] < 0:
+                pc1 = -pc1
+
+            k_grid = list(range(0, min(MAX_K, n_cells_g - 1, max(1, n_trials_g // MIN_TRIALS_PER_FOLD)) + 1))
+            n_folds = min(CV_FOLDS, max(2, n_trials_g // MIN_TRIALS_PER_FOLD))
+            k_star, ll_gain = np.nan, np.nan
+            if len(k_grid) > 1:
+                cv_ll = fa_cv_loglik(Rg, k_grid, n_folds, np.random.default_rng(stable_seed(sid, "fa", g, window, base=RANDOM_STATE)))
+                finite_ll = {k: v for k, v in cv_ll.items() if np.isfinite(v)}
+                if finite_ll:
+                    k_star = max(finite_ll, key=finite_ll.get)
+                    if np.isfinite(cv_ll.get(0, np.nan)):
+                        ll_gain = finite_ll[k_star] - cv_ll[0]
+
+            rows.append(dict(session_id=sid, animal_id=ses.animal_id, window=window, group=g,
+                              n_cells=n_cells_g, n_trials=n_trials_g,
+                              participation_ratio=pr, frac_var_pc1=frac_pc1, n_dims_90=n_dims_90,
+                              cv_k_star=k_star, cv_ll_gain=ll_gain,
+                              corr_pc1_global=corr(pc1, global_g), corr_pc1_pupil=corr(pc1, pupil_g),
+                              corr_pc1_speed=corr(pc1, speed_g), corr_pc1_choice=corr(pc1, choice_g)))
+    if not rows:
+        return None
+    print(f"  [{sid}] {len(analysed)} cells analysed, {len(rows)} (window, group) rows")
+    return dict(summary=pd.DataFrame(rows))
+
+
+results = run_sessions(
+    session_ids, process_session, [PROTOCOL], paths.store, "population_dimensionality",
+    key_params=dict(version="4a-v2", windows=WINDOWS, state_window=STATE_WINDOW, target=TARGET_STRATEGY,
+                    min_cells_pca=MIN_CELLS_PCA, min_other=MIN_OTHER_CELLS, min_trials_pca=MIN_TRIALS_PCA,
+                    max_k=MAX_K, cv_folds=CV_FOLDS, min_trials_per_fold=MIN_TRIALS_PER_FOLD, var_floor=VAR_FLOOR,
+                    noise_only=NOISE_ONLY, max_cells=MAX_CELLS, qc_mtime=qc_mtime, fits_mtime=int(fits_path.stat().st_mtime)),
+    load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
+    cells_by_session=cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
+    verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps, flatten=False)
+results = [r for r in results if r is not None]
+if not results:
+    raise SystemExit("No session produced a (session, group, window) with enough cells/trials for PCA.")
+S = pd.concat([r["summary"] for r in results], ignore_index=True)
+S.to_csv(table_dir / "population_dimensionality_by_session.csv", index=False, float_format="%.5g")
+print(f"\n{len(S)} (session, window, group) rows from {S['session_id'].nunique()} sessions")
+WIN = list(WINDOWS)
+
+
+# --------------------------------------------------------------------- #
+# 4. Tests: is each corr_pc1_* measure different from 0 across sessions/mice?
+# --------------------------------------------------------------------- #
+def bh(p):
+    p = np.asarray(p, float)
+    q = np.full(len(p), np.nan)
+    ok = np.isfinite(p)
+    if ok.any():
+        pv = p[ok]
+        o = np.argsort(pv)
+        adj = np.minimum.accumulate((pv[o] * len(pv) / np.arange(1, len(pv) + 1))[::-1])[::-1]
+        r = np.empty(len(pv))
+        r[o] = np.minimum(adj, 1.0)
+        q[ok] = r
+    return q
+
+
+def one_sample(v):
+    v = np.asarray(v, float)
+    v = v[np.isfinite(v)]
+    if len(v) < 3 or np.std(v) == 0:
+        return len(v), (float(np.mean(v)) if len(v) else np.nan), np.nan, np.nan, np.nan
+    t, p = sps.ttest_1samp(v, 0.0)
     try:
-        candidate = pd.read_pickle(pca_cache)
-        missing = [c for c in REQUIRED_COLUMNS if c not in candidate["shuffle_results"].columns]
-        if missing:
-            print(f"Cached PCA results are missing columns {missing} -- recomputing from 0_data/ "
-                  f"instead of using {pca_cache} (safe to delete that file to silence this check).")
-        else:
-            shuffle_results = candidate["shuffle_results"]
-            real_summary = candidate["real_summary"]
-            print(f"Reusing cached PCA results from {paths.store} (pass --recompute to reload 0_data/)")
-    except Exception as e:
-        print(f"Could not load cached PCA results ({e}); recomputing from 0_data/ ...")
+        pw = sps.wilcoxon(v).pvalue
+    except ValueError:
+        pw = np.nan
+    return len(v), float(np.mean(v)), float(t), float(p), float(pw)
 
-if shuffle_results is None:
-    sessions = load_sessions(protocols=[PROTOCOL], load_behaviordata=True, load_videodata=True,
-                              load_celldata=True, load_calciumdata=True, only_session_ids=included_ids)
 
-    area_label_by_session = {}
-    for ses in sessions:
-        included_cells = included_cell_ids_by_session.get(ses.session_id)
-        if not included_cells:
+trows = []
+for (grp, win), sub in S.groupby(["group", "window"]):
+    for measure in CORR_MEASURES:
+        n, mean, t, p, pw = one_sample(sub[measure])
+        if n < MIN_SESSIONS_TEST:
             continue
-        cd = ses.celldata[ses.celldata["cell_id"].isin(included_cells)].reset_index(drop=True)
-        area, label, _ = get_area_label(cd, label_split_areas=LABEL_SPLIT_AREAS)
-        area_label_by_session[ses.session_id] = dict(zip(cd["cell_id"], zip(area, label)))
+        mice = sub.groupby("animal_id")[measure].mean()
+        nm, mmean, mt, mp, _ = one_sample(mice.to_numpy())
+        trows.append(dict(group=grp, window=win, measure=measure, n_sessions=n, mean=mean, t=t, p_session=p,
+                           p_wilcoxon=pw, n_mice=nm, mean_mice=mmean, t_mice=mt, p_mice=mp,
+                           n_mice_positive=int((mice > 0).sum()), n_mice_negative=int((mice < 0).sum())))
+tests = pd.DataFrame(trows)
+if len(tests):
+    tests["q_session"] = np.nan
+    for _, idx in tests.groupby(["window", "measure"]).groups.items():
+        tests.loc[idx, "q_session"] = bh(tests.loc[idx, "p_session"].to_numpy())
+    tests.to_csv(table_dir / "population_dimensionality_tests.csv", index=False, float_format="%.5g")
+    print("\nCorrelation of PC1 with each candidate signal, sorted by p; q = BH within window x measure (across the 8 groups):")
+    print(tests.sort_values("p_session").head(20)[["group", "window", "measure", "n_sessions", "mean", "p_session", "q_session",
+                                                     "n_mice", "p_mice", "n_mice_positive"]].round(4).to_string(index=False))
+    print(f"\n{int((tests['q_session'] < ALPHA).sum())} / {len(tests)} tests with q < {ALPHA}")
 
-    def process_one_group(session_id, window_name, area, label, matrix, stim_bin, choice, cell_ids, seed):
-        rng_local = np.random.default_rng(seed)
-        specs = build_standard_condition_specs(stim_bin, choice)
-        df = run_across_shuffle_conditions(matrix, specs, pca_metrics, n_shuffles=N_SHUFFLES, rng=rng_local)
-        df.insert(0, "session_id", session_id)
-        df.insert(1, "window", window_name)
-        df.insert(2, "roi_name", area)
-        df.insert(3, "labeled_grouped", label)
-        df.insert(4, "n_cells", len(cell_ids))
-
-        z = zscore_population(matrix)
-        pca = PCA(n_components=min(z.shape), random_state=seed)
-        pca.fit(z)
-        real_row = {"session_id": session_id, "window": window_name, "roi_name": area,
-                    "labeled_grouped": label, "n_cells": len(cell_ids), "n_trials": matrix.shape[0],
-                    "var_ratio_per_pc": ",".join(f"{v:.6f}" for v in pca.explained_variance_ratio_)}
-        return df, real_row
-
-    print(f"Running PCA across shuffle conditions for {len(included_ids)} sessions "
-          f"(n_jobs={N_JOBS_SESSIONS}) ...")
-    groups = list(iterate_population_groups(sessions, mu_sigma_lookup, WINDOWS,
-                                              included_cell_ids_by_session, area_label_by_session,
-                                              min_cells=MIN_CELLS_PER_GROUP))
-    print(f"{len(groups)} (session, window, area, label) populations with >={MIN_CELLS_PER_GROUP} cells")
-    nested = Parallel(n_jobs=N_JOBS_SESSIONS, backend="loky", verbose=JOBLIB_VERBOSE)(
-        delayed(process_one_group)(sid, wname, area, label, matrix, stim_bin, choice, cell_ids,
-                                    RANDOM_STATE + i)
-        for i, (sid, wname, area, label, matrix, stim_bin, choice, cell_ids) in enumerate(groups)
-    )
-    shuffle_results = pd.concat([r[0] for r in nested], ignore_index=True)
-    real_summary = pd.DataFrame([r[1] for r in nested])
-    pd.to_pickle({"shuffle_results": shuffle_results, "real_summary": real_summary}, pca_cache)
-
-shuffle_results.to_csv(paths.out / "pca_shuffle_results.csv", index=False)
-real_summary.to_csv(paths.out / "pca_real_summary.csv", index=False)
-print(f"\n{len(real_summary)} populations analyzed, {len(shuffle_results)} total (condition, rep) rows")
-
+print("\nDimensionality summary (mean over sessions) by group x window:")
+print(S.groupby(["group", "window"])[["n_cells", "n_trials", "participation_ratio", "frac_var_pc1", "n_dims_90",
+                                       "cv_k_star", "cv_ll_gain"]].mean().round(3).to_string())
 
 # --------------------------------------------------------------------- #
-# 3. Summary
+# 5. Figures
 # --------------------------------------------------------------------- #
-if len(shuffle_results):
-    print("\nMean participation ratio by (window, area, condition):")
-    print(shuffle_results.groupby(["window", "roi_name", "condition"])["participation_ratio"]
-          .mean().round(2).to_string())
+agg_note = {"pooled": "mean over sessions (no error bars)", "session": "mean +- SEM over sessions",
+            "mouse": "mean +- SEM over mice"}[AGG]
 
 
-# --------------------------------------------------------------------- #
-# 4. Figures
-# --------------------------------------------------------------------- #
-if len(shuffle_results):
-    # 4a. COMMON PLOT 1: shuffle condition comparison (participation ratio)
-    # -- ALWAYS the six canonical groups (V1-lab, V1-unl, PM-lab, PM-unl,
-    # AL, RSP), one panel each, never collapsed to just 4 areas (which
-    # would silently show only whichever of lab/unl for V1/PM happened to
-    # be picked up first).
-    for window_name in WINDOWS:
-        sub = shuffle_results[shuffle_results["window"] == window_name]
-        if sub.empty:
-            continue
-        fig, axes = plt.subplots(1, len(SIX_GROUP_ORDER), figsize=(4.5 * len(SIX_GROUP_ORDER), 4.5),
-                                  squeeze=False)
-        for ax, (area, label) in zip(axes[0], SIX_GROUP_ORDER):
-            gsub = sub[(sub["roi_name"] == area) & (sub["labeled_grouped"] == label)]
-            if gsub.empty:
-                ax.set_title(f"{SIX_GROUP_LABELS[(area, label)]} (no data)", fontsize=9)
-                continue
-            plot_shuffle_condition_comparison(ax, gsub, "participation_ratio",
-                                               "participation ratio (effective dimensionality)")
-            ax.set_title(SIX_GROUP_LABELS[(area, label)])
-        fig.suptitle(f"PCA: participation ratio across shuffle conditions -- {window_name}, {PROTOCOL}",
-                     y=1.03)
-        fig.tight_layout()
-        save_fig(fig, figdir, f"1_shuffle_comparison_{window_name}")
-
-    # 4b. COMMON PLOT 2: metric vs population size (real data) -- one
-    # combined scatter per window, colored by the six groups (not just area)
-    real_pr = shuffle_results[shuffle_results["condition"] == "real"].copy()
-    real_pr["group_label"] = [SIX_GROUP_LABELS.get((a, l), f"{a}-{l}")
-                               for a, l in zip(real_pr["roi_name"], real_pr["labeled_grouped"])]
-    group_colors_by_label = {SIX_GROUP_LABELS[g]: SIX_GROUP_COLORS[g] for g in SIX_GROUP_ORDER}
-    fig, axes = plt.subplots(1, len(WINDOWS), figsize=(5 * len(WINDOWS), 4.5), squeeze=False)
-    for ax, window_name in zip(axes[0], WINDOWS):
-        sub = real_pr[real_pr["window"] == window_name]
-        if sub.empty:
-            continue
-        plot_metric_vs_population_size(ax, sub, "n_cells", "participation_ratio", "group_label",
-                                        "participation ratio (real data)", group_colors_by_label)
-        ax.set_title(window_name)
-    fig.suptitle(f"PCA: dimensionality vs. population size -- {PROTOCOL}", y=1.03)
-    fig.tight_layout()
-    save_fig(fig, figdir, "2_dimensionality_vs_size")
-
-    # 4c. UNIQUE TO PCA: scree plots, real vs conditions -- ALWAYS the six
-    # canonical groups, one example population per group
-    for window_name in ["stim"]:
-        sub_real = real_summary[real_summary["window"] == window_name]
-        if sub_real.empty:
-            continue
-        fig, axes = plt.subplots(1, len(SIX_GROUP_ORDER), figsize=(4.5 * len(SIX_GROUP_ORDER), 4.5),
-                                  squeeze=False)
-        for ax, (area, label) in zip(axes[0], SIX_GROUP_ORDER):
-            gsub = sub_real[(sub_real["roi_name"] == area) & (sub_real["labeled_grouped"] == label)]
-            group_label = SIX_GROUP_LABELS[(area, label)]
-            if gsub.empty:
-                ax.set_title(f"{group_label} (no data)", fontsize=9)
-                continue
-            example = gsub.iloc[0]
-            var_ratio = np.array([float(v) for v in example["var_ratio_per_pc"].split(",")])
-            ax.plot(range(1, len(var_ratio) + 1), np.cumsum(var_ratio), marker="o", markersize=3,
-                    color=SIX_GROUP_COLORS[(area, label)])
-            ax.set_xlabel("PC")
-            ax.set_ylabel("cumulative variance explained")
-            ax.set_title(f"{group_label} (example: {example['session_id']}, n={example['n_cells']} cells)",
-                         fontsize=9)
-            ax.set_ylim(0, 1.02)
-        fig.suptitle(f"PCA scree (cumulative variance) -- {window_name}, {PROTOCOL}", y=1.03)
-        fig.tight_layout()
-        save_fig(fig, figdir, f"3_scree_example_{window_name}")
-
-print(f"\nWrote tables to {paths.out}, figures to {figdir}")
+def panels(df, name, value, ylabel, title, **kw):
+    kw.setdefault("sharey", True)
+    group_panels(df, "window", WIN, value, AGG, figdir, name, title, ylabel=ylabel, mouse_colors=mouse_colors,
+                 ncols=len(WIN), panel_size=(4.6, 3.6), **kw)
 
 
-# ======================================================================= #
-# PART 2: PCA on TRIAL-AVERAGED activity -- a different question from
-# everything above. Part 1 asks "how many dimensions does trial-to-trial
-# VARIABILITY occupy, and how much is real correlation vs shared
-# tuning" (hence the conditioned-shuffle framework -- shuffling trials
-# only makes sense when trials are still distinct samples). Averaging
-# across trials FIRST removes trial-to-trial variability on purpose --
-# there's no "noise" left to shuffle -- and asks instead: "what does the
-# population's AVERAGE response look like as a trajectory through
-# activity space over the course of a trial, and how many dimensions
-# does THAT occupy." Same technique (PCA), different input, different
-# question, so no shuffle-condition test is run here.
-#
-# TENSOR: same position-binned-trial-tensor convention as 3d/3e/3f_
-# pair_*_temporal.py (infotheory.psth.build_position_binned_trial_tensor,
-# one value per trial per narrow position bin) -- but instead of keeping
-# each trial as its own sample, this AVERAGES across trials at each bin,
-# giving one (position bins, cells) matrix per (session, area, label)
-# population. Fitting PCA on THAT -- treating each position bin as a
-# sample -- is the standard "neural trajectory" analysis: the PC SCORES
-# at each bin, plotted against position, show how far the population's
-# average activity pattern has moved through state space by that point
-# in the trial (PART 2B below is exactly this -- "how it changes across
-# the whole trial duration/length").
-#
-# MEMORY: same per-session on-demand loading + explicit cleanup as
-# 3d/3e/3f_pair_*_temporal.py (see 3d's module docstring) -- sessions
-# load one at a time, N_JOBS_SESSIONS caps how many are in memory at
-# once.
-#
-# CROSS-SESSION CAVEAT: each session has a different population of
-# cells, and PCA's components have an arbitrary sign/rotation that
-# isn't guaranteed to line up across independently-fit sessions -- so
-# trajectories are shown PER SESSION (a small-multiples grid), not
-# pooled/averaged into one trajectory per area. A shared low-D space
-# across sessions (e.g. via CCA alignment) would be a reasonable next
-# step but is out of scope here.
-#
-# Outputs (added to the same out/store dirs as PART 1 above):
-#   trajectory_scores.csv     one row per (session, area, label,
-#                              s_rel): PC1..PCk scores of the trial-
-#                              averaged population state at that
-#                              position bin
-#   trajectory_variance.csv   one row per (session, area, label, PC):
-#                              variance explained
-# ======================================================================= #
-from infotheory.session import Session, discover_sessions
-from infotheory.psth import build_position_binned_trial_tensor
-from infotheory.continuous import merge_behavior_video, restrict_to_engaged, remove_pupil_outliers, build_calcium_continuous
+panels(S, "1_dimensionality_by_group", "participation_ratio", "participation ratio (eff. # dims)",
+       f"Dimensionality of shared variability -- {PROTOCOL}; {agg_note}")
+panels(S, "1b_cv_dimensionality_by_group", "cv_k_star", "cross-validated FA dimensionality (k*)",
+       f"Cross-validated factor-analysis dimensionality (0 = no reliable shared structure) -- {PROTOCOL}; {agg_note}")
 
-TRAJ_S_PRE, TRAJ_S_POST, TRAJ_BINSIZE = -60.0, 80.0, 10.0
-TRAJ_N_COMPONENTS = 5
-MIN_CELLS_FOR_TRAJECTORY = 10
-MIN_TRIALS_PER_TRAJ_BIN = 15
-SMOOTH_SIGMA_BINS = 1.0  # Gaussian smoothing along position, in units of BINS, applied to the
-                          # scaled trial-averaged matrix before PCA -- see the fix comment
-                          # below for why this and the raw-std scaling were both needed.
-                          # Set to 0/None to disable and see the raw (jagged) trajectories.
+long_rows = []
+for measure in CORR_MEASURES:
+    name = measure.replace("corr_pc1_", "")
+    long_rows.append(S[["session_id", "animal_id", "window", "group", measure]].rename(columns={measure: "corr"}).assign(mode=name))
+S_long = pd.concat(long_rows, ignore_index=True)
+MODE_ORDER = [m.replace("corr_pc1_", "") for m in CORR_MEASURES]
+panels(S_long, "2_mode_identity_correlations", "corr", "corr(PC1, signal)",
+       f"What is the leading shared mode? -- {PROTOCOL}; {agg_note}", series_col="mode", series_order=MODE_ORDER,
+       series_colors=MEASURE_COLORS, hline=0.0)
 
-session_lookup = {f"{animal_id}_{sessiondate}": (protocol, animal_id, sessiondate)
-                   for protocol, animal_id, sessiondate in discover_sessions([PROTOCOL])
-                   if f"{animal_id}_{sessiondate}" in included_ids}
+fig, axes = plt.subplots(1, len(WIN), figsize=(4.8 * len(WIN), 4.2), squeeze=False)
+for ax, w in zip(axes[0], WIN):
+    sub = S[S["window"] == w]
+    plot_metric_vs_population_size(ax, sub, "n_cells", "participation_ratio", "group",
+                                    "participation ratio", GCOLOR)
+    ax.set_title(w)
+    ax.legend(fontsize=6, frameon=False, ncol=2)
+fig.suptitle(f"Dimensionality vs. population size, one point per (session, group) -- {PROTOCOL}", y=1.03)
+fig.tight_layout()
+save_fig(fig, figdir, "3_dimensionality_vs_ncells")
+plt.close(fig)
 
-
-def process_one_session_trajectory(session_id, seed):
-    protocol, animal_id, sessiondate = session_lookup[session_id]
-    included_cells = included_cell_ids_by_session.get(session_id)
-    if not included_cells:
-        return [], []
-
-    ses = Session(protocol, animal_id, sessiondate)
-    ses.load(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True)
-
-    celldata = ses.celldata[ses.celldata["cell_id"].isin(included_cells)].reset_index(drop=True)
-    if celldata.empty:
-        return [], []
-    area, label, _ = get_area_label(celldata, label_split_areas=LABEL_SPLIT_AREAS)
-    cell_ids = celldata["cell_id"].tolist()
-
-    merged_full = merge_behavior_video(ses.behaviordata, ses.videodata)
-    merged_full = remove_pupil_outliers(merged_full)
-    engaged = restrict_to_engaged(merged_full, ses.trialdata)
-    score_rows, var_rows = [], []
-    if not engaged.empty:
-        engaged_trials = ses.trialdata[ses.trialdata.get("engaged", 1) == 1] \
-            if "engaged" in ses.trialdata.columns else ses.trialdata
-
-        for (a, l) in sorted(set(zip(area, label))):
-            group_cell_ids = [c for c, ga, gl in zip(cell_ids, area, label) if ga == a and gl == l]
-            if len(group_cell_ids) < MIN_CELLS_FOR_TRAJECTORY:
-                continue
-
-            calcium_continuous = build_calcium_continuous(ses.calciumdata[group_cell_ids], ses.ts_F,
-                                                            ses.behaviordata)
-            tensor_wide = build_position_binned_trial_tensor(
-                engaged_trials, calcium_continuous, cell_cols=group_cell_ids,
-                s_pre=TRAJ_S_PRE, s_post=TRAJ_S_POST, binsize=TRAJ_BINSIZE)
-
-            trial_avg = (tensor_wide.groupby("s_rel")[group_cell_ids]
-                         .agg(lambda s: s.mean() if s.notna().sum() >= MIN_TRIALS_PER_TRAJ_BIN else np.nan)
-                         .dropna())
-            if len(trial_avg) < TRAJ_N_COMPONENTS + 1:
-                continue
-
-            # Center using the trial-averaged data's own per-bin mean, but SCALE using each
-            # cell's std across ALL individual trials (pooled, from tensor_wide directly) --
-            # not the std across just the handful of BIN AVERAGES (2-14 samples here, an
-            # unstable estimate that a single noisy bin can dominate). This was the source of
-            # the "scree looks too smooth" symptom: with the old bin-averaged-std scaling, a
-            # group left with only 2-3 valid bins would show PC1 trivially explaining most of
-            # the variance, since with that few samples almost any shared direction dominates
-            # by chance -- confirmed directly on real V1/PM examples that had only 2-3 valid
-            # bins after the MIN_TRIALS_PER_TRAJ_BIN filter. Scaling by the pooled-trial std
-            # (hundreds of samples, not single digits) is a far more stable estimate of each
-            # cell's actual noise scale, and correctly downweights cells whose trial-averaged
-            # wiggle is mostly noise rather than real position tuning (a cell with small
-            # trial-averaged variance AND large raw per-trial variance is weakly tuned and
-            # should contribute little to PCA, not get amplified to unit variance).
-            raw_std = tensor_wide[group_cell_ids].std(skipna=True)
-            raw_std_safe = raw_std.replace(0, 1.0)
-            centered = trial_avg - trial_avg.mean(axis=0)
-            z = (centered / raw_std_safe).to_numpy()
-
-            # Optional position-domain smoothing, applied AFTER scaling so every cell is
-            # already on a comparable scale first -- reduces bin-to-bin sampling noise (each
-            # bin's trial average still has residual variance ~ sigma^2/n_trials_in_that_bin,
-            # which the scaling fix above does not remove) directly in the jagged PC-vs-
-            # position trajectories. Assumes bins are contiguous (no gaps from dropped bins);
-            # with large gaps this smooths across positions that aren't really adjacent --
-            # acceptable for a first pass but worth checking bin counts (n_bins in
-            # trajectory_variance.csv) before trusting heavily-smoothed groups.
-            if SMOOTH_SIGMA_BINS and SMOOTH_SIGMA_BINS > 0 and z.shape[0] > 2:
-                from scipy.ndimage import gaussian_filter1d
-                z = gaussian_filter1d(z, sigma=SMOOTH_SIGMA_BINS, axis=0, mode="nearest")
-
-            n_components = min(TRAJ_N_COMPONENTS, z.shape[0], z.shape[1])
-            pca = PCA(n_components=n_components, random_state=seed)
-            scores = pca.fit_transform(z)
-
-            for s_rel, score_row in zip(trial_avg.index, scores):
-                score_rows.append({"session_id": session_id, "roi_name": a, "labeled_grouped": l,
-                                    "s_rel": s_rel,
-                                    **{f"PC{k + 1}": score_row[k] for k in range(n_components)}})
-            for k in range(n_components):
-                var_rows.append({"session_id": session_id, "roi_name": a, "labeled_grouped": l,
-                                  "PC": k + 1, "var_ratio": float(pca.explained_variance_ratio_[k]),
-                                  "n_cells": len(group_cell_ids), "n_bins": len(trial_avg)})
-
-    for attr in ("calciumdata", "videodata", "behaviordata"):
-        if hasattr(ses, attr):
-            delattr(ses, attr)
-    print(f"  [{session_id}] trial-averaged trajectory done ({len(score_rows)} bin-rows)")
-    return score_rows, var_rows
-
-
-print(f"\nComputing trial-averaged PCA trajectories for {len(included_ids)} sessions "
-      f"(n_jobs={N_JOBS_SESSIONS}) ...")
-traj_nested = Parallel(n_jobs=N_JOBS_SESSIONS, backend="loky", verbose=JOBLIB_VERBOSE)(
-    delayed(process_one_session_trajectory)(sid, RANDOM_STATE + i) for i, sid in enumerate(included_ids)
-)
-trajectory_scores = pd.DataFrame([row for scores, _ in traj_nested for row in scores])
-trajectory_variance = pd.DataFrame([row for _, var in traj_nested for row in var])
-trajectory_scores.to_csv(paths.out / "trajectory_scores.csv", index=False)
-trajectory_variance.to_csv(paths.out / "trajectory_variance.csv", index=False)
-print(f"{len(trajectory_scores)} (session, area, label, position bin) trajectory rows, "
-      f"{trajectory_scores.groupby(['session_id', 'roi_name', 'labeled_grouped']).ngroups if len(trajectory_scores) else 0} "
-      f"populations")
-
-if len(trajectory_scores):
-    # 5a. Variance explained (trial-averaged PCA) -- ALWAYS the six
-    #     canonical groups, one example (session) per group
-    fig, axes = plt.subplots(1, len(SIX_GROUP_ORDER), figsize=(4 * len(SIX_GROUP_ORDER), 4), squeeze=False)
-    for ax, (area, label) in zip(axes[0], SIX_GROUP_ORDER):
-        group_label = SIX_GROUP_LABELS[(area, label)]
-        gsub = trajectory_variance[(trajectory_variance["roi_name"] == area)
-                                    & (trajectory_variance["labeled_grouped"] == label)]
-        if gsub.empty:
-            ax.set_title(f"{group_label} (no data)", fontsize=9)
-            continue
-        example_sid = gsub["session_id"].iloc[0]
-        ex = gsub[gsub["session_id"] == example_sid].sort_values("PC")
-        ax.plot(ex["PC"], np.cumsum(ex["var_ratio"]), marker="o", markersize=4, color=SIX_GROUP_COLORS[(area, label)])
-        ax.set_xlabel("PC")
-        ax.set_ylabel("cumulative variance explained")
-        ax.set_ylim(0, 1.02)
-        ax.set_title(f"{group_label} (example: {example_sid}, n={int(ex['n_cells'].iloc[0])} cells, "
-                     f"{int(ex['n_bins'].iloc[0])} bins)", fontsize=8)
-    fig.suptitle(f"Trial-averaged PCA: variance explained -- {PROTOCOL}", y=1.08)
-    fig.tight_layout()
-    save_fig(fig, figdir, "4_trajectory_variance_explained")
-
-    # 5b. PC scores vs position -- "how it changes across the whole trial
-    #     duration/length" -- ALWAYS the six canonical groups
-    fig, axes = plt.subplots(1, len(SIX_GROUP_ORDER), figsize=(4.5 * len(SIX_GROUP_ORDER), 4.5), squeeze=False)
-    for ax, (area, label) in zip(axes[0], SIX_GROUP_ORDER):
-        group_label = SIX_GROUP_LABELS[(area, label)]
-        gsub = trajectory_scores[(trajectory_scores["roi_name"] == area)
-                                  & (trajectory_scores["labeled_grouped"] == label)]
-        if gsub.empty:
-            ax.set_title(f"{group_label} (no data)", fontsize=9)
-            continue
-        example_sid = gsub["session_id"].iloc[0]
-        ex = gsub[gsub["session_id"] == example_sid].sort_values("s_rel")
-        pc_cols = [c for c in ex.columns if c.startswith("PC")]
-        for pc in pc_cols[:3]:
-            ax.plot(ex["s_rel"], ex[pc], marker="o", markersize=3, label=pc)
-        ax.axvline(0, color="black", linestyle=":", linewidth=1)
-        ax.axhline(0, color="grey", linewidth=0.7)
-        ax.set_xlabel("position rel. to stimulus onset (cm)")
-        ax.set_ylabel("PC score (trial-averaged)")
-        ax.set_title(f"{group_label} (example: {example_sid})", fontsize=9)
-        ax.legend(fontsize=7, frameon=False)
-    fig.suptitle(f"Trial-averaged population trajectory, PC scores vs position -- {PROTOCOL}", y=1.03)
-    fig.tight_layout()
-    save_fig(fig, figdir, "5_trajectory_pc_vs_position")
-
-    # 5c. PC1 vs PC2, 2D trajectory colored by position -- ALWAYS the six
-    #     canonical groups
-    fig, axes = plt.subplots(1, len(SIX_GROUP_ORDER), figsize=(4.5 * len(SIX_GROUP_ORDER), 4.5), squeeze=False)
-    for ax, (area, label) in zip(axes[0], SIX_GROUP_ORDER):
-        group_label = SIX_GROUP_LABELS[(area, label)]
-        gsub = trajectory_scores[(trajectory_scores["roi_name"] == area)
-                                  & (trajectory_scores["labeled_grouped"] == label)]
-        if gsub.empty or "PC1" not in gsub.columns or "PC2" not in gsub.columns:
-            ax.set_title(f"{group_label} (no data)", fontsize=9)
-            continue
-        example_sid = gsub["session_id"].iloc[0]
-        ex = gsub[gsub["session_id"] == example_sid].sort_values("s_rel")
-        sc = ax.scatter(ex["PC1"], ex["PC2"], c=ex["s_rel"], cmap="viridis", s=40, zorder=2)
-        ax.plot(ex["PC1"], ex["PC2"], color="grey", alpha=0.5, linewidth=1, zorder=1)
-        fig.colorbar(sc, ax=ax, label="position (cm)")
-        ax.set_xlabel("PC1")
-        ax.set_ylabel("PC2")
-        ax.set_title(f"{group_label} (example: {example_sid})", fontsize=9)
-    fig.suptitle(f"Trial-averaged population trajectory in PC space -- {PROTOCOL}", y=1.03)
-    fig.tight_layout()
-    save_fig(fig, figdir, "6_trajectory_pc1_pc2")
-
-print(f"\nWrote trial-averaged trajectory tables to {paths.out}, figures to {figdir}")
-print("Run `python b_progress/make_progress_md.py 4a_population_pca` to build a markdown summary.")
+print(f"\nWrote tables to {table_dir}, figures to {figdir}")

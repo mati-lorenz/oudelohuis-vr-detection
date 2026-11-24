@@ -38,7 +38,9 @@ class Scope:
 
     @property
     def is_full(self) -> bool:
-        return (self.animals is None and self.sessions is None and self.max_cells is None and self.max_pairs is None)
+        # a PAIR cap alone does not make a run a "selection": it limits how many pairs the pair-level steps look at, it is part of the
+        # analysis (200 pairs per pair of groups), so the results stay in out/ where the next steps read them
+        return (self.animals is None and self.sessions is None and self.max_cells is None)
 
     @property
     def tag(self) -> str:
@@ -74,10 +76,10 @@ def add_scope_args(parser):
                         help="sessions processed in parallel (default: project_config.N_JOBS_SESSIONS)")
     parser.add_argument("--max-cells", type=int, default=None, metavar="N",
                         help="analyse at most N cells PER GROUP (V1-lab, V1-unl, PM-lab ...) per session (a fixed pseudo-random, nested subset; default: "
-                             "project_config.MAX_CELLS_PER_SESSION). Raising N later computes only the added cells, "
-                             "lowering it reads the stored results. Writes to out/selection/<tag>/")
+                             "project_config.MAX_CELLS_PER_SESSION). A changed cap recomputes the "
+                             "session (there is no per-cell cache, to save disk). Writes to out/selection/<tag>/")
     parser.add_argument("--max-pairs", type=int, default=None, metavar="N",
-                        help="pair-level scripts: at most N cell pairs per PAIR OF GROUPS per session (nested subset; default: "
+                        help="pair-level scripts: at most N cell pairs per PAIR OF GROUPS per session (fixed subset; default: "
                              "project_config.MAX_PAIRS_PER_SESSION)")
     parser.add_argument("--recompute", action="store_true",
                         help="ignore the per-session caches in store/ and recompute")

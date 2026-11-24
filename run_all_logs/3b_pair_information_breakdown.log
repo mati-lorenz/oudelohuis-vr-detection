@@ -1,0 +1,101 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+Targets (stimulus binning strategies + choice):
+  pct_0-25_25-50_50-75_75-100: curve_pct, zero_separate=False, edges=[0.25, 0.5, 0.75] -> bins ['0-25%', '25-50%', '50-75%', '75-100%']
+  choice: lick vs no-lick
+WARNING: no pairs in 3a's list for ['LPE11495_2024_02_22', 'LPE11623_2024_04_02', 'LPE11997_2024_04_09', 'LPE11997_2024_04_19', 'LPE11998_2024_04_29'] (rerun 3a on the full dataset); skipped
+22 sessions, 27193 pairs (3a's list, pair_rank < 200)
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+  [LPE10884_2024_01_12] 2400 (window, target, pair) rows
+  [LPE11997_2024_04_10] 7200 (window, target, pair) rows
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/externals/loky/process_executor.py:787: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed:  2.5min
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed:  4.2min remaining:   56.1s
+  [LPE11997_2024_04_18] 5262 (window, target, pair) rows
+  [LPE11998_2024_04_25] 8214 (window, target, pair) rows
+  [LPE12013_2024_04_30] 8106 (window, target, pair) rows
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed:  4.8min finished
+  [LPE11622_2024_02_22] 9600 (window, target, pair) rows
+  [LPE11998_2024_04_24] 8400 (window, target, pair) rows
+  [LPE12013_2024_04_26] 8286 (window, target, pair) rows
+  [LPE12385_2024_06_17] 6714 (window, target, pair) rows
+
+163158 (session, window, target, pair) rows
+
+======== target: pct_0-25_25-50_50-75_75-100 [0-25% | 25-50% | 50-75% | 75-100%] ========
+Mean I_total / I_lin / I_sigsim / I_cor / RSI by (window, group), mean over sessions:
+                     I_total   I_lin  I_sigsim   I_cor     RSI
+window   group                                                
+pre_stim AL_unl       0.0105  0.0055   -0.0002  0.0053  0.0051
+         PM_lab       0.0047  0.0023   -0.0000  0.0025  0.0024
+         PM_unl       0.0094  0.0054   -0.0002  0.0043  0.0041
+         PMdeep_lab   0.0110  0.0059   -0.0002  0.0054  0.0051
+         PMdeep_unl   0.0101  0.0053   -0.0002  0.0050  0.0048
+         RSP_unl      0.0102  0.0056   -0.0002  0.0049  0.0046
+         V1_lab       0.0086  0.0054   -0.0002  0.0034  0.0032
+         V1_unl       0.0093  0.0056   -0.0002  0.0039  0.0037
+reward   AL_unl       0.0884  0.0544   -0.0048  0.0388  0.0340
+         PM_lab       0.1176  0.0697   -0.0059  0.0538  0.0479
+         PM_unl       0.0965  0.0589   -0.0050  0.0425  0.0375
+         PMdeep_lab   0.0973  0.0600   -0.0047  0.0420  0.0373
+         PMdeep_unl   0.0945  0.0572   -0.0045  0.0419  0.0373
+         RSP_unl      0.0785  0.0487   -0.0036  0.0333  0.0297
+         V1_lab       0.0928  0.0582   -0.0047  0.0394  0.0347
+         V1_unl       0.0805  0.0519   -0.0037  0.0323  0.0286
+stim     AL_unl       0.0596  0.0281   -0.0015  0.0330  0.0315
+         PM_lab       0.0651  0.0235   -0.0016  0.0432  0.0416
+         PM_unl       0.1079  0.0538   -0.0054  0.0595  0.0541
+         PMdeep_lab   0.1099  0.0523   -0.0040  0.0616  0.0576
+         PMdeep_unl   0.0998  0.0461   -0.0035  0.0572  0.0537
+         RSP_unl      0.0571  0.0267   -0.0024  0.0327  0.0304
+         V1_lab       0.0861  0.0408   -0.0023  0.0477  0.0453
+         V1_unl       0.0825  0.0446   -0.0023  0.0402  0.0379
+
+49560/81579 pairs show net synergy (RSI>0); the rest net redundancy.
+
+======== target: choice [no lick | lick] ========
+Mean I_total / I_lin / I_sigsim / I_cor / RSI by (window, group), mean over sessions:
+                     I_total   I_lin  I_sigsim   I_cor     RSI
+window   group                                                
+pre_stim AL_unl       0.0066  0.0064   -0.0001  0.0003  0.0002
+         PM_lab       0.0032  0.0034   -0.0000 -0.0002 -0.0002
+         PM_unl       0.0072  0.0065   -0.0001  0.0008  0.0007
+         PMdeep_lab   0.0068  0.0064   -0.0001  0.0005  0.0004
+         PMdeep_unl   0.0073  0.0070   -0.0001  0.0004  0.0003
+         RSP_unl      0.0066  0.0065   -0.0001  0.0002  0.0001
+         V1_lab       0.0068  0.0064   -0.0001  0.0005  0.0004
+         V1_unl       0.0061  0.0058   -0.0001  0.0005  0.0004
+reward   AL_unl       0.1414  0.1574   -0.0111 -0.0048 -0.0160
+         PM_lab       0.1739  0.1925   -0.0137 -0.0049 -0.0186
+         PM_unl       0.1498  0.1662   -0.0115 -0.0049 -0.0164
+         PMdeep_lab   0.1433  0.1579   -0.0104 -0.0042 -0.0146
+         PMdeep_unl   0.1371  0.1505   -0.0097 -0.0037 -0.0134
+         RSP_unl      0.1270  0.1387   -0.0085 -0.0031 -0.0116
+         V1_lab       0.1402  0.1545   -0.0105 -0.0037 -0.0143
+         V1_unl       0.1303  0.1434   -0.0094 -0.0036 -0.0131
+stim     AL_unl       0.0268  0.0272   -0.0005  0.0001 -0.0004
+         PM_lab       0.0260  0.0273   -0.0004 -0.0009 -0.0013
+         PM_unl       0.0374  0.0389   -0.0010 -0.0006 -0.0016
+         PMdeep_lab   0.0349  0.0370   -0.0008 -0.0013 -0.0022
+         PMdeep_unl   0.0354  0.0365   -0.0008 -0.0003 -0.0011
+         RSP_unl      0.0250  0.0265   -0.0006 -0.0009 -0.0015
+         V1_lab       0.0305  0.0315   -0.0006 -0.0005 -0.0011
+         V1_unl       0.0287  0.0295   -0.0005 -0.0002 -0.0008
+
+23412/81579 pairs show net synergy (RSI>0); the rest net redundancy.
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/3b_pair_information_breakdown/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/3b_pair_information_breakdown/out/figures
+  [LPE11622_2024_02_20] 7200 (window, target, pair) rows
+  [LPE11997_2024_04_17] 8286 (window, target, pair) rows
+  [LPE12013_2024_04_29] 7638 (window, target, pair) rows
+  [LPE12385_2024_06_26] 5682 (window, target, pair) rows
+  [LPE11622_2024_02_26] 9600 (window, target, pair) rows
+  [LPE11998_2024_04_23] 8400 (window, target, pair) rows
+  [LPE12013_2024_04_25] 7668 (window, target, pair) rows
+  [LPE12385_2024_06_16] 7734 (window, target, pair) rows
+  [LPE11622_2024_02_23] 9426 (window, target, pair) rows
+  [LPE11997_2024_04_16] 7668 (window, target, pair) rows
+  [LPE11998_2024_05_01] 6000 (window, target, pair) rows
+  [LPE12385_2024_06_15] 7920 (window, target, pair) rows
+  [LPE12385_2024_06_27] 5754 (window, target, pair) rows

@@ -262,3 +262,50 @@ def group_panels(df, panel_col, panel_order, value, aggregate, figdir, name, tit
     fig.tight_layout()
     save_fig(fig, figdir, name)
     plt.close(fig)
+
+
+def group_grid(df, row_col, row_order, col_col, col_order, value, aggregate, figdir, name, title, ylabel=None,
+               hline=None, mouse_colors=None, min_cells_per_unit=1, panel_size=(4.3, 2.5), col_titles=None,
+               sharey_row=True):
+    """One figure, a grid: one ROW per entry of `row_col` (e.g. predictor) and one COLUMN per entry of `col_col` (e.g.
+    window); each panel = the project groups at the chosen unit of analysis (group_unit_bars). The y range is shared along
+    each ROW (sharey_row), so the columns of a row are directly comparable; rows keep their own scale. Group names (with n)
+    are written under the last row only. `df`: one row per cell with group, `value`, session_id / animal_id."""
+    from .plotting import save_fig
+    if df.empty or not len(row_order) or not len(col_order):
+        return
+    nr, nc = len(row_order), len(col_order)
+    fig, axes = plt.subplots(nr, nc, figsize=(panel_size[0] * nc, panel_size[1] * nr + 0.6), squeeze=False)
+    for i, r in enumerate(row_order):
+        for j, c in enumerate(col_order):
+            ax = axes[i, j]
+            s = df[(df[row_col] == r) & (df[col_col] == c)]
+            if i == 0:
+                ax.set_title((col_titles or {}).get(c, str(c)), fontsize=10)
+            if s.dropna(subset=[value]).empty:
+                ax.text(0.5, 0.5, "no valid values", transform=ax.transAxes, ha="center", va="center", fontsize=8,
+                        color="grey")
+                ax.set_xticks([])
+            else:
+                group_unit_bars(ax, s, value, aggregate, mouse_colors=mouse_colors,
+                                min_cells_per_unit=min_cells_per_unit, hline=hline)
+                if i < nr - 1:
+                    ax.set_xticklabels([])
+            if j == 0:
+                ax.set_ylabel(str(r), fontsize=9, fontweight="bold")
+    if sharey_row:
+        for i in range(nr):
+            drawn = [ax for ax in axes[i] if ax.has_data()]
+            if drawn:
+                lo = min(ax.get_ylim()[0] for ax in drawn)
+                hi = max(ax.get_ylim()[1] for ax in drawn)
+                for ax in drawn:
+                    ax.set_ylim(lo, hi)
+                    if ax is not drawn[0]:
+                        ax.tick_params(labelleft=False)
+    if aggregate != "pooled" and mouse_colors is not None and "animal_id" in df:
+        mouse_legend(axes[0, -1], mouse_colors, animals=df["animal_id"].unique(), loc="upper right")
+    fig.suptitle(title + (f"\ny: {ylabel}" if ylabel else ""), y=1.0, fontsize=10)
+    fig.tight_layout()
+    save_fig(fig, figdir, name)
+    plt.close(fig)

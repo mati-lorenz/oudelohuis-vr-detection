@@ -162,7 +162,7 @@ print(f"{len(session_ids)} sessions, {sum(len(v) for v in cells_by_session.value
 # --------------------------------------------------------------------- #
 def process_session(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
-    cells = list(new_cells)          # only the cells not yet in the ledger (session_jobs.run_sessions_units)
+    cells = list(new_cells)          # the requested cells (session_jobs.run_sessions_units)
     if ses.trialdata is None or ses.behaviordata is None or ses.calciumdata is None or ses.ts_F is None:
         return None
     rng = np.random.default_rng(seed)

@@ -20,21 +20,45 @@ Per cell, frame by frame on the imaging clock (engaged trials, frames within [-S
 A. TUNING CURVE   mean activity (SD units) in N_BINS pupil QUANTILE bins, bins defined within the session so every
                   session spans the same percentiles of ITS pupil range (x axis = percentile of the pupil range,
                   not absolute size, which differs between mice and sessions).
-B. SHAPE TESTS    y ~ 1 + z + z^2 per cell (z = standardized pupil).
-                    beta2    < 0 inverted U, > 0 U
+B. SHAPE TESTS    y ~ 1 + z + z^2 per cell (z = standardized pupil), CROSS-VALIDATED: the quadratic (and nested
+                  linear) model is fit on ODD trials and scored on EVEN trials and vice versa (fit_train /
+                  score_test / fit_cv), SSE and SST pooled over both directions before computing R^2. beta1/beta2
+                  are the MEAN of the two half-fits. This replaces fitting and scoring on the SAME frames (the old
+                  design): an in-sample quadratic R^2 can only ever be >= the linear R^2 (a nested model), so dR2
+                  was mechanically non-negative and partly just "the quadratic absorbing noise with its extra
+                  parameter" -- here dR2 (and r2q/r2l individually, not written out but implicit in dR2/r_lin) CAN
+                  come out negative when the shape does not generalize, which is the point.
+                    beta2    < 0 inverted U, > 0 U (mean of the odd-fit and even-fit beta2)
                     slopes at the low / high end of the range (RANGE_PCT percentiles): inverted U needs low > 0 and
                     high < 0 (turning point inside the range); U the opposite
-                    dR2      variance explained by the quadratic beyond the linear model
-                    r_lin    plain linear correlation (an inverted U has r ~ 0)
+                    dR2      CROSS-VALIDATED variance explained by the quadratic beyond the linear model (held-out
+                             R^2 of the quadratic minus held-out R^2 of the linear; can be negative)
+                    r_lin    plain linear correlation, from the held-out R^2 of the linear-only model (an inverted
+                             U has r ~ 0)
                   Significance = CIRCULAR-SHIFT null (as in 2g): the pupil trace is rolled by a random lag
-                  (>= MIN_SHIFT_S) N_SHIFTS times and the same statistics recomputed, so the autocorrelation of both
-                  signals is kept (frames are not independent, a plain OLS p-value would be far too small).
+                  (>= MIN_SHIFT_S) N_SHIFTS times and the SAME cross-validated fit_cv recomputed at every shift (not
+                  just the in-sample fit), so the autocorrelation of both signals is kept (frames are not
+                  independent, a plain OLS p-value would be far too small) AND the null is of the honest, held-out
+                  statistic, not the inflated in-sample one.
+                  SUPPLEMENTARY 5-FOLD CROSS-CHECK: every beta1/beta2/r_lin/dR2/p_* above also has a `_5fold`
+                  twin, from the SAME fit_cv generalized to K=5 folds (fold = trial index mod 5): train on 4/5 of
+                  the trials, score the held-out 1/5, pooled SSE/SST over the 5 held-out scorings, coefficients
+                  averaged over the 5 training fits. The 2-fold (odd/even) numbers stay the headline (unchanged,
+                  used by every figure and the shape classification); `_5fold` is there to confirm the 2-fold
+                  numbers are not an artifact of that particular split -- see figure 1c.
+                  FIT-ON-ONE-HALF, SHOW-THE-OTHER-HALF'S-POINTS (figure 1c): NOT the quadratic model (that is what
+                  beta_quadratic/dR2 above already test) -- h2/h1 (per cell, per bin; odd trials' own bin means,
+                  no shape assumed) is plotted as a line against h1/h2 (the OTHER half's own, independently computed
+                  bin means) as points, so the curve shown is always being compared against data it never saw.
                   Each cell is then assigned a SHAPE CLASS:
                     inverted_U / U     quadratic term significant AND the slopes change sign inside the range
                     increasing / decreasing   not a hump, but a significant (monotone or saturating) trend
                     flat               nothing significant
                   Model-free companion: `center_minus_edges` = mean of the middle bins minus mean of the outer bins of
-                  the tuning curve (> 0 inverted-U-like, < 0 U-like), no fit involved.
+                  the tuning curve (> 0 inverted-U-like, < 0 U-like), no fit involved. Not cross-validated: MID/EDGE
+                  are FIXED bin positions (not picked from the data, unlike e.g. 2k's `modulation`'s data-dependent
+                  peak/trough bin), so there is no selection bias to correct here -- its own reliability is the
+                  split-half check in section C below.
 C. RELIABILITY    the tuning curve of EVEN and ODD trials separately (same bin edges): per-cell split-half curve
                   correlation, and across cells the split-half correlation of center_minus_edges. If a cell's shape does
                   not even replicate in its own other half, nothing can be said about consistency between cells.
@@ -64,7 +88,9 @@ Outputs
 2_pipeline/2j_pupil_activity_shape/
     out/    pupil_activity_shape_per_cell.csv     one row per (variant, session, cell): n_frames, beta1, beta2, slopes,
                     turning point, r_lin, dR2, p-values, shape class, center_minus_edges, split-half r, curve c0..cN
-                    (bin means), half curves h1_*, h2_*, pupil bin centers zc*
+                    (bin means), half curves h1_*/h2_* (even/odd actual bin means; also the figure-1c "fit", idea 1 --
+                    no shape assumed), the _5fold twins of beta1/beta2/r_lin/dR2/p_* (idea 2/3, supplementary
+                    cross-check of the quadratic model), pupil bin centers zc*
             shape_class_by_group[__<aggregate>].csv   fraction of cells per class, at the chosen unit
             shape_consistency_by_group.csv            reliability + consistency across cells / sessions / mice
             shape_unit_curves.csv                     mean curve per group x session / mouse
@@ -168,8 +194,9 @@ stamps = {s: data_stamp(*selected[s]) for s in session_ids}
 qc_mtime = int((activity_out / "qc_per_cell.csv").stat().st_mtime)
 
 CURVE = [f"c{i}" for i in range(N_BINS)]
-HALF1 = [f"h1_{i}" for i in range(N_BINS)]
-HALF2 = [f"h2_{i}" for i in range(N_BINS)]
+HALF1 = [f"h1_{i}" for i in range(N_BINS)]        # actual bin means of the EVEN trials -- also the "fit" shown for idea 1
+                                                    # (no shape assumed: the curve IS the other half's own bin means)
+HALF2 = [f"h2_{i}" for i in range(N_BINS)]        # actual bin means of the ODD trials -- ditto
 ZC = [f"zc{i}" for i in range(N_BINS)]
 MID = [i for i in range(N_BINS) if N_BINS // 4 <= i < N_BINS - N_BINS // 4]
 EDGE = [i for i in range(N_BINS) if i not in MID]
@@ -192,26 +219,65 @@ def residualize_by_position(X, rel, mask, bin_cm):
     return np.where(mask[:, None], X - np.nan_to_num(means[b]), 0.0)
 
 
-def fit_all(z, w, Y, Y2):
-    """Quadratic and linear OLS of every column of Y (T, N; zeros where w = 0) on the pupil z (T,) over the frames with
-    weight w in {0, 1}. Returns beta1, beta2 (per SD / SD^2 of the pupil), r_lin, dR2 and the standardization (mu, sd)."""
+def fit_train(z, w, Y):
+    """Quadratic (and nested linear) OLS of every column of Y (T, N) on the pupil z (T,), TRAIN frames only
+    (weight w in {0, 1}). Returns beta (3, N), bl (2, N) and the standardization (mu, sd) -- all fit on these
+    same TRAIN frames only, so a caller scoring held-out frames never leaks test information into mu/sd/beta."""
     n = w.sum()
     mu = (w * z).sum() / n
     sd = np.sqrt((w * (z - mu) ** 2).sum() / n)
     zz = np.where(w > 0, (z - mu) / sd, 0.0)
     X = np.column_stack([np.ones_like(zz), zz, zz ** 2])
     Xw = X * w[:, None]
-    XtY = Xw.T @ Y
     XtX = Xw.T @ X
-    beta = np.linalg.solve(XtX, XtY)
-    bl = np.linalg.solve(XtX[:2, :2], XtY[:2])
-    Yw, Y2w = w @ Y, w @ Y2
-    sst = Y2w - Yw ** 2 / n
+    beta = np.linalg.solve(XtX, Xw.T @ Y)
+    bl = np.linalg.solve(XtX[:2, :2], Xw.T[:2] @ Y)
+    return beta, bl, mu, sd
+
+
+def score_test(beta, bl, mu, sd, z, w, Y, Y2):
+    """Held-out SSE (quadratic, linear model) and SST of Y on TEST frames (weight w), scoring a model TRAINED
+    elsewhere (beta/bl/mu/sd come from fit_train on a DIFFERENT, disjoint set of frames)."""
+    n = w.sum()
+    zz = np.where(w > 0, (z - mu) / sd, 0.0)
+    X = np.column_stack([np.ones_like(zz), zz, zz ** 2])
+    grand = (w @ Y) / n
+    sse_q = (w[:, None] * (Y - X @ beta) ** 2).sum(0)
+    sse_l = (w[:, None] * (Y - X[:, :2] @ bl) ** 2).sum(0)
+    sst = (w @ Y2) - 2 * grand * (w @ Y) + n * grand ** 2
+    return sse_q, sse_l, sst
+
+
+def fit_cv(z, w, fold, Y, Y2):
+    """GENERAL K-FOLD cross-validated quadratic-vs-pupil fit (`fold`: integer array of fold ids 0..K-1 per frame).
+    For every fold f: fit on every OTHER fold (fit_train), score the held-out fold f (score_test); SSE/SST are
+    POOLED over all K held-out scorings before computing R^2 -- never an average of K separate ratios (project
+    convention). This is the held-out counterpart of the old fit_all, which fit and scored on the SAME frames and
+    so could only ever make the quadratic look AS GOOD OR BETTER than the linear model (R^2 of a nested model
+    never decreases in-sample). Here dR2 (and r2q, r2l individually) CAN come out negative.
+    beta1, beta2 = the MEAN of the K folds' own TRAINING fits (idea 3: "average curve across the different fits of
+    the different subsets") -- never a coefficient fit on the same frames it is scored against. mu, sd = mean of
+    the K folds' own standardization.
+    K=2 with fold = odd trials (0/1) reproduces the original odd/even design exactly; K=5 (fold = trial index % 5)
+    is the standard 5-fold CV (idea 2: "divide the data in 5 parts, train on 4/5, measure the held-out loss, mean
+    across the 5"), used here as a second, independent cross-validated estimate of the same quantities.
+    (Idea 1's "fit on one half, show the OTHER half's points" figure does NOT use this quadratic fit -- it just
+    shows each half's own bin means (HALF1/HALF2 below) against the other, with no shape assumed.)"""
+    K = int(fold.max()) + 1
+    sse_q = sse_l = sst = 0.0
+    betas1, betas2, bl1s, mus, sds = [], [], [], [], []
+    for f in range(K):
+        tr_w, te_w = w * (fold != f), w * (fold == f)
+        beta, bl, mu, sd = fit_train(z, tr_w, Y)
+        sq, sl, ss = score_test(beta, bl, mu, sd, z, te_w, Y, Y2)
+        sse_q, sse_l, sst = sse_q + sq, sse_l + sl, sst + ss
+        betas1.append(beta[1]); betas2.append(beta[2]); bl1s.append(bl[1]); mus.append(mu); sds.append(sd)
     with np.errstate(invalid="ignore", divide="ignore"):
-        r2q = 1 - (Y2w - (beta * XtY).sum(0)) / sst
-        r2l = 1 - (Y2w - (bl * XtY[:2]).sum(0)) / sst
-    return dict(beta1=beta[1], beta2=beta[2], r_lin=np.sign(bl[1]) * np.sqrt(np.clip(r2l, 0, None)),
-                dR2=r2q - r2l, mu=mu, sd=sd)
+        r2q = 1 - sse_q / sst
+        r2l = 1 - sse_l / sst
+    beta1, beta2, bl1 = np.mean(betas1, axis=0), np.mean(betas2, axis=0), np.mean(bl1s, axis=0)
+    return dict(beta1=beta1, beta2=beta2, r_lin=np.sign(bl1) * np.sqrt(np.clip(r2l, 0, None)), dR2=r2q - r2l,
+                mu=float(np.mean(mus)), sd=float(np.mean(sds)), K=K)
 
 
 def bin_means(Y, mask, b):
@@ -221,7 +287,7 @@ def bin_means(Y, mask, b):
 
 def process_session(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
-    cell_ids = list(new_cells)          # only the cells not yet in the ledger (session_jobs.run_sessions_units)
+    cell_ids = list(new_cells)          # the requested cells (session_jobs.run_sessions_units)
     if (not cell_ids or ses.calciumdata is None or ses.ts_F is None or ses.trialdata is None or ses.videodata is None
             or ses.behaviordata is None or "engaged" not in ses.trialdata.columns):
         return None
@@ -252,6 +318,7 @@ def process_session(ses, seed, new_cells, new_pairs, req_cells):
     zc = np.array([np.median(zp[ok & (b == i)]) if (ok & (b == i)).any() else np.nan for i in range(N_BINS)])
     z_lo, z_hi = np.percentile(zp[ok], RANGE_PCT)
     odd = (k % 2 == 1)
+    fold5 = np.mod(k, 5)                  # 5-fold split (idea 2), same trial-index logic as the odd/even 2-fold split
     rng = np.random.default_rng(seed)
     min_shift = int(round(MIN_SHIFT_S / dt))
     shifts = rng.integers(min_shift, max(min_shift + 1, T - min_shift), n_shifts)
@@ -265,28 +332,38 @@ def process_session(ses, seed, new_cells, new_pairs, req_cells):
             continue
         Y = np.where(ok[:, None], np.nan_to_num(Y[:, good]), 0.0)
         Y2 = Y ** 2
-        obs = fit_all(zp, w, Y, Y2)
+        obs = fit_cv(zp, w, odd, Y, Y2)                              # 2-fold (odd/even): headline, unchanged
+        obs5 = fit_cv(zp, w, fold5, Y, Y2)                          # 5-fold: supplementary cross-check (idea 2/3)
         nulls = {"r_lin": [], "beta2": [], "dR2": []}
+        nulls5 = {"r_lin": [], "beta2": [], "dR2": []}
         for s in shifts:
             zs, ws = np.roll(zp, s), w * np.roll(w, s)
-            f = fit_all(zs, ws, Y * ws[:, None], Y2 * ws[:, None])
+            f = fit_cv(zs, ws, odd, Y, Y2)
+            f5 = fit_cv(zs, ws, fold5, Y, Y2)
             for key in nulls:
                 nulls[key].append(f[key])
+                nulls5[key].append(f5[key])
         nulls = {kk: np.vstack(v) for kk, v in nulls.items()}
+        nulls5 = {kk: np.vstack(v) for kk, v in nulls5.items()}
         p_lin = (1 + (np.abs(nulls["r_lin"]) >= np.abs(obs["r_lin"])).sum(0)) / (1 + n_shifts)
         p_quad = (1 + (np.abs(nulls["beta2"]) >= np.abs(obs["beta2"])).sum(0)) / (1 + n_shifts)
         p_dR2 = (1 + (nulls["dR2"] >= obs["dR2"]).sum(0)) / (1 + n_shifts)
+        p_lin5 = (1 + (np.abs(nulls5["r_lin"]) >= np.abs(obs5["r_lin"])).sum(0)) / (1 + n_shifts)
+        p_quad5 = (1 + (np.abs(nulls5["beta2"]) >= np.abs(obs5["beta2"])).sum(0)) / (1 + n_shifts)
+        p_dR25 = (1 + (nulls5["dR2"] >= obs5["dR2"]).sum(0)) / (1 + n_shifts)
         zlo_s, zhi_s = (z_lo - obs["mu"]) / obs["sd"], (z_hi - obs["mu"]) / obs["sd"]
         with np.errstate(invalid="ignore", divide="ignore"):
             vertex = obs["mu"] + obs["sd"] * (-obs["beta1"] / (2 * obs["beta2"]))
         curve = bin_means(Y, ok, b)
-        h1 = bin_means(Y, ok & ~odd, b)
-        h2 = bin_means(Y, ok & odd, b)
+        h1 = bin_means(Y, ok & ~odd, b)    # actual EVEN-trial bin means
+        h2 = bin_means(Y, ok & odd, b)     # actual ODD-trial bin means
         df = pd.DataFrame({
             "session_id": sid, "cell_id": np.asarray(cell_ids)[good], "variant": var, "n_frames": int(ok.sum()),
             "beta1": obs["beta1"], "beta2": obs["beta2"], "slope_low": obs["beta1"] + 2 * obs["beta2"] * zlo_s,
             "slope_high": obs["beta1"] + 2 * obs["beta2"] * zhi_s, "turning_z": vertex, "r_lin": obs["r_lin"],
-            "dR2": obs["dR2"], "p_lin": p_lin, "p_quad": p_quad, "p_dR2": p_dR2, "z_lo": z_lo, "z_hi": z_hi})
+            "dR2": obs["dR2"], "p_lin": p_lin, "p_quad": p_quad, "p_dR2": p_dR2, "z_lo": z_lo, "z_hi": z_hi,
+            "beta1_5fold": obs5["beta1"], "beta2_5fold": obs5["beta2"], "r_lin_5fold": obs5["r_lin"],
+            "dR2_5fold": obs5["dR2"], "p_lin_5fold": p_lin5, "p_quad_5fold": p_quad5, "p_dR2_5fold": p_dR25})
         for cols, arr in ((CURVE, curve), (HALF1, h1), (HALF2, h2)):
             df[cols] = arr.T
         df[ZC] = np.tile(zc, (len(df), 1))
@@ -296,7 +373,7 @@ def process_session(ses, seed, new_cells, new_pairs, req_cells):
 
 results = run_sessions_units(
     session_ids, process_session, [PROTOCOL], paths.store, "shape_session",
-    key_params=dict(version="2j-v2", variants=VARIANTS, ctrl=CONTROL_POSITION_BIN_CM, lag_s=LAG_S, n_bins=N_BINS,
+    key_params=dict(version="2j-v5", variants=VARIANTS, ctrl=CONTROL_POSITION_BIN_CM, lag_s=LAG_S, n_bins=N_BINS,
                     range_pct=RANGE_PCT, min_frames=MIN_FRAMES, n_shifts=n_shifts, min_shift_s=MIN_SHIFT_S,
                     s_pre=S_PRE, s_post=S_POST, qc_mtime=qc_mtime, fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
@@ -507,26 +584,67 @@ for var in VARIANTS:
     save_fig(fig, figdir, f"1b_mouse_curves_{tag}")
     plt.close(fig)
 
-    # 2. heatmap of every cell's curve, cells sorted by their peak bin
-    fig, axd = six_panel_figure(figsize_per_panel=(3.3, 3.2), sharex=True, sharey=False)
-    allC = vc[CURVE].to_numpy(float)
-    vmax = float(np.nanpercentile(np.abs(allC), 99)) or 1.0       # one symmetric colour scale for all groups
+    # 1c. idea 1: one half's own bin-mean curve (no shape assumed -- not the quadratic model, which is tested
+    #     separately via beta_quadratic/dR2) drawn against the OTHER half's own actual bin means: a "fit" that has
+    #     never seen the points it is laid over. HALF2/HALF1 (odd curve vs even points) and HALF1/HALF2 (even curve
+    #     vs odd points); both directions shown so neither half is privileged. Also reports the 5-fold dR2 next to
+    #     the 2-fold (odd/even) dR2 as a convergence check (idea 2) -- that statistic IS quadratic-based, unlike
+    #     this figure's curves.
+    fig, axd = six_panel_figure(figsize_per_panel=(3.3, 3.0), sharex=True, sharey=True)
     for g, ax in axd.items():
         sub = vc[vc["group"] == group_key(g)]
-        Cg = sub[CURVE].to_numpy(float)
-        Cg = Cg[np.isfinite(Cg).all(1)]
-        if not len(Cg):
+        ax.axhline(0, color="k", lw=0.5)
+        if sub.empty:
             ax.text(0.5, 0.5, "no cells", transform=ax.transAxes, ha="center", color="grey")
             continue
-        order = np.lexsort((-Cg.max(1), Cg.argmax(1)))
-        im = ax.imshow(Cg[order], aspect="auto", cmap="RdBu_r", vmin=-vmax, vmax=vmax,
-                       extent=[0, 1, len(Cg), 0], interpolation="nearest")
+        for fit_cols, pt_cols, fit_lab, pt_lab, color in (
+                (HALF2, HALF1, "odd trials' own curve", "even points", "#d62728"),
+                (HALF1, HALF2, "even trials' own curve", "odd points", "#1f77b4")):
+            fit_m = np.nanmean(sub[fit_cols].to_numpy(float), 0)
+            pt_m = np.nanmean(sub[pt_cols].to_numpy(float), 0)
+            pt_sem = (np.nanstd(sub[pt_cols].to_numpy(float), 0)
+                      / np.sqrt(np.isfinite(sub[pt_cols].to_numpy(float)).sum(0)))
+            ax.plot(XB, fit_m, color=color, lw=2.0, label=fit_lab)
+            ax.errorbar(XB, pt_m, yerr=pt_sem, color=color, marker="o", markersize=4, lw=0, elinewidth=1.1,
+                        capsize=2, label=pt_lab)
+        r2_2f, r2_5f = sub["dR2"].mean(), sub["dR2_5fold"].mean()
+        ax.text(0.03, 0.97, f"n={len(sub)} cells\ndR2 2-fold {r2_2f:+.3f} | 5-fold {r2_5f:+.3f}",
+                transform=ax.transAxes, fontsize=7, va="top")
+        ax.set_xlabel("pupil percentile (within session)", fontsize=8)
+        ax.set_ylabel("activity (SD)", fontsize=8)
+    ax.legend(fontsize=6.5, frameon=False, loc="lower right")
+    fig.suptitle("Each half's own tuning curve (no shape assumed), shown against the OTHER half's own points "
+                 "(mean over cells); dR2 (quadratic model): 2-fold (odd/even, headline) vs 5-fold (supplementary) "
+                 "agreement", y=1.0, fontsize=9.5)
+    fig.tight_layout()
+    save_fig(fig, figdir, f"1c_cv_fit_vs_heldout_points_{tag}")
+    plt.close(fig)
+
+    # 2. heatmap of every cell's curve -- idea 4: cells SORTED by their peak bin on the ODD-trial curve (h2),
+    #    values DISPLAYED are the EVEN-trial curve (h1): the sort order and the colors shown never come from the
+    #    same trials, so a heatmap that "looks structured" is not sorting noise to look structured.
+    fig, axd = six_panel_figure(figsize_per_panel=(3.3, 3.2), sharex=True, sharey=False)
+    allH = vc[HALF1].to_numpy(float)
+    vmax = float(np.nanpercentile(np.abs(allH), 99)) or 1.0       # one symmetric colour scale for all groups
+    for g, ax in axd.items():
+        sub = vc[vc["group"] == group_key(g)]
+        H2g = sub[HALF2].to_numpy(float)    # ODD-trial curve: used ONLY to pick the sort order
+        H1g = sub[HALF1].to_numpy(float)    # EVEN-trial curve: what is actually DISPLAYED
+        keep = np.isfinite(H2g).all(1) & np.isfinite(H1g).all(1)
+        H2g, H1g = H2g[keep], H1g[keep]
+        if not len(H1g):
+            ax.text(0.5, 0.5, "no cells", transform=ax.transAxes, ha="center", color="grey")
+            continue
+        order = np.lexsort((-H2g.max(1), H2g.argmax(1)))     # sort by the ODD-trial peak bin
+        im = ax.imshow(H1g[order], aspect="auto", cmap="RdBu_r", vmin=-vmax, vmax=vmax,
+                       extent=[0, 1, len(H1g), 0], interpolation="nearest")
         ax.set_xlabel("pupil percentile", fontsize=8)
-        ax.set_ylabel("cells (sorted by peak bin)", fontsize=8)
-    fig.suptitle("Every cell's tuning curve to pupil (rows = cells)", y=1.0)
+        ax.set_ylabel("cells (sorted by ODD-trial peak)", fontsize=8)
+    fig.suptitle("Every cell's EVEN-trial tuning curve (rows = cells), sorted by the ODD-trial peak bin "
+                 "(idea 4: never sort and display the same trials)", y=1.0, fontsize=9.5)
     fig.tight_layout(rect=[0, 0, 0.92, 0.97])
     cax = fig.add_axes([0.94, 0.25, 0.012, 0.5])
-    fig.colorbar(im, cax=cax, label="activity (SD)")
+    fig.colorbar(im, cax=cax, label="activity (SD), even trials")
     save_fig(fig, figdir, f"2_curve_heatmaps_{tag}")
     plt.close(fig)
 

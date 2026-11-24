@@ -1,0 +1,33 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+Targets: trial-mean runspeed, pupil_area, motionenergy, lick in each window, 3 quantile bins; axes ['position', 'time']; binnings ['windows', 'fixed', 'sliding']
+22 sessions (cells: 2a + 2b inclusion; pairs sampled per session)
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+Traceback (most recent call last):
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/1_scripts/3l_pair_behavior_pid.py", line 39, in <module>
+    run(__file__, stem="behavior_pid", store_name="behavior_pid", version="3l-v1", what="Pairwise PID",
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        components=[("redundancy", "tab:purple"), ("unique1", "tab:blue"), ("unique2", "tab:cyan"), ("synergy", "tab:red")],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        total="I12", compare=["I12", "redundancy", "synergy"], ylabel="information (bits)", compute=compute,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        store_values=STORE_VALUES, add_args=add_args,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        key_extra=lambda a: dict(pid_shuffles=a.pid_shuffles, redundancy=a.redundancy))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/1_scripts/utils/infotheory/behavior_pair_runner.py", line 136, in run
+    records = run_sessions(
+        inp.session_ids, process_session, [PROTOCOL], paths.store, store_name, key_params=key,
+        load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
+        cells_by_session=inp.cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
+        verbose=JOBLIB_VERBOSE, extra_key_by_session=inp.stamps, flatten=True)
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/1_scripts/utils/infotheory/session_jobs.py", line 71, in run_sessions
+    Parallel(n_jobs=n_jobs, backend="loky", verbose=verbose)(delayed(_one)(sid) for sid in todo)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/parallel.py", line 2056, in __call__
+    self._print(f"Using backend {backend_name} with {n_jobs} concurrent workers.")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/parallel.py", line 1583, in _print
+    writer(f"[{self}]: {msg}\n")
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 122] Disk quota exceeded

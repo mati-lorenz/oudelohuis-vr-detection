@@ -1,0 +1,107 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+22 sessions, 22619 included cells
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/externals/loky/process_executor.py:787: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed: 10.1min
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed: 16.7min remaining:  3.7min
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed: 18.8min finished
+
+469497 pairwise linear fits, 67857 multivariate fits (engaged trials)
+Agreement with 2c: 469497/469497 pairs found in 2c's table; 100.0% use exactly the same number of trials
+
+Share of (cell, window) pairs where a linear fit misses >20% of the MI (candidates for 2e), mean over sessions:
+predictor
+cur_lick                             0.886
+cur_runspeed                         0.848
+choice                               0.786
+cur_motionenergy                     0.777
+correct                              0.763
+stim__pct_0-25_25-50_50-75_75-100    0.697
+cur_pupil_area                       0.632
+
+542856 (session, cell, window, analysis) ROC rows; 22619 cells
+
+Fraction of cells significant (chance = 5%), mean over sessions of the per-session fraction:
+group                        V1_lab  V1_unl  PM_lab  PM_unl  AL_unl  RSP_unl  PMdeep_lab  PMdeep_unl
+window   analysis                                                                                   
+pre_stim choice                0.07    0.06    0.08    0.07    0.05     0.06        0.08        0.07
+         choice [tmpl]         0.07    0.06    0.02    0.08    0.07     0.06        0.07        0.08
+         choice|stim           0.08    0.06    0.11    0.08    0.06     0.06        0.05        0.06
+         choice|stim [tmpl]    0.04    0.06    0.04    0.06    0.06     0.06        0.05        0.06
+         stim                  0.04    0.05    0.03    0.05    0.06     0.05        0.04        0.05
+         stim [tmpl]           0.04    0.05    0.08    0.06    0.05     0.04        0.05        0.05
+         stim|choice           0.03    0.05    0.03    0.04    0.05     0.05        0.04        0.05
+         stim|choice [tmpl]    0.03    0.05    0.05    0.05    0.05     0.05        0.07        0.05
+reward   choice                0.31    0.22    0.39    0.30    0.28     0.25        0.35        0.34
+         choice [tmpl]         0.31    0.23    0.42    0.32    0.27     0.27        0.39        0.35
+         choice|stim           0.17    0.11    0.06    0.14    0.12     0.11        0.15        0.14
+         choice|stim [tmpl]    0.11    0.07    0.07    0.10    0.10     0.10        0.11        0.10
+         stim                  0.19    0.15    0.22    0.19    0.15     0.13        0.22        0.21
+         stim [tmpl]           0.21    0.17    0.16    0.19    0.17     0.14        0.18        0.21
+         stim|choice           0.13    0.11    0.21    0.12    0.08     0.08        0.14        0.14
+         stim|choice [tmpl]    0.11    0.11    0.05    0.11    0.11     0.08        0.13        0.12
+stim     choice                0.27    0.26    0.27    0.28    0.24     0.25        0.35        0.32
+         choice [tmpl]         0.25    0.25    0.31    0.31    0.23     0.24        0.33        0.30
+         choice|stim           0.06    0.06    0.08    0.07    0.09     0.09        0.11        0.09
+         choice|stim [tmpl]    0.05    0.06    0.13    0.06    0.07     0.06        0.07        0.08
+         stim                  0.31    0.28    0.48    0.31    0.20     0.18        0.37        0.34
+         stim [tmpl]           0.31    0.28    0.49    0.31    0.19     0.17        0.37        0.34
+         stim|choice           0.25    0.22    0.30    0.26    0.14     0.13        0.30        0.26
+         stim|choice [tmpl]    0.20    0.21    0.26    0.23    0.14     0.12        0.31        0.25
+
+Disengaged-tail test: 18/22 sessions have a tail (>= 90% disengaged, >= 20 trials)
+  pairwise r^2, tail sessions only (mean over sessions):
+condition                                   disengaged  engaged_matched
+window   predictor                                                     
+pre_stim choice                                  0.012            0.012
+         correct                                 0.012            0.012
+         cur_lick                                0.012            0.013
+         cur_motionenergy                        0.017            0.013
+         cur_pupil_area                          0.019            0.019
+         cur_runspeed                            0.027            0.025
+         stim__pct_0-25_25-50_50-75_75-100       0.011            0.011
+reward   choice                                  0.013            0.036
+         correct                                 0.014            0.026
+         cur_lick                                0.013            0.032
+         cur_motionenergy                        0.017            0.022
+         cur_pupil_area                          0.019            0.020
+         cur_runspeed                            0.034            0.044
+         stim__pct_0-25_25-50_50-75_75-100       0.021            0.028
+stim     choice                                  0.015            0.026
+         correct                                 0.018            0.019
+         cur_lick                                0.011            0.020
+         cur_motionenergy                        0.017            0.017
+         cur_pupil_area                          0.020            0.019
+         cur_runspeed                            0.033            0.032
+         stim__pct_0-25_25-50_50-75_75-100       0.039            0.040
+  ROC fraction significant, tail sessions only (mean over sessions; NaN = not testable):
+condition                    disengaged  engaged_matched
+window   analysis                                       
+pre_stim choice                   0.050            0.062
+         choice [tmpl]            0.061            0.070
+         choice|stim              0.046            0.060
+         choice|stim [tmpl]       0.062            0.071
+         stim                     0.053            0.057
+         stim [tmpl]              0.055            0.056
+         stim|choice              0.054            0.058
+         stim|choice [tmpl]       0.055            0.059
+reward   choice                   0.074            0.190
+         choice [tmpl]            0.079            0.212
+         choice|stim              0.058            0.087
+         choice|stim [tmpl]       0.069            0.083
+         stim                     0.090            0.114
+         stim [tmpl]              0.097            0.129
+         stim|choice              0.088            0.085
+         stim|choice [tmpl]       0.096            0.085
+stim     choice                   0.077            0.189
+         choice [tmpl]            0.082            0.192
+         choice|stim              0.051            0.065
+         choice|stim [tmpl]       0.066            0.065
+         stim                     0.168            0.178
+         stim [tmpl]              0.166            0.185
+         stim|choice              0.162            0.136
+         stim|choice [tmpl]       0.165            0.136
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2d_linear_encod/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2d_linear_encod/out/figures

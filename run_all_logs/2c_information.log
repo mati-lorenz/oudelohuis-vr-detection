@@ -1,0 +1,114 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+Stimulus predictors:
+  pct_0-25_25-50_50-75_75-100: curve_pct, zero_separate=False, edges=[0.25, 0.5, 0.75] -> bins ['0-25%', '25-50%', '50-75%', '75-100%']
+Pooled-frames MI: 8 quantile bins, >= 300 frames per pair, null = circular shift of the cell trace by >= 10 windows' worth of frames
+Binning (shared with 2d/3x): 3 quantile bins, >= 3 trials per target bin, >= 20 trials per pair
+22 sessions, 22619 included cells (passing 2a proximity AND 2b QC)
+
+Cell yield by group, 1b-included sessions only (13061 cells of sessions excluded by 1b are not counted); sessions with >=1 / >=5 analysed cells. Independent of --max-cells.
+            1_recorded  2_proximity  3_depth_rule  4_qc_pass_(analysed)  n_sessions_any  n_sessions_ge_min
+area_label                                                                                                
+AL_unl            5065         5065          4420                  4416              20                 20
+PM_lab            1324         1324          1292                  1292              21                 21
+PM_unl           12360         6265          6173                  6169              21                 21
+RSP_unl           4770         4770          4699                  4698              21                 21
+V1_lab             681          681           676                   675              21                 20
+V1_unl           14735         5454          5379                  5369              21                 21
+0/22 sessions cached (max 200 pairs per pair of groups); computing 22 (n_jobs=5, one session in RAM per worker)
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/externals/loky/process_executor.py:787: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed: 38.8min
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed: 61.2min remaining: 13.6min
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed: 70.0min finished
+
+735423 (session, window, cell, predictor) MI values (engaged trials)
+Pooled-frames MI: median frames per (cell, behavior) pair by window = {'pre_stim': 1361, 'reward': 3291, 'stim': 1401} -> ~{'pre_stim': 21, 'reward': 51, 'stim': 22} frames per joint bin (8x8) if uniform
+
+Strongest (window, predictor) by fraction of significant cells (p<0.05; mean over sessions of the per-session fraction):
+window    predictor                        
+reward    cur_runspeed                         0.861
+          choice                               0.810
+          cur_lick                             0.794
+          correct                              0.643
+          cur_motionenergy                     0.597
+          stim__pct_0-25_25-50_50-75_75-100    0.524
+stim      cur_runspeed                         0.493
+reward    cur_runspeed__frames                 0.454
+pre_stim  cur_runspeed                         0.402
+reward    cur_motionenergy__frames             0.367
+
+Confound check: cur_runspeed's significant fraction vs choice / correct (similar magnitudes suggest the frame-count/precision confound, see docstring):
+predictor  cur_runspeed  choice  correct
+window                                  
+pre_stim          0.402   0.058    0.051
+reward            0.861   0.810    0.643
+stim              0.493   0.285    0.185
+
+401640 (session, window, cell, predictor) pairs with MI and MI | running speed (same trials; running speed itself excluded)
+Fraction of cells significant, plain vs given running speed (mean over sessions):
+                                      MI  MI | runspeed
+predictor                                              
+choice                             0.384          0.149
+correct                            0.292          0.103
+cur_lick                           0.328          0.071
+cur_motionenergy                   0.308          0.114
+cur_pupil_area                     0.184          0.105
+stim__pct_0-25_25-50_50-75_75-100  0.269          0.108
+
+Information between areas, mean bias-corrected MI (bits) over sessions; diagonal = within area:
+  I(X;Y)
+window           pre_stim  reward    stim
+area_pair                                
+V1 x V1            0.0059  0.0205  0.0087
+V1 x PM            0.0056  0.0211  0.0093
+V1 x PMdeep        0.0054  0.0200  0.0088
+V1 x AL            0.0053  0.0222  0.0073
+V1 x RSP           0.0050  0.0191  0.0069
+PM x PM            0.0065  0.0236  0.0123
+PM x PMdeep        0.0062  0.0217  0.0101
+PM x AL            0.0055  0.0225  0.0077
+PM x RSP           0.0057  0.0201  0.0081
+PMdeep x PMdeep    0.0074  0.0230  0.0116
+PMdeep x AL        0.0057  0.0221  0.0077
+PMdeep x RSP       0.0057  0.0198  0.0079
+AL x AL            0.0057  0.0244  0.0081
+AL x RSP           0.0050  0.0202  0.0065
+RSP x RSP          0.0056  0.0196  0.0076
+
+Labeled vs unlabeled (paired per session): 243 comparisons; Holm-significant (p<0.05):
+       family   window               comparison area  n_units  mean_lab  mean_unl  p_wilcoxon  p_holm
+      cell_mi pre_stim     cur_runspeed__frames   V1       20    0.0108    0.0074      0.0005  0.0150
+      cell_mi pre_stim cur_motionenergy__frames   V1       19    0.0084    0.0056      0.0003  0.0085
+cell_frac_sig pre_stim cur_motionenergy__frames   V1       19    0.2042    0.1388      0.0012  0.0375
+      cell_mi     stim         cur_motionenergy   V1       19    0.0121    0.0101      0.0010  0.0318
+      cell_mi     stim cur_motionenergy__frames   V1       19    0.0094    0.0068      0.0012  0.0375
+
+Disengaged-tail test: 18/22 sessions have a tail (>= 90% disengaged, >= 20 trials, and as many engaged trials before it)
+  per-predictor summary, tail sessions only (mean over sessions):
+                                           mean_mi_bits                 frac_significant                
+condition                                    disengaged engaged_matched       disengaged engaged_matched
+window   predictor                                                                                      
+pre_stim choice                                   0.007           0.006            0.032           0.050
+         correct                                  0.006           0.006            0.044           0.047
+         cur_lick                                 0.003           0.003            0.024           0.007
+         cur_motionenergy                         0.017           0.013            0.136           0.088
+         cur_pupil_area                           0.016           0.012            0.099           0.088
+         cur_runspeed                             0.040           0.028            0.342           0.250
+         stim__pct_0-25_25-50_50-75_75-100        0.005           0.006            0.036           0.040
+reward   choice                                   0.016           0.086            0.146           0.701
+         correct                                  0.010           0.044            0.079           0.521
+         cur_lick                                 0.003           0.073            0.011           0.660
+         cur_motionenergy                         0.030           0.053            0.263           0.472
+         cur_pupil_area                           0.018           0.023            0.135           0.203
+         cur_runspeed                             0.075           0.113            0.552           0.731
+         stim__pct_0-25_25-50_50-75_75-100        0.013           0.034            0.141           0.381
+stim     choice                                   0.009           0.019            0.047           0.203
+         correct                                  0.012           0.011            0.109           0.123
+         cur_lick                                 0.002           0.007            0.013           0.094
+         cur_motionenergy                         0.018           0.015            0.131           0.133
+         cur_pupil_area                           0.018           0.013            0.118           0.090
+         cur_runspeed                             0.044           0.039            0.379           0.337
+         stim__pct_0-25_25-50_50-75_75-100        0.019           0.021            0.148           0.170
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2c_information/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2c_information/out/figures

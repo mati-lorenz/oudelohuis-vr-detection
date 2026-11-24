@@ -6,7 +6,8 @@ Shared by 3a (pair correlations), 3b (information breakdown) and 3c (PID): ONE d
 analysed and which TRIALS enter each (pair, target, window), so the three scripts agree before bias correction
 (project rule 4, project_config.py).
 
-PAIRS      3a samples them ONCE per session (not per window / target), inside each (area, label) group only, and writes
+PAIRS      3a samples them ONCE per session (not per window / target), inside each PROJECT GROUP only (the 8 groups, deep PM
+           separate; max 200 per group, project_config.MAX_PAIRS_PER_SESSION), and writes
            them to out/pair_list.csv with a random `pair_rank` within the group. 3b and 3c READ that file (Rule #1: other
            steps' out/) and use the pairs with pair_rank < --max-pairs, so a smaller budget is always a subset of the
            same pairs and every script describes the same pairs.
@@ -23,10 +24,9 @@ import pandas as pd
 
 from . import project_config as cfg
 from . import cell_tables as ct
-from .celldata_utils import get_area_label, sample_pairs_within_groups, LABEL_SPLIT_AREAS
 from .stim_binning import CHOICE_TARGET
 
-PAIR_COLUMNS = ["session_id", "animal_id", "roi_name", "labeled_grouped", "cell_i", "cell_j", "pair_rank"]
+PAIR_COLUMNS = ["session_id", "animal_id", "roi_name", "labeled_grouped", "depth_class", "cell_i", "cell_j", "pair_rank"]
 
 
 def target_column(target: str) -> str:
@@ -38,21 +38,42 @@ def add_target_columns(table: pd.DataFrame, strategies) -> pd.DataFrame:
     return ct.add_stimulus_columns(table, strategies)
 
 
-def sample_session_pairs(celldata: pd.DataFrame, session_id: str, rng: np.random.Generator, max_pairs: int) -> pd.DataFrame:
-    """Pairs of the (already filtered) cells of one session, within each (area, label) group, `max_pairs` per group,
-    with a random `pair_rank` inside the group (0 = first)."""
+def sample_session_pairs(celldata: pd.DataFrame, session_id: str, rng: np.random.Generator, max_pairs: int,
+                         group_of: dict | None = None) -> pd.DataFrame:
+    """Pairs of the (already filtered) cells of one session, WITHIN each project group (the 8 groups when the depth rule is
+    on: V1-lab, V1-unl, PM-lab, PM-unl, AL, RSP, deep PM-lab, deep PM-unl), `max_pairs` per group, with a random `pair_rank`
+    inside the group (0 = first). Both cells of a pair are in the same group, so the pair's group is unambiguous: the table has
+    the columns `roi_name` (the real area, 'PM' for deep PM), `labeled_grouped` and `depth_class` ('shallow' | 'deep_pm'),
+    which add_six_group_column turns back into the group.
+    group_of = {cell_id: group key} (e.g. from neural_encoding.load_cell_inclusion(...)['group'], i.e. 2a's classification);
+    without it the groups are computed from the celldata (depth-corrected) here."""
+    from .groups import add_six_group_column, group_key
+    from .celldata_utils import SIX_GROUP_ORDER, apply_depth_correction
     celldata = celldata.reset_index(drop=True)
-    area, label, _ = get_area_label(celldata, label_split_areas=LABEL_SPLIT_AREAS)
-    pairs, groups = sample_pairs_within_groups(area, label, max_pairs_per_group=max_pairs, rng=rng)
-    if not pairs:
+    ids = celldata["cell_id"].to_numpy()
+    if group_of is not None:
+        grp = np.array([group_of.get(c, "excluded") for c in ids], dtype=object)
+    else:
+        grp = add_six_group_column(apply_depth_correction(celldata, session_id).reset_index(drop=True),
+                                   area_var="roi_name", label_var="labeled")["group"].to_numpy(dtype=object)
+    rows = []
+    for g in SIX_GROUP_ORDER:
+        key = group_key(g)
+        idx = np.flatnonzero(grp == key)
+        if len(idx) < 2:
+            continue
+        ii, jj = np.triu_indices(len(idx), k=1)
+        if len(ii) > max_pairs:
+            pick = rng.choice(len(ii), size=max_pairs, replace=False)
+            ii, jj = ii[pick], jj[pick]
+        rank = rng.permutation(len(ii))
+        area = "PM" if g[0] == "PMdeep" else g[0]
+        for k in range(len(ii)):
+            rows.append((session_id, session_id.split("_")[0], area, g[1], "deep_pm" if g[0] == "PMdeep" else "shallow",
+                         ids[idx[ii[k]]], ids[idx[jj[k]]], int(rank[k])))
+    if not rows:
         return pd.DataFrame(columns=PAIR_COLUMNS)
-    df = pd.DataFrame({"session_id": session_id, "animal_id": session_id.split("_")[0],
-                       "roi_name": [g[0] for g in groups], "labeled_grouped": [g[1] for g in groups],
-                       "cell_i": [celldata["cell_id"].iloc[i] for i, _ in pairs],
-                       "cell_j": [celldata["cell_id"].iloc[j] for _, j in pairs]})
-    df["pair_rank"] = df.groupby(["roi_name", "labeled_grouped"])["cell_i"].transform(
-        lambda s: rng.permutation(len(s)))
-    return df[PAIR_COLUMNS]
+    return pd.DataFrame(rows, columns=PAIR_COLUMNS)
 
 
 def pair_trials(table: pd.DataFrame, target: str, cell_i, cell_j, min_trials: int = cfg.MIN_TRIALS_ANALYSIS,

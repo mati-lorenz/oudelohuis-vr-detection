@@ -1,0 +1,46 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+22 sessions, 22619 included cells
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed: 30.4min
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/externals/loky/process_executor.py:787: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed: 53.7min remaining: 11.9min
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed: 59.7min finished
+156499 (session, cell, variable) rows; 22619 cells in 22 sessions
+
+Behavior classes (mean fraction of cells per group, mean over sessions; classified on |position correlations):
+            runspeed  pupil_area  lick  mixed  unclassified
+group                                                      
+V1_lab          0.30        0.04  0.10   0.27          0.29
+V1_unl          0.25        0.04  0.09   0.30          0.32
+PM_lab          0.23        0.04  0.21   0.26          0.26
+PM_unl          0.25        0.06  0.12   0.28          0.29
+AL_unl          0.29        0.04  0.11   0.28          0.27
+RSP_unl         0.24        0.06  0.12   0.32          0.27
+PMdeep_lab      0.26        0.04  0.12   0.39          0.20
+PMdeep_unl      0.28        0.05  0.12   0.33          0.22
+
+Fraction of cells significantly correlated (chance = 5%), mean over sessions:
+group                V1_lab  V1_unl  PM_lab  PM_unl  AL_unl  RSP_unl  PMdeep_lab  PMdeep_unl
+variable                                                                                    
+runspeed               0.67    0.65    0.61    0.64    0.69     0.67        0.76        0.72
+pupil_area             0.35    0.30    0.23    0.34    0.30     0.35        0.37        0.36
+lick                   0.56    0.50    0.62    0.56    0.56     0.57        0.65        0.61
+position               0.36    0.30    0.37    0.34    0.29     0.31        0.45        0.40
+runspeed|position      0.57    0.54    0.43    0.52    0.58     0.55        0.66        0.61
+pupil_area|position    0.25    0.24    0.17    0.30    0.25     0.29        0.32        0.30
+lick|position          0.46    0.36    0.52    0.43    0.43     0.43        0.53        0.48
+
+Mean r:
+group                V1_lab  V1_unl  PM_lab  PM_unl  AL_unl  RSP_unl  PMdeep_lab  PMdeep_unl
+variable                                                                                    
+runspeed              0.015  -0.000  -0.001   0.026   0.017    0.029       0.017       0.009
+pupil_area            0.025   0.015   0.025   0.031   0.016    0.031       0.039       0.031
+lick                 -0.008  -0.002   0.002  -0.014  -0.012   -0.019      -0.020      -0.014
+position              0.001   0.006  -0.007  -0.006  -0.005   -0.011      -0.002      -0.002
+runspeed|position     0.009  -0.007  -0.004   0.016   0.009    0.020       0.009       0.002
+pupil_area|position   0.023   0.013   0.025   0.029   0.016    0.030       0.037       0.028
+lick|position        -0.013  -0.005   0.007  -0.015  -0.014   -0.018      -0.022      -0.016
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2g_behavior_correlation/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2g_behavior_correlation/out/figures

@@ -52,6 +52,19 @@ PART 3 -- outcome analysis (sections 14-20), after van Vugt et al. 2018 (Science
     MIN_TRIALS_COND trials are blank); choice probability and miss fraction mix stimulus-evoked and lick/movement-related
     activity (the lick itself follows stimulus onset on hits). --no-outcome skips this part.
 
+PART 4 -- distribution of the single-cell RESPONSE (sections 21-23), to choose the response binning
+    The quantity that 2c-3x cut into RESPONSE_BINS quantile bins: the mean deconvolved activity of a cell in a position window of an
+    ENGAGED trial (pre_stim -30..-10, stim 0..20, reward 25..45 cm), for the cells that pass 2a + QC in 1b-included sessions.
+      21 histograms of the raw response (density; the share of exactly-zero responses is the grey bar at 0; vertical lines =
+         the pooled tertiles), one row per area (V1, PM, deep PM, AL, RSP) and one for ALL cells, one column per window;
+         21a linear y axis, 21b log y axis (shows the tail)
+      22 the same after dividing every cell's responses by its own mean in that window (cells are binned one by one, so this is
+         closer to what the binning sees)
+      23 per cell: fraction of exactly-zero trials (a tertile binning merges bins when it exceeds 1/3 or 2/3) and the number of
+         DISTINCT response bins the cell actually gets with RESPONSE_BINS (digitize_quantile)
+    Tables: response_distribution_summary.csv (per area x window: quantiles, share of zeros), response_bin_occupancy_by_area.csv.
+    Pooling is over trials and cells (no unit-level aggregate: a distribution, not a comparison). --no-response-dist skips it.
+
 Project-wide rules (infotheory/project_config.py) -- what applies here
     * selection : --animals / --sessions restrict the sessions; a restricted run writes to out/selection/<tag>/ and
                   NEVER overwrites qc_per_cell.csv in out/ (read by every later step). QC is per cell, so selecting
@@ -84,9 +97,10 @@ Outputs
             choice_probability_by_group[__<aggregate>].csv, choice_probability_trace[__<aggregate>].csv,
             prestim_marker_auroc_per_session.csv, prestim_marker_auroc[__<aggregate>].csv,
             hit_probability_by_prestim_marker[__<aggregate>].csv     (part 3)
-            figures/*.png                      1-9 statistics/QC; 10-13 raster; 14-20 outcome analysis
+            response_distribution_summary.csv, response_bin_occupancy_by_area.csv   (part 4)
+            figures/*.png                      1-9 statistics/QC; 10-13 raster; 14-20 outcome analysis; 21-23 response distribution
     out/selection/<tag>/...                    the same for a restricted run
-    store/  activity_session_<hash>.pkl, raster_session_<hash>.pkl, outcome_session_<hash>.pkl   per-session caches
+    store/  activity_session_<hash>.pkl, raster_session_<hash>.pkl, outcome_session_<hash>.pkl, response_dist_<hash>.pkl   per-session caches
 """
 from __future__ import annotations
 
@@ -161,11 +175,21 @@ N_MARKER_BINS = 3                    # prestimulus-variance bins for hit probabi
 MIN_TRIALS_PER_MARKER_BIN = 5
 OUTCOME_COLORS = {"HIT": "#2ca02c", "MISS": "#d62728", "CR": "black", "FA": "#1f77b4"}
 
+# ---- part 4: distribution of the single-cell response -----------------------------------------------------
+RUN_RESPONSE_DIST = True
+RESP_WINDOWS = {"pre_stim": (-30.0, -10.0), "stim": (0.0, 20.0), "reward": (25.0, 45.0)}   # cm relative to stimStart (as 2c)
+RESP_HIST_BINS = 60                  # linear histogram bins (range 0 .. RESP_HIST_QMAX quantile of the pooled non-zero values)
+RESP_HIST_QMAX = 0.995
+RESP_NORM_MAX = 6.0                  # x range of the per-cell-mean-normalised histogram
+ZERO_EPS = 1e-9                      # a window mean <= this counts as "exactly zero"
+RESP_ROWS = [("V1", ["V1"]), ("PM", ["PM"]), ("PM (deep)", ["PMdeep"]), ("AL", ["AL"]), ("RSP", ["RSP"]), ("all cells", None)]
+
 parser = argparse.ArgumentParser()
 add_scope_args(parser)
 parser.add_argument("--sort-by", default=SORT_BY, choices=sorted(rs.SORTERS), help="raster sorting (no recompute)")
 parser.add_argument("--no-raster", action="store_true", help="skip part 2 (raster)")
 parser.add_argument("--no-outcome", action="store_true", help="skip part 3 (outcome analysis)")
+parser.add_argument("--no-response-dist", action="store_true", help="skip part 4 (distribution of the single-cell response)")
 parser.add_argument("--n-perm-outcome", type=int, default=200, help="permutations for the per-cell choice probability")
 args = parser.parse_args()
 scope = scope_from_args(args)
@@ -1246,6 +1270,208 @@ if ri is not None and want_outcome:
             fig.tight_layout()
             save_fig(fig, figdir, "20_hit_probability_by_prestim_marker")
             plt.close(fig)
+
+
+# =====================================================================================================
+# PART 4 -- DISTRIBUTION OF THE SINGLE-CELL RESPONSE (to choose the response binning of 2c-3x)
+# =====================================================================================================
+if not args.no_response_dist and RUN_RESPONSE_DIST:
+    from infotheory.neural_encoding import build_session_tables
+    from infotheory.pair_information import digitize_quantile
+    ri4 = ri if ri is not None else raster_inputs()
+    if ri4 is None:
+        print("\nResponse distribution skipped (missing inputs).")
+    else:
+        rd_ids, rd_cells, rd_cd, rd_mu_sigma = ri4
+        RWIN = list(RESP_WINDOWS)
+
+        def process_response(ses, seed):
+            """Window-mean response of every included cell on every engaged trial (float32, trials x cells) per window."""
+            tabs = build_session_tables(ses, rd_mu_sigma, RESP_WINDOWS, included_cell_ids=set(rd_cells[ses.session_id]))
+            if not tabs:
+                return None
+            out = dict(session_id=ses.session_id, animal_id=ses.animal_id, cell_ids=None, X={})
+            for w, t in tabs.items():
+                cids = [c for c in rd_cells[ses.session_id] if c in t.columns]
+                if not cids:
+                    continue
+                out["X"][w] = t[cids].to_numpy(np.float32)
+                out["cell_ids"] = out["cell_ids"] or {}
+                out["cell_ids"][w] = cids
+            return out if out["X"] else None
+
+        resp = run_sessions(
+            rd_ids, process_response, [PROTOCOL], paths.store, "response_dist",
+            key_params=dict(version="2b-resp-v1", windows=RESP_WINDOWS), 
+            load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
+            cells_by_session=rd_cells, n_jobs=N_JOBS, recompute=args.recompute, verbose=JOBLIB_VERBOSE,
+            extra_key_by_session={sid: stamps[sid] for sid in rd_ids}, flatten=False)
+        resp = [r for r in resp if r is not None]
+        if not resp:
+            print("Response distribution skipped: no session produced window means.")
+        else:
+            meta4 = add_six_group_column(rd_cd[["session_id", "cell_id"] + group_meta_columns(rd_cd)])
+            gmap = dict(zip(zip(meta4["session_id"], meta4["cell_id"]), meta4["group"]))
+            # per window: values (trials x cells columns stacked cell by cell), cell index, group, one list entry per cell
+            cell_vals = {w: [] for w in RWIN}      # list of (group_key, 1-D finite values of ONE cell)
+            for r in resp:
+                for w, X in r["X"].items():
+                    for j, cid in enumerate(r["cell_ids"][w]):
+                        v = X[:, j]
+                        v = v[np.isfinite(v)]
+                        if len(v) >= 3:
+                            cell_vals[w].append((gmap.get((r["session_id"], cid), "excluded"), v.astype(float)))
+            del resp
+
+            def rows_of(w, keys):
+                sel = [v for g, v in cell_vals[w] if keys is None or g.split("_")[0] in keys]
+                return sel
+
+            def cat(sel):
+                return np.concatenate(sel) if sel else np.array([])
+
+            # ---- summary table + bin occupancy
+            R = cfg.RESPONSE_BINS
+            srows, orows = [], []
+            for lab, keys in RESP_ROWS:
+                for w in RWIN:
+                    sel = rows_of(w, keys)
+                    x = cat(sel)
+                    if not len(x):
+                        continue
+                    nz = x > ZERO_EPS
+                    q = np.quantile(x, [0.25, 0.5, 0.75, 0.9, 0.95, 0.99])
+                    srows.append(dict(area=lab, window=w, n_cells=len(sel), n_values=len(x), frac_zero=float(1 - nz.mean()),
+                                      mean=float(x.mean()), q25=q[0], median=q[1], q75=q[2], q90=q[3], q95=q[4], q99=q[5],
+                                      max=float(x.max()),
+                                      median_of_cell_frac_zero=float(np.median([np.mean(v <= ZERO_EPS) for v in sel]))))
+                    nb = np.array([len(np.unique(digitize_quantile(v, R))) for v in sel])
+                    orow = dict(area=lab, window=w, n_cells=len(sel))
+                    for k in range(1, R + 1):
+                        orow[f"frac_cells_{k}_bins"] = float(np.mean(nb == k))
+                    orows.append(orow)
+            summ = pd.DataFrame(srows)
+            summ.to_csv(table_dir / "response_distribution_summary.csv", index=False)
+            pd.DataFrame(orows).to_csv(table_dir / "response_bin_occupancy_by_area.csv", index=False)
+            print(f"\nResponse distribution: {len(cell_vals[RWIN[0]])} cells ({RWIN[0]} window). "
+                  f"Share of exactly-zero window means, and cells that get fewer than {R} response bins:")
+            occ = pd.DataFrame(orows)
+            occ["frac_cells_below_full"] = 1 - occ[f"frac_cells_{R}_bins"]
+            print(summ.merge(occ[["area", "window", "frac_cells_below_full"]], on=["area", "window"])[
+                ["area", "window", "n_cells", "frac_zero", "median", "q95", "frac_cells_below_full"]].round(3).to_string(index=False))
+
+            row_color = {"V1": "#0d3d61", "PM": "#a33f00", "PM (deep)": "#5b1a8f", "AL": "#2ca02c", "RSP": "#d62728",
+                         "all cells": "k"}
+
+            def hist_panel(ax, x, color, xmax, log, bins=RESP_HIST_BINS, tert=True):
+                """Density (over ALL values, zeros included) of the non-zero part + a grey bar for the exactly-zero share."""
+                n = len(x)
+                if not n:
+                    ax.text(0.5, 0.5, "no cells", transform=ax.transAxes, ha="center")
+                    return
+                edges = np.linspace(0, xmax, bins + 1)
+                bw = edges[1] - edges[0]
+                nzv = x[x > ZERO_EPS]
+                h = np.histogram(nzv, edges)[0] / n / bw      # values above xmax are not drawn (no pile-up in the last bin)
+                ax.bar(edges[:-1], h, width=bw, align="edge", color=color, alpha=0.85, lw=0)
+                f0 = 1 - len(nzv) / n
+                ax.bar([-bw], [f0 / bw], width=bw, align="edge", color="#888888", hatch="///", edgecolor="white", lw=0)
+                if tert:
+                    for qv in np.quantile(x, [1 / 3, 2 / 3]):
+                        ax.axvline(min(qv, xmax), color="k", ls=":", lw=0.9)
+                ax.text(0.97, 0.95, f"zero: {100 * f0:.0f}%  above range: {100 * np.mean(x > xmax):.1f}%\nn={n}", transform=ax.transAxes, ha="right", va="top", fontsize=7)
+                if log:
+                    ax.set_yscale("log")
+                ax.set_xlim(-1.5 * bw, xmax)
+
+            def grid_figure(name, title, values_fn, xmax_fn, log, xlabel, tert=True):
+                fig, axs = plt.subplots(len(RESP_ROWS), len(RWIN), figsize=(4.0 * len(RWIN), 2.1 * len(RESP_ROWS)),
+                                        squeeze=False, sharey="all" if True else False)
+                for i, (lab, keys) in enumerate(RESP_ROWS):
+                    for j, w in enumerate(RWIN):
+                        ax = axs[i, j]
+                        x = values_fn(w, keys)
+                        hist_panel(ax, x, row_color[lab], xmax_fn(w), log, tert=tert)
+                        if i == 0:
+                            ax.set_title(f"{w} ({RESP_WINDOWS[w][0]:g}..{RESP_WINDOWS[w][1]:g} cm)", fontsize=9)
+                        if j == 0:
+                            ax.set_ylabel(f"{lab}\ndensity", fontsize=8, color=row_color[lab])
+                        if i == len(RESP_ROWS) - 1:
+                            ax.set_xlabel(xlabel, fontsize=8)
+                fig.suptitle(title, y=1.0, fontsize=9)
+                fig.tight_layout()
+                save_fig(fig, figdir, name)
+                plt.close(fig)
+
+            def raw_values(w, keys):
+                return cat(rows_of(w, keys))
+
+            xmax_w = {}
+            for w in RWIN:
+                allv = cat(rows_of(w, None))
+                nzv = allv[allv > ZERO_EPS]
+                xmax_w[w] = float(np.quantile(nzv, RESP_HIST_QMAX)) if len(nzv) else 1.0
+            sub_t = (f"window-mean deconvolved activity per engaged trial and cell (x range up to the {RESP_HIST_QMAX:g} quantile "
+                     f"of the non-zero values, shared across rows); grey bar = exactly zero; dotted = pooled tertiles; "
+                     f"y shared; pooled over trials and cells")
+            grid_figure("21a_response_distribution_linear", f"Response distribution, linear y -- {sub_t}", raw_values,
+                        lambda w: xmax_w[w], False, "response (window mean)")
+            grid_figure("21b_response_distribution_log", f"Response distribution, log y -- {sub_t}", raw_values,
+                        lambda w: xmax_w[w], True, "response (window mean)")
+
+            def norm_values(w, keys):
+                out = []
+                for v in rows_of(w, keys):
+                    m = v.mean()
+                    if m > ZERO_EPS:
+                        out.append(v / m)
+                return cat(out)
+
+            grid_figure("22_response_distribution_normalised_per_cell",
+                        "Response divided by the cell's own mean in the window (cells with mean 0 left out): the shape the "
+                        "per-cell quantile binning works on; grey bar = exactly zero; dotted = pooled tertiles; y shared",
+                        norm_values, lambda w: RESP_NORM_MAX, False, "response / cell mean")
+
+            # ---- 23: per-cell zero fraction and number of bins
+            fig, axs = plt.subplots(2, len(RWIN), figsize=(4.2 * len(RWIN), 6.4), squeeze=False)
+            areas4 = [r for r in RESP_ROWS if r[1] is not None]
+            for j, w in enumerate(RWIN):
+                ax = axs[0, j]
+                for lab, keys in areas4:
+                    f0 = np.array([np.mean(v <= ZERO_EPS) for v in rows_of(w, keys)])
+                    if len(f0):
+                        ax.hist(f0, bins=np.linspace(0, 1, 21), histtype="step", lw=1.6, color=row_color[lab],
+                                weights=np.full(len(f0), 1.0 / len(f0)), label=f"{lab} (n={len(f0)})")
+                for xv in (1 / 3, 2 / 3):
+                    ax.axvline(xv, color="k", ls=":", lw=0.9)
+                ax.set_title(f"{w}: fraction of trials with exactly zero response, per cell", fontsize=8)
+                ax.set_xlabel("fraction of zero trials of the cell")
+                ax.set_ylabel("fraction of cells")
+                if j == 0:
+                    ax.legend(fontsize=6, frameon=False)
+                ax = axs[1, j]
+                width = 0.8 / len(areas4)
+                for ai, (lab, keys) in enumerate(areas4):
+                    nb = np.array([len(np.unique(digitize_quantile(v, R))) for v in rows_of(w, keys)])
+                    if not len(nb):
+                        continue
+                    fr = [np.mean(nb == k) for k in range(1, R + 1)]
+                    ax.bar(np.arange(1, R + 1) - 0.4 + width * (ai + 0.5), fr, width=width * 0.92, color=row_color[lab])
+                ax.set_xticks(range(1, R + 1))
+                ax.set_xlabel(f"distinct response bins the cell gets (of {R})")
+                ax.set_ylabel("fraction of cells")
+                ax.set_title(f"{w}: effective number of quantile bins per cell", fontsize=8)
+            for row in axs:
+                lo = min(a.get_ylim()[0] for a in row)
+                hi = max(a.get_ylim()[1] for a in row)
+                for a in row:
+                    a.set_ylim(lo, hi)
+            fig.suptitle(f"Zero inflation of the single-cell response and its consequence for RESPONSE_BINS = {R} quantile bins "
+                         f"(a cell with more than 1/3 zero trials loses one bin); per area, y shared within a row", y=1.0, fontsize=9)
+            fig.tight_layout()
+            save_fig(fig, figdir, "23_response_zero_fraction_and_bins_per_cell")
+            plt.close(fig)
+            del cell_vals
 
 
 print(f"\nWrote tables to {table_dir}, figures to {figdir}")

@@ -1,0 +1,22 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+Stimulus bins (pct_0-25_25-50_50-75_75-100): 0-25% | 25-50% | 50-75% | 75-100%
+22 sessions
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+Traceback (most recent call last):
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/1_scripts/3g_pair_hit_miss_correlations.py", line 263, in <module>
+    records = run_sessions(
+        session_ids, process_session, [PROTOCOL], paths.store, "hit_miss",
+    ...<4 lines>...
+        cells_by_session={s: cells_by_session[s] for s in session_ids}, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs,
+        recompute=args.recompute, verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps, flatten=True)
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/1_scripts/utils/infotheory/session_jobs.py", line 71, in run_sessions
+    Parallel(n_jobs=n_jobs, backend="loky", verbose=verbose)(delayed(_one)(sid) for sid in todo)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/parallel.py", line 2056, in __call__
+    self._print(f"Using backend {backend_name} with {n_jobs} concurrent workers.")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/parallel.py", line 1583, in _print
+    writer(f"[{self}]: {msg}\n")
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 122] Disk quota exceeded

@@ -44,16 +44,16 @@ AGGREGATES = ("pooled", "session", "mouse")
 # 3. Memory: sessions are NEVER all loaded at once. Each worker loads ONE session, computes and
 #    caches its result, and frees it. Peak RAM ~ N_JOBS_SESSIONS x one session (1 = lowest).
 # --------------------------------------------------------------------- #
-N_JOBS_SESSIONS = 10
+N_JOBS_SESSIONS = 5
 
 #    Caps on the number of units analysed per session (None = all). --max-cells / --max-pairs override them per run.
-#    The cap picks a fixed pseudo-random, NESTED subset (first N of a hash order of the session's cells), and the per-session
-#    caches store results PER CELL / PER PAIR, so changing the cap never recomputes what is already stored: N=100, then 300
-#    computes the 200 added cells; then 50 just reads the first 50. A run with a cap writes to out/selection/<tag>/.
+#    The cap picks a fixed pseudo-random subset (first N of a hash order of the session's cells). The per-session caches hold only
+#    the final tables of one selection (no per-cell / per-pair ledger, to save disk): changing the cap recomputes the session.
+#    A run with a cap writes to out/selection/<tag>/.
 # The caps apply PER GROUP (V1-lab, V1-unl, PM-lab, ... incl. deep PM) within a session: MAX_CELLS_PER_SESSION = 10 keeps up to 10 cells of each
 # group, so rare groups (labeled cells) are not emptied; MAX_PAIRS_PER_SESSION counts pairs per pair of groups.
 MAX_CELLS_PER_SESSION = None
-MAX_PAIRS_PER_SESSION = None
+MAX_PAIRS_PER_SESSION = 400
 
 # --------------------------------------------------------------------- #
 # 4. Shared binning (consumed by 2c, 3a-3f, 4a-4c once migrated; at the moment only 1a follows the

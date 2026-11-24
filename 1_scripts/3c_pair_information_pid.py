@@ -54,7 +54,7 @@ from infotheory.scope import add_scope_args, scope_from_args, select_sessions, s
 from infotheory.session_jobs import run_sessions
 from infotheory.unit_stats import stable_seed
 from infotheory.unit_plots import group_panels, mouse_palette
-from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, CHOICE_TARGET, target_signature,
+from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, SIMPLE_STRATEGIES, CHOICE_TARGET, target_signature,
                                      target_bin_names, describe_strategies)
 from infotheory import cell_tables as ct
 from infotheory import pair_tables as pt
@@ -69,7 +69,7 @@ PID_SHUFFLES = 30           # target shuffles for the redundancy bias correction
 ALPHA = 0.05
 MIN_PAIRS_PER_UNIT = 3
 RANDOM_STATE = 0
-BINNING_STRATEGIES = list(DEFAULT_STRATEGIES)
+BINNING_STRATEGIES = list(SIMPLE_STRATEGIES)
 INCLUDE_CHOICE_TARGET = True
 SHARE_Y = True              # the window panels of a group figure get the same y range
 JOBLIB_VERBOSE = 5
@@ -80,7 +80,7 @@ parser.add_argument("--strategies", nargs="+", default=None, choices=sorted(STIM
 parser.add_argument("--pid-shuffles", type=int, default=PID_SHUFFLES)
 parser.add_argument("--redundancy", default=REDUNDANCY_MEASURE, choices=sorted(REDUNDANCY_MEASURES))
 args = parser.parse_args()
-MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
+MAX_PAIRS = args.max_pairs or cfg.MAX_PAIRS_PER_SESSION or MAX_PAIRS_PER_GROUP   # --max-pairs / project_config.MAX_PAIRS_PER_SESSION; here: pairs per (session, area, label); the constant above is the fallback
 scope = scope_from_args(args)
 AGG = scope.aggregate
 UNIT = unit_noun(AGG)
@@ -156,7 +156,7 @@ def process_session(ses, seed):
                 res = dict(n_trials=p.n, I1=p.I1, I2=p.I2, I12=p.I12, redundancy=p.redundancy, unique1=p.unique1,
                            unique2=p.unique2, synergy=p.synergy, redundancy_p_value=p.redundancy_p_value)
                 records.append(dict(session_id=sid, animal_id=ses.animal_id, window=window, target=target,
-                                    roi_name=r.roi_name, labeled_grouped=r.labeled_grouped, cell_i=r.cell_i,
+                                    roi_name=r.roi_name, labeled_grouped=r.labeled_grouped, depth_class=r.depth_class, cell_i=r.cell_i,
                                     cell_j=r.cell_j, pair_rank=r.pair_rank, **res))
     print(f"  [{sid}] {len(records)} (window, target, pair) rows")
     return records
@@ -166,7 +166,7 @@ records = run_sessions(
     session_ids, process_session, [PROTOCOL], paths.store, "pid",
     key_params=dict(windows=WINDOWS, r_bins=R_BINS, pid_shuffles=args.pid_shuffles, redundancy=args.redundancy,
                     targets=target_signature(TARGETS), min_trials=cfg.MIN_TRIALS_ANALYSIS,
-                    min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3c-v3", fits_mtime=int(fits_path.stat().st_mtime)),
+                    min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3c-v4", fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
     cells_by_session=cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
     verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps, flatten=True)

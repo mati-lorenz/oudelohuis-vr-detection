@@ -1,0 +1,60 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+22 sessions, 22619 included cells
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed:  3.2min
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/externals/loky/process_executor.py:787: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed:  5.4min remaining:  1.2min
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed:  5.8min finished
+21702 cells x 2 variants, 21 sessions
+
+Shape classes, mean fraction of cells per group (mean over sessions); chance for each of inverted_U / U is ~2.5% x P(slopes change sign):
+  variant raw
+            inverted_U     U  increasing  decreasing  flat
+group                                                     
+V1_lab            0.02  0.06        0.19        0.06  0.68
+V1_unl            0.02  0.06        0.17        0.06  0.70
+PM_lab            0.02  0.05        0.17        0.02  0.75
+PM_unl            0.03  0.07        0.21        0.04  0.65
+AL_unl            0.02  0.06        0.21        0.05  0.65
+RSP_unl           0.02  0.05        0.26        0.04  0.63
+PMdeep_lab        0.03  0.05        0.29        0.06  0.57
+PMdeep_unl        0.03  0.06        0.24        0.05  0.61
+  variant |position
+            inverted_U     U  increasing  decreasing  flat
+group                                                     
+V1_lab            0.02  0.07        0.18        0.04  0.71
+V1_unl            0.01  0.06        0.13        0.04  0.75
+PM_lab            0.01  0.04        0.17        0.02  0.76
+PM_unl            0.02  0.08        0.18        0.04  0.68
+AL_unl            0.01  0.07        0.16        0.04  0.72
+RSP_unl           0.02  0.05        0.21        0.03  0.69
+PMdeep_lab        0.02  0.06        0.25        0.05  0.62
+PMdeep_unl        0.03  0.07        0.20        0.04  0.66
+
+Consistency, variant raw:
+            n_cells  n_sessions  n_mice  median_split_half_curve_r  pc1_var_share  mean_beta2  session_loo_r_median  mouse_loo_r_median  mouse_p_beta2_wilcoxon
+group                                                                                                                                                          
+V1_lab          657          20       5                      0.447          0.641       0.002                 0.841               0.960                   0.125
+V1_unl         5030          20       5                      0.435          0.602       0.002                 0.785               0.893                   0.438
+PM_lab          186          15       5                      0.492          0.550       0.005                 0.769               0.867                   0.125
+PM_unl         2233          18       5                      0.466          0.599       0.005                 0.905               0.846                   0.062
+AL_unl         4305          19       6                      0.539          0.640       0.001                 0.842               0.909                   0.844
+RSP_unl        4453          20       6                      0.520          0.635       0.002                 0.929               0.950                   0.562
+PMdeep_lab     1088          20       5                      0.622          0.687       0.002                 0.923               0.959                   0.625
+PMdeep_unl     3750          20       5                      0.622          0.674       0.002                 0.946               0.972                   0.625
+
+Consistency, variant |position:
+            n_cells  n_sessions  n_mice  median_split_half_curve_r  pc1_var_share  mean_beta2  session_loo_r_median  mouse_loo_r_median  mouse_p_beta2_wilcoxon
+group                                                                                                                                                          
+V1_lab          657          20       5                      0.379          0.585       0.002                 0.825               0.951                   0.062
+V1_unl         5030          20       5                      0.372          0.539       0.002                 0.763               0.808                   0.188
+PM_lab          186          15       5                      0.442          0.509       0.005                 0.739               0.862                   0.125
+PM_unl         2233          18       5                      0.435          0.572       0.005                 0.896               0.888                   0.062
+AL_unl         4305          19       6                      0.463          0.577       0.002                 0.800               0.905                   0.156
+RSP_unl        4453          20       6                      0.478          0.610       0.003                 0.938               0.955                   0.094
+PMdeep_lab     1088          20       5                      0.586          0.662       0.002                 0.917               0.953                   0.438
+PMdeep_unl     3750          20       5                      0.582          0.645       0.002                 0.945               0.969                   0.312
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2j_pupil_activity_shape/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2j_pupil_activity_shape/out/figures

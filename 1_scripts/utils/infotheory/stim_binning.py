@@ -66,6 +66,10 @@ STIM_BINNING_STRATEGIES = {
     "zero_vs_nonzero": dict(
         kind="contrast", zero_separate=False, edges=[0.0],
         names=["0", ">0"]),
+    # every stimulus value (0, 20, 40, 60, 80, 100) is its own bin: the best-defined signal correlation (3d / 3h)
+    "all_levels": dict(
+        kind="contrast", zero_separate=False, edges=[10.0, 30.0, 50.0, 70.0, 90.0],
+        names=["0", "20", "40", "60", "80", "100"]),
     # the previous hard-coded behaviour, kept for reference/comparison
     "quantile4": dict(kind="quantile", n_bins=4, zero_separate=False, edges=[]),
 }

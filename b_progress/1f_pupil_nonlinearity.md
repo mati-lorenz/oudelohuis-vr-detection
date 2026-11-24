@@ -1,6 +1,6 @@
 # 1f_pupil_nonlinearity
 
-*Auto-generated from `2_pipeline/1f_pupil_nonlinearity/out/` on 2026-11-10 17:48. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/1f_pupil_nonlinearity/out/` on 2026-11-17 15:42. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
 
 ## Figures
 
@@ -20,17 +20,69 @@
 
 ![10d_pupil_performance_by_position](../2_pipeline/1f_pupil_nonlinearity/out/figures/10d_pupil_performance_by_position.png)
 
+### Pupil tuning whole trial
+
+![11_pupil_tuning_whole_trial](../2_pipeline/1f_pupil_nonlinearity/out/figures/11_pupil_tuning_whole_trial.png)
+
+### 11q pupil tuning whole trial by quantile
+
+![11q_pupil_tuning_whole_trial_by_quantile](../2_pipeline/1f_pupil_nonlinearity/out/figures/11q_pupil_tuning_whole_trial_by_quantile.png)
+
+### 11w pupil tuning whole trial equal width
+
+![11w_pupil_tuning_whole_trial_equal_width](../2_pipeline/1f_pupil_nonlinearity/out/figures/11w_pupil_tuning_whole_trial_equal_width.png)
+
+### Pupil tuning by window
+
+![12_pupil_tuning_by_window](../2_pipeline/1f_pupil_nonlinearity/out/figures/12_pupil_tuning_by_window.png)
+
+### 12q pupil tuning by window by quantile
+
+![12q_pupil_tuning_by_window_by_quantile](../2_pipeline/1f_pupil_nonlinearity/out/figures/12q_pupil_tuning_by_window_by_quantile.png)
+
+### 12w pupil tuning by window equal width
+
+![12w_pupil_tuning_by_window_equal_width](../2_pipeline/1f_pupil_nonlinearity/out/figures/12w_pupil_tuning_by_window_equal_width.png)
+
+### Pupil tuning sections
+
+![13_pupil_tuning_sections](../2_pipeline/1f_pupil_nonlinearity/out/figures/13_pupil_tuning_sections.png)
+
+### 13q pupil tuning sections by quantile
+
+![13q_pupil_tuning_sections_by_quantile](../2_pipeline/1f_pupil_nonlinearity/out/figures/13q_pupil_tuning_sections_by_quantile.png)
+
+### 13w pupil tuning sections equal width
+
+![13w_pupil_tuning_sections_equal_width](../2_pipeline/1f_pupil_nonlinearity/out/figures/13w_pupil_tuning_sections_equal_width.png)
+
+### 1a cv fit vs heldout points cur pupil area
+
+![1a_cv_fit_vs_heldout_points_cur_pupil_area](../2_pipeline/1f_pupil_nonlinearity/out/figures/1a_cv_fit_vs_heldout_points_cur_pupil_area.png)
+
 ### 1a pupil curves cur pupil area
 
 ![1a_pupil_curves_cur_pupil_area](../2_pipeline/1f_pupil_nonlinearity/out/figures/1a_pupil_curves_cur_pupil_area.png)
+
+### 1b cv fit vs heldout points prev pupil area
+
+![1b_cv_fit_vs_heldout_points_prev_pupil_area](../2_pipeline/1f_pupil_nonlinearity/out/figures/1b_cv_fit_vs_heldout_points_prev_pupil_area.png)
 
 ### 1b pupil curves prev pupil area
 
 ![1b_pupil_curves_prev_pupil_area](../2_pipeline/1f_pupil_nonlinearity/out/figures/1b_pupil_curves_prev_pupil_area.png)
 
+### 1c cv fit vs heldout points cur pupil xpos
+
+![1c_cv_fit_vs_heldout_points_cur_pupil_xpos](../2_pipeline/1f_pupil_nonlinearity/out/figures/1c_cv_fit_vs_heldout_points_cur_pupil_xpos.png)
+
 ### 1c pupil curves cur pupil xpos
 
 ![1c_pupil_curves_cur_pupil_xpos](../2_pipeline/1f_pupil_nonlinearity/out/figures/1c_pupil_curves_cur_pupil_xpos.png)
+
+### 1d cv fit vs heldout points cur pupil ypos
+
+![1d_cv_fit_vs_heldout_points_cur_pupil_ypos](../2_pipeline/1f_pupil_nonlinearity/out/figures/1d_cv_fit_vs_heldout_points_cur_pupil_ypos.png)
 
 ### 1d pupil curves cur pupil ypos
 
@@ -39,6 +91,10 @@
 ### Pupil performance windows
 
 ![2_pupil_performance_windows](../2_pipeline/1f_pupil_nonlinearity/out/figures/2_pupil_performance_windows.png)
+
+### 2b pupil dprime criterion methods
+
+![2b_pupil_dprime_criterion_methods](../2_pipeline/1f_pupil_nonlinearity/out/figures/2b_pupil_dprime_criterion_methods.png)
 
 ### 3a pupil quadratic cur pupil area
 
@@ -172,38 +228,38 @@
 
 | protocol | x | y | pupil_bin | mean_centered | sem |
 | --- | --- | --- | --- | --- | --- |
-| DP | cur_pupil_area | lick_any | 1 | 0.01304 | 0.02537 |
-| DP | cur_pupil_area | lick_any | 2 | 0.01511 | 0.04143 |
-| DP | cur_pupil_area | lick_any | 3 | -0.006368 | 0.03335 |
-| DP | cur_pupil_area | lick_any | 4 | 0.07577 | 0.04775 |
-| DP | cur_pupil_area | lick_any | 5 | -0.06407 | 0.05969 |
-| DP | cur_pupil_area | lick_any | 6 | -0.03589 | 0.03815 |
-| DN | cur_pupil_area | lick_any | 1 | 0.04518 | 0.02934 |
-| DN | cur_pupil_area | lick_any | 2 | 0.05122 | 0.01771 |
-| DN | cur_pupil_area | lick_any | 3 | 0.04708 | 0.01933 |
-| DN | cur_pupil_area | lick_any | 4 | 0.04546 | 0.02041 |
-| DN | cur_pupil_area | lick_any | 5 | -0.04312 | 0.02218 |
-| DN | cur_pupil_area | lick_any | 6 | -0.1433 | 0.02599 |
-| DP | cur_pupil_area | cur_runspeed | 1 | -2.216 | 1.272 |
-| DP | cur_pupil_area | cur_runspeed | 2 | 1.125 | 0.6844 |
-| DP | cur_pupil_area | cur_runspeed | 3 | 1.746 | 0.5786 |
-| DP | cur_pupil_area | cur_runspeed | 4 | 0.9294 | 0.6264 |
-| DP | cur_pupil_area | cur_runspeed | 5 | -0.1426 | 0.3182 |
-| DP | cur_pupil_area | cur_runspeed | 6 | -1.338 | 1.04 |
-| DN | cur_pupil_area | cur_runspeed | 1 | -0.9309 | 0.7147 |
-| DN | cur_pupil_area | cur_runspeed | 2 | 0.01409 | 0.5265 |
-| DN | cur_pupil_area | cur_runspeed | 3 | 0.531 | 0.5307 |
-| DN | cur_pupil_area | cur_runspeed | 4 | 0.6692 | 0.4675 |
-| DN | cur_pupil_area | cur_runspeed | 5 | 0.7519 | 0.7068 |
-| DN | cur_pupil_area | cur_runspeed | 6 | -0.9619 | 0.986 |
-| DP | cur_pupil_area | cur_motionenergy | 1 | -0.03017 | 0.04274 |
-| DP | cur_pupil_area | cur_motionenergy | 2 | 0.05191 | 0.03187 |
-| DP | cur_pupil_area | cur_motionenergy | 3 | -0.003461 | 0.01068 |
-| DP | cur_pupil_area | cur_motionenergy | 4 | -0.01379 | 0.01793 |
-| DP | cur_pupil_area | cur_motionenergy | 5 | 0.03825 | 0.02708 |
-| DP | cur_pupil_area | cur_motionenergy | 6 | -0.04033 | 0.01574 |
+| DP | cur_pupil_area | lick_any | 1 | 0.001497 | 0.02344 |
+| DP | cur_pupil_area | lick_any | 2 | 0.03779 | 0.02882 |
+| DP | cur_pupil_area | lick_any | 3 | 0.03302 | 0.06461 |
+| DP | cur_pupil_area | lick_any | 4 | -0.03713 | 0.06778 |
+| DP | cur_pupil_area | lick_any | 5 | 0.07979 | 0.05794 |
+| DP | cur_pupil_area | lick_any | 6 | 0.01508 | 0.03357 |
+| DP | cur_pupil_area | lick_any | 7 | -0.05337 | 0.03209 |
+| DP | cur_pupil_area | lick_any | 8 | -0.06422 | 0.05125 |
+| DN | cur_pupil_area | lick_any | 1 | 0.04086 | 0.03431 |
+| DN | cur_pupil_area | lick_any | 2 | 0.07445 | 0.02167 |
+| DN | cur_pupil_area | lick_any | 3 | 0.02255 | 0.02781 |
+| DN | cur_pupil_area | lick_any | 4 | 0.05462 | 0.02296 |
+| DN | cur_pupil_area | lick_any | 5 | 0.0784 | 0.02621 |
+| DN | cur_pupil_area | lick_any | 6 | -0.0417 | 0.021 |
+| DN | cur_pupil_area | lick_any | 7 | -0.07652 | 0.03829 |
+| DN | cur_pupil_area | lick_any | 8 | -0.147 | 0.02539 |
+| DP | cur_pupil_area | cur_runspeed | 1 | -3.49 | 1.491 |
+| DP | cur_pupil_area | cur_runspeed | 2 | 1.612 | 0.7804 |
+| DP | cur_pupil_area | cur_runspeed | 3 | 1.273 | 0.7162 |
+| DP | cur_pupil_area | cur_runspeed | 4 | 1.428 | 0.5974 |
+| DP | cur_pupil_area | cur_runspeed | 5 | 0.6737 | 0.7936 |
+| DP | cur_pupil_area | cur_runspeed | 6 | 0.5673 | 0.2529 |
+| DP | cur_pupil_area | cur_runspeed | 7 | -0.5551 | 0.9004 |
+| DP | cur_pupil_area | cur_runspeed | 8 | -1.425 | 1.232 |
+| DN | cur_pupil_area | cur_runspeed | 1 | -1.194 | 0.8279 |
+| DN | cur_pupil_area | cur_runspeed | 2 | -0.1512 | 0.5567 |
+| DN | cur_pupil_area | cur_runspeed | 3 | 0.2625 | 0.5531 |
+| DN | cur_pupil_area | cur_runspeed | 4 | 0.6116 | 0.6211 |
+| DN | cur_pupil_area | cur_runspeed | 5 | 0.5257 | 0.5461 |
+| DN | cur_pupil_area | cur_runspeed | 6 | 1.474 | 0.5772 |
 
-*(showing first 30 of 300 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 400 rows -- see the linked CSV for the rest)*
 
 [pupil_nonlinearity_curves__session.csv](../2_pipeline/1f_pupil_nonlinearity/out/pupil_nonlinearity_curves__session.csv)
 
@@ -211,35 +267,35 @@
 
 | protocol | x | y | statistic | alternative | n_units | mean | median | p | frac_inverted_U | p_holm |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| DN | cur_pupil_area | cur_lick | beta_quadratic | two-sided | 24 | 0.02703 | 0.0223 | 0.006516 | 0 | 0.03258 |
-| DN | cur_pupil_area | cur_motionenergy | beta_quadratic | two-sided | 24 | 0.003453 | -0.00553 | 0.9441 | 0 | 1 |
-| DN | cur_pupil_area | cur_pupil_xpos | beta_quadratic | two-sided | 24 | -0.002658 | 0.02902 | 0.9441 | 0.08333 | 1 |
-| DN | cur_pupil_area | cur_pupil_ypos | beta_quadratic | two-sided | 24 | -0.02876 | -0.03101 | 0.1974 | 0 | 0.5921 |
-| DN | cur_pupil_area | cur_runspeed | beta_quadratic | two-sided | 24 | -0.0781 | -0.07129 | 0.003504 | 0.125 | 0.02103 |
-| DN | cur_pupil_area | lick_any | beta_quadratic | two-sided | 24 | -0.03922 | -0.05247 | 0.0691 | 0.125 | 0.2764 |
+| DN | cur_pupil_area | cur_lick | beta_quadratic_cv | two-sided | 24 | 0.02069 | 0.0127 | 0.05264 | 0 | 0.2632 |
+| DN | cur_pupil_area | cur_motionenergy | beta_quadratic_cv | two-sided | 24 | -0.0002528 | -0.01251 | 0.9441 | 0 | 1 |
+| DN | cur_pupil_area | cur_pupil_xpos | beta_quadratic_cv | two-sided | 24 | -0.004564 | 0.03994 | 0.9441 | 0.125 | 1 |
+| DN | cur_pupil_area | cur_pupil_ypos | beta_quadratic_cv | two-sided | 24 | -0.02783 | -0.04079 | 0.2076 | 0 | 0.6228 |
+| DN | cur_pupil_area | cur_runspeed | beta_quadratic_cv | two-sided | 24 | -0.0788 | -0.07144 | 0.003901 | 0.08333 | 0.0234 |
+| DN | cur_pupil_area | lick_any | beta_quadratic_cv | two-sided | 24 | -0.04228 | -0.05047 | 0.0691 | 0.125 | 0.2764 |
 | DN | cur_pupil_area | cur_lick | slope_lower_half | greater | 24 | -0.2144 | -0.1782 | 0.9999 | 0 | 1 |
 | DN | cur_pupil_area | cur_motionenergy | slope_lower_half | greater | 24 | -0.03632 | -0.09296 | 0.7634 | 0 | 1 |
-| DN | cur_pupil_area | cur_pupil_xpos | slope_lower_half | greater | 24 | 0.001211 | 0.1397 | 0.4944 | 0.08333 | 1 |
+| DN | cur_pupil_area | cur_pupil_xpos | slope_lower_half | greater | 24 | 0.001211 | 0.1397 | 0.4944 | 0.125 | 1 |
 | DN | cur_pupil_area | cur_pupil_ypos | slope_lower_half | greater | 24 | 0.2135 | 0.2544 | 0.01974 | 0 | 0.1184 |
-| DN | cur_pupil_area | cur_runspeed | slope_lower_half | greater | 24 | 0.1627 | 0.1558 | 0.03455 | 0.125 | 0.1728 |
+| DN | cur_pupil_area | cur_runspeed | slope_lower_half | greater | 24 | 0.1627 | 0.1558 | 0.03455 | 0.08333 | 0.1728 |
 | DN | cur_pupil_area | lick_any | slope_lower_half | greater | 24 | -0.05919 | -0.02426 | 0.7546 | 0.125 | 1 |
 | DN | cur_pupil_area | cur_lick | slope_upper_half | less | 24 | -0.0711 | -0.05554 | 0.02821 | 0 | 0.1411 |
 | DN | cur_pupil_area | cur_motionenergy | slope_upper_half | less | 24 | 0.00209 | 0.03222 | 0.6051 | 0 | 1 |
-| DN | cur_pupil_area | cur_pupil_xpos | slope_upper_half | less | 24 | -0.02395 | -0.05835 | 0.3317 | 0.08333 | 0.9952 |
+| DN | cur_pupil_area | cur_pupil_xpos | slope_upper_half | less | 24 | -0.02395 | -0.05835 | 0.3317 | 0.125 | 0.9952 |
 | DN | cur_pupil_area | cur_pupil_ypos | slope_upper_half | less | 24 | 0.05507 | 0.04098 | 0.8552 | 0 | 1 |
-| DN | cur_pupil_area | cur_runspeed | slope_upper_half | less | 24 | -0.1643 | -0.1705 | 0.04755 | 0.125 | 0.1902 |
+| DN | cur_pupil_area | cur_runspeed | slope_upper_half | less | 24 | -0.1643 | -0.1705 | 0.04755 | 0.08333 | 0.1902 |
 | DN | cur_pupil_area | lick_any | slope_upper_half | less | 24 | -0.2935 | -0.2869 | 1.234e-05 | 0.125 | 7.403e-05 |
-| DN | cur_pupil_area | cur_lick | cv_gain | greater | 24 | -0.0148 | -0.005271 | 0.9995 | 0 | 1 |
-| DN | cur_pupil_area | cur_motionenergy | cv_gain | greater | 24 | 0.0008943 | -0.0006146 | 0.6476 | 0 | 1 |
-| DN | cur_pupil_area | cur_pupil_xpos | cv_gain | greater | 24 | -0.007826 | -0.001762 | 0.4498 | 0.08333 | 1 |
-| DN | cur_pupil_area | cur_pupil_ypos | cv_gain | greater | 24 | 0.005725 | 0.001407 | 0.2823 | 0 | 1 |
-| DN | cur_pupil_area | cur_runspeed | cv_gain | greater | 24 | -4.753e-05 | -0.006246 | 0.7272 | 0.125 | 1 |
-| DN | cur_pupil_area | lick_any | cv_gain | greater | 24 | 0.002229 | -0.007418 | 0.8276 | 0.125 | 1 |
+| DN | cur_pupil_area | cur_lick | cv_gain | greater | 24 | -0.00575 | -0.00212 | 0.9654 | 0 | 1 |
+| DN | cur_pupil_area | cur_motionenergy | cv_gain | greater | 24 | -0.002011 | -0.002785 | 0.6051 | 0 | 1 |
+| DN | cur_pupil_area | cur_pupil_xpos | cv_gain | greater | 24 | -0.004118 | 0.00209 | 0.4058 | 0.125 | 1 |
+| DN | cur_pupil_area | cur_pupil_ypos | cv_gain | greater | 24 | -0.003419 | -9.935e-05 | 0.4609 | 0 | 1 |
+| DN | cur_pupil_area | cur_runspeed | cv_gain | greater | 24 | 0.008281 | 0.002948 | 0.4832 | 0.08333 | 1 |
+| DN | cur_pupil_area | lick_any | cv_gain | greater | 24 | -0.02024 | -0.0109 | 0.9495 | 0.125 | 1 |
 | DN | cur_pupil_area | cur_lick | mi_excess_bits | greater | 24 | -0.01947 | -0.01414 | 1 | 0 | 1 |
 | DN | cur_pupil_area | cur_motionenergy | mi_excess_bits | greater | 24 | -0.02709 | -0.008054 | 0.998 | 0 | 1 |
-| DN | cur_pupil_area | cur_pupil_xpos | mi_excess_bits | greater | 24 | -0.02266 | -0.01922 | 0.9865 | 0.08333 | 1 |
+| DN | cur_pupil_area | cur_pupil_xpos | mi_excess_bits | greater | 24 | -0.02266 | -0.01922 | 0.9865 | 0.125 | 1 |
 | DN | cur_pupil_area | cur_pupil_ypos | mi_excess_bits | greater | 24 | -0.02109 | -0.004093 | 0.8616 | 0 | 1 |
-| DN | cur_pupil_area | cur_runspeed | mi_excess_bits | greater | 24 | -0.0184 | -0.00543 | 0.9718 | 0.125 | 1 |
+| DN | cur_pupil_area | cur_runspeed | mi_excess_bits | greater | 24 | -0.0184 | -0.00543 | 0.9718 | 0.08333 | 1 |
 | DN | cur_pupil_area | lick_any | mi_excess_bits | greater | 24 | -0.00176 | -0.0009524 | 0.7634 | 0.125 | 1 |
 
 *(showing first 30 of 250 rows -- see the linked CSV for the rest)*
@@ -281,24 +337,24 @@
 | DP | cur_pupil_area | cur_lick | 120 | -0.01375 | -0.02756 | 0.6333 | 0.07636 | -0.1105 | 0.3705 | 0.2752 | -0.2494 | -1.635 | 1.755 | False |
 | DP | cur_pupil_area | cur_pupil_xpos | 120 | -0.3381 | -0.03314 | 0.646 | -0.2297 | -0.4544 | 0.8089 | 0.04052 | -5.1 | -1.635 | 1.755 | False |
 
-*(showing first 15 of 26 columns; showing first 30 of 775 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 44 columns; showing first 30 of 775 rows -- see the linked CSV for the rest)*
 
 [pupil_nonlinearity_per_unit__session.csv](../2_pipeline/1f_pupil_nonlinearity/out/pupil_nonlinearity_per_unit__session.csv)
 
 ### Pupil pca group tests  session
 
-| protocol | pc | n_units | mean_r | frac_positive | p | mean_beta_quadratic | p_quadratic | p_holm |
+| protocol | pc | n_units | mean_r | frac_positive | p | mean_beta_quadratic_cv | p_quadratic | p_holm |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| DN | PC1 | 24 | -0.05225 | 0.375 | 0.3305 | 0.06396 | 0.00178 | 1 |
-| DN | PC2 | 24 | 0.02122 | 0.5 | 0.8115 | -0.04165 | 0.114 | 1 |
-| DN | PC3 | 24 | 0.06571 | 0.5 | 0.3165 | -0.008704 | 0.7048 | 1 |
-| DN | PC4 | 24 | -0.04413 | 0.4583 | 0.4732 | 0.01885 | 0.7257 | 1 |
-| DN | PC5 | 24 | 0.121 | 0.7083 | 0.01504 | 0.01783 | 0.4908 | 0.07522 |
-| DP | PC1 | 7 | -0.2043 | 0.1429 | 0.07812 | 0.1309 | 0.07812 | 0.3906 |
-| DP | PC2 | 7 | 0.2155 | 0.7143 | 0.1094 | 0.02083 | 0.9375 | 0.4375 |
-| DP | PC3 | 7 | 0.1507 | 0.8571 | 0.1094 | -0.03609 | 0.4688 | 0.4375 |
-| DP | PC4 | 7 | 0.02699 | 0.5714 | 0.6875 | -0.08187 | 0.1094 | 0.75 |
-| DP | PC5 | 7 | -0.09396 | 0.4286 | 0.375 | 0.006605 | 1 | 0.75 |
+| DN | PC1 | 24 | -0.05225 | 0.375 | 0.3305 | 0.06123 | 0.003504 | 1 |
+| DN | PC2 | 24 | 0.02122 | 0.5 | 0.8115 | -0.03874 | 0.1011 | 1 |
+| DN | PC3 | 24 | 0.06571 | 0.5 | 0.3165 | -0.006939 | 0.6634 | 1 |
+| DN | PC4 | 24 | -0.04413 | 0.4583 | 0.4732 | 0.01922 | 0.6634 | 1 |
+| DN | PC5 | 24 | 0.121 | 0.7083 | 0.01504 | 0.02613 | 0.3449 | 0.07522 |
+| DP | PC1 | 7 | -0.2043 | 0.1429 | 0.07812 | 0.1561 | 0.04688 | 0.3906 |
+| DP | PC2 | 7 | 0.2155 | 0.7143 | 0.1094 | 0.02498 | 1 | 0.4375 |
+| DP | PC3 | 7 | 0.1507 | 0.8571 | 0.1094 | -0.01899 | 0.9375 | 0.4375 |
+| DP | PC4 | 7 | 0.02699 | 0.5714 | 0.6875 | -0.09487 | 0.1094 | 0.75 |
+| DP | PC5 | 7 | -0.09396 | 0.4286 | 0.375 | 0.009681 | 0.9375 | 0.75 |
 
 [pupil_pca_group_tests__session.csv](../2_pipeline/1f_pupil_nonlinearity/out/pupil_pca_group_tests__session.csv)
 
@@ -415,46 +471,46 @@
 | DP | PC4 | 63 | 0.09057 | -0.07899 | 0.1349 | 0.2876 | -0.09384 | 8.974e-06 | 0.3737 | 0.5733 | -1.247 | 1.167 | False | False |
 | DP | PC5 | 63 | 0.1355 | 0.2136 | 0.1487 | -0.3973 | 0.6343 | 0.8214 | 0.9523 | -0.3173 | -1.247 | 1.167 | False | False |
 
-*(showing first 15 of 25 columns; showing first 30 of 155 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 43 columns; showing first 30 of 155 rows -- see the linked CSV for the rest)*
 
 [pupil_pca_vs_pupil_area__session.csv](../2_pipeline/1f_pupil_nonlinearity/out/pupil_pca_vs_pupil_area__session.csv)
 
 ### Pupil performance by quantile windows  session
 
-| protocol | pupil_bin | dprime | criterion | hit_rate | fa_rate | balanced_accuracy | n_trials_0 | n_trials_100 | n_trials_signal_pos | animal_id | session_id | window |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| DP | 1 | 1.965 | -0.5517 | 0.7143 | 0.3333 | 0.6905 | 3 | 8 | 35 | LPE11622 | LPE11622_2024_02_19 | pre_stim |
-| DP | 2 | 2.376 | 0.3462 | 0.6552 | 0 | 0.8276 | 8 | 5 | 29 | LPE11622 | LPE11622_2024_02_19 | pre_stim |
-| DP | 3 | 2.403 | -0.1338 | 0.8065 | 0.1429 | 0.8318 | 7 | 11 | 31 | LPE11622 | LPE11622_2024_02_19 | pre_stim |
-| DP | 4 | 1.742 | -0.1965 | 0.7931 | 0.25 | 0.7716 | 8 | 7 | 29 | LPE11622 | LPE11622_2024_02_19 | pre_stim |
-| DP | 5 | 2.441 | 2.22e-16 | 0.7857 | 0.1111 | 0.8373 | 9 | 9 | 28 | LPE11622 | LPE11622_2024_02_19 | pre_stim |
-| DP | 6 | -0.4102 | -0.3193 | 0.6786 | 0.7 | 0.4893 | 10 | 11 | 28 | LPE11622 | LPE11622_2024_02_19 | pre_stim |
-| DP | 1 | 1.956 | 0.3035 | 0.4815 | 0.1 | 0.6907 | 10 | 8 | 27 | LPE11997 | LPE11997_2024_04_15 | pre_stim |
-| DP | 2 | 1.896 | -0.5173 | 0.5455 | 0.3333 | 0.6061 | 3 | 7 | 33 | LPE11997 | LPE11997_2024_04_15 | pre_stim |
-| DP | 3 | 1.147 | 0.3937 | 0.28 | 0.1667 | 0.5567 | 12 | 7 | 25 | LPE11997 | LPE11997_2024_04_15 | pre_stim |
-| DP | 4 | 2.433 | -0.2489 | 0.5 | 0.1667 | 0.6667 | 6 | 7 | 30 | LPE11997 | LPE11997_2024_04_15 | pre_stim |
-| DP | 5 | 1.876 | 0.02948 | 0.4242 | 0 | 0.7121 | 3 | 11 | 33 | LPE11997 | LPE11997_2024_04_15 | pre_stim |
-| DP | 6 | 1.904 | 0.3293 | 0.5926 | 0.1 | 0.7463 | 10 | 15 | 27 | LPE11997 | LPE11997_2024_04_15 | pre_stim |
-| DP | 1 |  |  |  |  |  | 2 | 6 | 17 | LPE11998 | LPE11998_2024_04_15 | pre_stim |
-| DP | 2 |  |  |  |  |  | 2 | 5 | 17 | LPE11998 | LPE11998_2024_04_15 | pre_stim |
-| DP | 3 | 1.498 | 0.3184 | 0.5455 | 0.1429 | 0.7013 | 7 | 3 | 11 | LPE11998 | LPE11998_2024_04_15 | pre_stim |
-| DP | 4 |  |  | 0.8 | 0.25 | 0.775 | 4 | 2 | 15 | LPE11998 | LPE11998_2024_04_15 | pre_stim |
-| DP | 5 | 0.9674 | 0.4837 | 0.4667 | 0 | 0.7333 | 3 | 6 | 15 | LPE11998 | LPE11998_2024_04_15 | pre_stim |
-| DP | 6 | 0.1121 | 0.3747 | 0.3125 | 0.3333 | 0.4896 | 3 | 8 | 16 | LPE11998 | LPE11998_2024_04_15 | pre_stim |
-| DP | 1 |  |  |  |  |  | 2 | 4 | 15 | LPE11998 | LPE11998_2024_04_16 | pre_stim |
-| DP | 2 | 2.249 | -0.1571 | 0.7857 | 0 | 0.8929 | 3 | 5 | 14 | LPE11998 | LPE11998_2024_04_16 | pre_stim |
-| DP | 3 |  |  |  |  |  | 2 | 3 | 14 | LPE11998 | LPE11998_2024_04_16 | pre_stim |
-| DP | 4 | 2.433 | 0.2489 | 0.8 | 0 | 0.9 | 7 | 6 | 10 | LPE11998 | LPE11998_2024_04_16 | pre_stim |
-| DP | 5 | 1.642 | 0.1465 | 0.5385 | 0 | 0.7692 | 3 | 4 | 13 | LPE11998 | LPE11998_2024_04_16 | pre_stim |
-| DP | 6 |  |  |  |  |  | 1 | 6 | 16 | LPE11998 | LPE11998_2024_04_16 | pre_stim |
-| DP | 1 | 1.088 | -0.3642 | 0.75 | 0.4286 | 0.6607 | 7 | 11 | 28 | LPE11998 | LPE11998_2024_04_18 | pre_stim |
-| DP | 2 | 2.225 | -0.2707 | 0.8 | 0.2 | 0.8 | 10 | 6 | 25 | LPE11998 | LPE11998_2024_04_18 | pre_stim |
-| DP | 3 | 2.433 | -0.2489 | 0.8929 | 0.1667 | 0.8631 | 6 | 7 | 28 | LPE11998 | LPE11998_2024_04_18 | pre_stim |
-| DP | 4 | 1.33 | -0.4852 | 0.8214 | 0.4286 | 0.6964 | 7 | 4 | 28 | LPE11998 | LPE11998_2024_04_18 | pre_stim |
-| DP | 5 | 2.533 | -0.1163 | 0.7308 | 0.125 | 0.8029 | 8 | 6 | 26 | LPE11998 | LPE11998_2024_04_18 | pre_stim |
-| DP | 6 | 2.209 | -0.4298 | 0.6129 | 0.25 | 0.6815 | 4 | 8 | 31 | LPE11998 | LPE11998_2024_04_18 | pre_stim |
+| protocol | pupil_bin | dprime | criterion | dprime_0_100 | criterion_0_100 | hit_rate | fa_rate | balanced_accuracy | n_trials_0 | n_trials_100 | n_trials_signal_pos | dprime_probit_pred | criterion_probit_pred | dprime_probit_shift |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DP | 1 |  |  | 1.965 | -0.5517 | 0.7143 | 0.3333 | 0.6905 | 3 | 8 | 35 |  |  |  |
+| DP | 2 |  |  | 2.376 | 0.3462 | 0.6552 | 0 | 0.8276 | 8 | 5 | 29 |  |  |  |
+| DP | 3 |  |  | 2.403 | -0.1338 | 0.8065 | 0.1429 | 0.8318 | 7 | 11 | 31 |  |  |  |
+| DP | 4 |  |  | 1.742 | -0.1965 | 0.7931 | 0.25 | 0.7716 | 8 | 7 | 29 |  |  |  |
+| DP | 5 |  |  | 2.441 | 2.22e-16 | 0.7857 | 0.1111 | 0.8373 | 9 | 9 | 28 |  |  |  |
+| DP | 6 |  |  | -0.4102 | -0.3193 | 0.6786 | 0.7 | 0.4893 | 10 | 11 | 28 |  |  |  |
+| DP | 1 |  |  | 1.956 | 0.3035 | 0.4815 | 0.1 | 0.6907 | 10 | 8 | 27 |  |  |  |
+| DP | 2 |  |  | 1.896 | -0.5173 | 0.5455 | 0.3333 | 0.6061 | 3 | 7 | 33 |  |  |  |
+| DP | 3 |  |  | 1.147 | 0.3937 | 0.28 | 0.1667 | 0.5567 | 12 | 7 | 25 |  |  |  |
+| DP | 4 |  |  | 2.433 | -0.2489 | 0.5 | 0.1667 | 0.6667 | 6 | 7 | 30 |  |  |  |
+| DP | 5 |  |  | 1.876 | 0.02948 | 0.4242 | 0 | 0.7121 | 3 | 11 | 33 |  |  |  |
+| DP | 6 |  |  | 1.904 | 0.3293 | 0.5926 | 0.1 | 0.7463 | 10 | 15 | 27 |  |  |  |
+| DP | 1 |  |  |  |  |  |  |  | 2 | 6 | 17 |  |  |  |
+| DP | 2 |  |  |  |  |  |  |  | 2 | 5 | 17 |  |  |  |
+| DP | 3 |  |  | 1.498 | 0.3184 | 0.5455 | 0.1429 | 0.7013 | 7 | 3 | 11 |  |  |  |
+| DP | 4 |  |  |  |  | 0.8 | 0.25 | 0.775 | 4 | 2 | 15 |  |  |  |
+| DP | 5 |  |  | 0.9674 | 0.4837 | 0.4667 | 0 | 0.7333 | 3 | 6 | 15 |  |  |  |
+| DP | 6 |  |  | 0.1121 | 0.3747 | 0.3125 | 0.3333 | 0.4896 | 3 | 8 | 16 |  |  |  |
+| DP | 1 |  |  |  |  |  |  |  | 2 | 4 | 15 |  |  |  |
+| DP | 2 |  |  | 2.249 | -0.1571 | 0.7857 | 0 | 0.8929 | 3 | 5 | 14 |  |  |  |
+| DP | 3 |  |  |  |  |  |  |  | 2 | 3 | 14 |  |  |  |
+| DP | 4 |  |  | 2.433 | 0.2489 | 0.8 | 0 | 0.9 | 7 | 6 | 10 |  |  |  |
+| DP | 5 |  |  | 1.642 | 0.1465 | 0.5385 | 0 | 0.7692 | 3 | 4 | 13 |  |  |  |
+| DP | 6 |  |  |  |  |  |  |  | 1 | 6 | 16 |  |  |  |
+| DP | 1 |  |  | 1.088 | -0.3642 | 0.75 | 0.4286 | 0.6607 | 7 | 11 | 28 |  |  |  |
+| DP | 2 |  |  | 2.225 | -0.2707 | 0.8 | 0.2 | 0.8 | 10 | 6 | 25 |  |  |  |
+| DP | 3 |  |  | 2.433 | -0.2489 | 0.8929 | 0.1667 | 0.8631 | 6 | 7 | 28 |  |  |  |
+| DP | 4 |  |  | 1.33 | -0.4852 | 0.8214 | 0.4286 | 0.6964 | 7 | 4 | 28 |  |  |  |
+| DP | 5 |  |  | 2.533 | -0.1163 | 0.7308 | 0.125 | 0.8029 | 8 | 6 | 26 |  |  |  |
+| DP | 6 |  |  | 2.209 | -0.4298 | 0.6129 | 0.25 | 0.6815 | 4 | 8 | 31 |  |  |  |
 
-*(showing first 30 of 576 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 22 columns; showing first 30 of 576 rows -- see the linked CSV for the rest)*
 
 [pupil_performance_by_quantile_windows__session.csv](../2_pipeline/1f_pupil_nonlinearity/out/pupil_performance_by_quantile_windows__session.csv)
 
@@ -475,25 +531,25 @@
 | DN | balanced_accuracy | 10 | 50 | 19 | -0.02709 | 0.02892 | 0.418 | 0.003926 | 0.02347 | 0.8906 | 1 | 1 |
 | DN | balanced_accuracy | 11 | 60 | 17 | -0.0114 | 0.03025 | 0.6112 | -0.0002452 | 0.02137 | 0.7119 | 1 | 1 |
 | DN | balanced_accuracy | 12 | 70 | 17 | 0.0009739 | 0.03488 | 0.7467 | 0.006382 | 0.01753 | 0.3778 | 1 | 1 |
-| DN | criterion | 0 | -50 | 18 | 0.5738 | 0.1468 | 0.001289 | -0.1051 | 0.07386 | 0.1674 | 0.009277 | 0.3591 |
-| DN | criterion | 1 | -40 | 20 | 0.4774 | 0.1286 | 0.002712 | -0.1278 | 0.07269 | 0.06958 | 0.01627 | 0.3479 |
-| DN | criterion | 2 | -30 | 18 | 0.5244 | 0.135 | 0.0005341 | -0.1331 | 0.07061 | 0.08977 | 0.004807 | 0.3591 |
-| DN | criterion | 3 | -20 | 20 | 0.4961 | 0.1198 | 0.0002098 | -0.1726 | 0.0725 | 0.03623 | 0.002518 | 0.2536 |
-| DN | criterion | 4 | -10 | 19 | 0.4322 | 0.1545 | 0.01407 | -0.15 | 0.07748 | 0.09551 | 0.01627 | 0.3591 |
-| DN | criterion | 5 | 0 | 18 | 0.4901 | 0.1365 | 0.003365 | -0.1819 | 0.0685 | 0.01387 | 0.01627 | 0.1387 |
-| DN | criterion | 6 | 10 | 18 | 0.4907 | 0.1428 | 0.003365 | -0.202 | 0.06613 | 0.006577 | 0.01627 | 0.07234 |
-| DN | criterion | 7 | 20 | 15 | 0.6371 | 0.1524 | 0.00116 | -0.3079 | 0.07475 | 0.002014 | 0.009277 | 0.02618 |
-| DN | criterion | 8 | 30 | 16 | 0.7445 | 0.1533 | 0.0003052 | -0.1939 | 0.0881 | 0.05066 | 0.003357 | 0.304 |
-| DN | criterion | 9 | 40 | 16 | 0.9312 | 0.1277 | 3.052e-05 | -0.2159 | 0.07572 | 0.02899 | 0.0003967 | 0.2319 |
-| DN | criterion | 10 | 50 | 19 | 0.4944 | 0.1109 | 0.0003357 | -0.1129 | 0.07637 | 0.09551 | 0.003357 | 0.3591 |
-| DN | criterion | 11 | 60 | 17 | 0.4431 | 0.1223 | 0.003159 | -0.1843 | 0.04982 | 0.00209 | 0.01627 | 0.02618 |
-| DN | criterion | 12 | 70 | 17 | 0.4577 | 0.1205 | 0.003845 | -0.1828 | 0.06382 | 0.01743 | 0.01627 | 0.1568 |
-| DN | dprime | 0 | -50 | 18 | -0.01934 | 0.1814 | 0.865 | 0.03253 | 0.113 | 0.865 | 1 | 1 |
-| DN | dprime | 1 | -40 | 20 | -0.0757 | 0.1657 | 0.658 | 0.08457 | 0.09656 | 0.3118 | 1 | 1 |
-| DN | dprime | 2 | -30 | 18 | 0.005245 | 0.1819 | 0.9811 | 0.002491 | 0.1032 | 0.766 | 1 | 1 |
-| DN | dprime | 3 | -20 | 20 | -0.07685 | 0.1634 | 0.6742 | -0.05975 | 0.09486 | 0.5459 | 1 | 1 |
+| DN | criterion | 0 | -50 | 13 | 0.9775 | 0.2127 | 0.001709 | -0.2397 | 0.1051 | 0.04785 | 0.01538 | 0.1764 |
+| DN | criterion | 1 | -40 | 14 | 1.013 | 0.2975 | 0.004028 | -0.2697 | 0.1513 | 0.1726 | 0.02417 | 0.1764 |
+| DN | criterion | 2 | -30 | 14 | 1.277 | 0.4065 | 0.0008545 | -0.414 | 0.1854 | 0.05798 | 0.008545 | 0.1764 |
+| DN | criterion | 3 | -20 | 14 | 1.155 | 0.2712 | 0.002319 | -0.2602 | 0.1104 | 0.03528 | 0.01855 | 0.1764 |
+| DN | criterion | 4 | -10 | 13 | 0.9955 | 0.3098 | 0.003418 | -0.3583 | 0.1366 | 0.01709 | 0.02393 | 0.1709 |
+| DN | criterion | 5 | 0 | 14 | 1.27 | 0.4273 | 0.005249 | -0.3751 | 0.1977 | 0.03528 | 0.02625 | 0.1764 |
+| DN | criterion | 6 | 10 | 13 | 1.198 | 0.4452 | 0.01709 | -0.5789 | 0.1914 | 0.0002441 | 0.05469 | 0.003174 |
+| DN | criterion | 7 | 20 | 12 | 1.418 | 0.3045 | 0.0004883 | -0.4367 | 0.1104 | 0.003418 | 0.006348 | 0.04102 |
+| DN | criterion | 8 | 30 | 12 | 2.403 | 0.5143 | 0.0004883 | -0.82 | 0.2452 | 0.003418 | 0.006348 | 0.04102 |
+| DN | criterion | 9 | 40 | 12 | 1.97 | 0.4452 | 0.0004883 | -0.734 | 0.2486 | 0.021 | 0.006348 | 0.1709 |
+| DN | criterion | 10 | 50 | 11 | 1.392 | 0.4816 | 0.01367 | -0.5833 | 0.2263 | 0.01855 | 0.05469 | 0.1709 |
+| DN | criterion | 11 | 60 | 9 | 0.4358 | 0.255 | 0.1641 | -0.3545 | 0.1206 | 0.01953 | 0.2109 | 0.1709 |
+| DN | criterion | 12 | 70 | 10 | 0.4557 | 0.215 | 0.1055 | -0.2934 | 0.09937 | 0.01953 | 0.2109 | 0.1709 |
+| DN | dprime | 0 | -50 | 13 | -0.2961 | 0.1117 | 0.01343 | 0.02355 | 0.055 | 0.6848 | 0.1477 | 1 |
+| DN | dprime | 1 | -40 | 14 | -0.2652 | 0.1086 | 0.02026 | 0.06332 | 0.04284 | 0.2676 | 0.1824 | 1 |
+| DN | dprime | 2 | -30 | 14 | -0.292 | 0.1282 | 0.02454 | 0.06975 | 0.04338 | 0.104 | 0.1963 | 0.728 |
+| DN | dprime | 3 | -20 | 14 | -0.2432 | 0.1063 | 0.04944 | 0.03082 | 0.03976 | 0.4631 | 0.2966 | 1 |
 
-*(showing first 30 of 130 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 104 rows -- see the linked CSV for the rest)*
 
 [pupil_position_performance_group__session.csv](../2_pipeline/1f_pupil_nonlinearity/out/pupil_position_performance_group__session.csv)
 
@@ -504,35 +560,35 @@
 | DN | LPE10884 | LPE10884_2024_01_12 | 0 | hit_rate | -0.3226 | 0.136 | -50 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 0 | fa_rate | 0 | 0.3556 | -50 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 0 | balanced_accuracy | -0.1613 | -0.1098 | -50 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 0 | dprime | -1.282 | -0.2223 | -50 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 0 | criterion | 0.6408 | -0.7149 | -50 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 0 | dprime | -0.03377 | 0.1444 | -50 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 0 | criterion | 0.8061 | -0.5868 | -50 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 1 | hit_rate | -0.2812 | 0.09112 | -40 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 1 | fa_rate | 0 | 0.2444 | -40 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 1 | balanced_accuracy | -0.1406 | -0.07666 | -40 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 1 | dprime | -1.064 | 0.2701 | -40 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 1 | criterion | 0.5322 | -0.3978 | -40 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 1 | dprime | -0.0144 | 0.1925 | -40 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 1 | criterion | 0.679 | -0.8632 | -40 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 2 | dprime | -0.05865 | 0.0874 | -30 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 2 | criterion | 0.627 | -0.611 | -30 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 3 | hit_rate | -0.2188 | 0.03905 | -20 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 3 | fa_rate | 0 | 0.2421 | -20 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 3 | balanced_accuracy | -0.1094 | -0.1015 | -20 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 3 | dprime | -0.7156 | -0.09445 | -20 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 3 | criterion | 0.3578 | -0.1959 | -20 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 3 | dprime | -0.08968 | 0.1579 | -20 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 3 | criterion | 0.8376 | -0.7941 | -20 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 4 | dprime | -0.01828 | 0.1332 | -10 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 4 | criterion | 0.4254 | -0.7157 | -10 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 5 | hit_rate | -0.3707 | 0.07022 | 0 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 5 | fa_rate | 0.1667 | 0.1389 | 0 |
 | DN | LPE10884 | LPE10884_2024_01_12 | 5 | balanced_accuracy | -0.2687 | -0.03433 | 0 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 5 | dprime | -1.34 | 0.0004724 | 0 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 5 | criterion | 0.6699 | -0.2533 | 0 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 9 | hit_rate | -0.3542 | 0.1204 | 40 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 9 | fa_rate | 0.2 | 0.1167 | 40 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 9 | balanced_accuracy | -0.2771 | 0.001871 | 40 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 9 | dprime | -1.844 | 0.6092 | 40 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 9 | criterion | 0.7964 | -0.5164 | 40 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 10 | hit_rate | -0.2575 | 0.0296 | 50 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 10 | fa_rate | 0.25 | 0.1667 | 50 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 10 | balanced_accuracy | -0.2537 | -0.06853 | 50 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 10 | dprime | -2.072 | 0.1498 | 50 |
-| DN | LPE10884 | LPE10884_2024_01_12 | 10 | criterion | 0.4291 | -0.5003 | 50 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 5 | dprime | -0.1543 | 0.05789 | 0 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 5 | criterion | 0.9558 | -0.3787 | 0 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 6 | dprime | -0.1097 | 0.04108 | 10 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 6 | criterion | 0.8884 | -0.3534 | 10 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 7 | dprime | -0.4545 | 0.08243 | 20 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 7 | criterion | 2.553 | -0.5216 | 20 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 8 | dprime | -0.7642 | 0.3486 | 30 |
+| DN | LPE10884 | LPE10884_2024_01_12 | 8 | criterion | 5.639 | -2.497 | 30 |
 
-*(showing first 30 of 1476 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 1234 rows -- see the linked CSV for the rest)*
 
 [pupil_position_performance_per_unit__session.csv](../2_pipeline/1f_pupil_nonlinearity/out/pupil_position_performance_per_unit__session.csv)
 
@@ -540,36 +596,36 @@
 
 | protocol | y | window_k | win_center | n_units | mean_beta_quadratic | sem_beta_quadratic | mean_r | sem_r | frac_inverted_U | mean_cv_gain | p_beta_quadratic | p_r | p_beta_quadratic_holm | p_r_holm |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| DN | cur_lick | 0 | -50 | 24 | 0.04664 | 0.01495 | -0.1328 | 0.0241 | 0.04167 | -0.01714 | 0.003901 | 0.0001271 | 0.05071 | 0.0003812 |
-| DN | cur_lick | 1 | -40 | 24 | 0.02419 | 0.01832 | -0.08937 | 0.02782 | 0.04167 | -0.006246 | 0.1875 | 0.002516 | 1 | 0.00465 |
-| DN | cur_lick | 2 | -30 | 20 | 0.01129 | 0.01759 | -0.1082 | 0.03049 | 0.05 | -0.0004291 | 0.7012 | 0.002325 | 1 | 0.00465 |
-| DN | cur_lick | 3 | -20 | 24 | 0.02703 | 0.009691 | -0.1486 | 0.02099 | 0 | -0.01854 | 0.006516 | 5.126e-06 | 0.07819 | 3.076e-05 |
-| DN | cur_lick | 4 | -10 | 24 | 0.02836 | 0.01498 | -0.1695 | 0.01959 | 0.04167 | -0.01069 | 0.1074 | 1.192e-07 | 1 | 1.55e-06 |
-| DN | cur_lick | 5 | 0 | 24 | 0.04023 | 0.0141 | -0.2112 | 0.02254 | 0 | -0.01295 | 0.01504 | 1.192e-07 | 0.1655 | 1.55e-06 |
-| DN | cur_lick | 6 | 10 | 24 | 0.01277 | 0.01718 | -0.2082 | 0.02413 | 0 | -0.01137 | 0.5838 | 2.384e-07 | 1 | 2.623e-06 |
-| DN | cur_lick | 7 | 20 | 24 | -0.01832 | 0.01974 | -0.213 | 0.03177 | 0.04167 | 0.006429 | 0.4223 | 6.557e-06 | 1 | 3.278e-05 |
-| DN | cur_lick | 8 | 30 | 24 | -0.01521 | 0.02174 | -0.2869 | 0.03934 | 0.04167 | -0.006071 | 0.6033 | 2.265e-06 | 1 | 1.812e-05 |
-| DN | cur_lick | 9 | 40 | 24 | -0.005822 | 0.01817 | -0.2551 | 0.03625 | 0 | 0.008936 | 0.3449 | 1.192e-06 | 1 | 1.073e-05 |
-| DN | cur_lick | 10 | 50 | 24 | 0.00774 | 0.02091 | -0.1642 | 0.0231 | 0.04167 | -0.01031 | 0.5838 | 2.98e-06 | 1 | 2.086e-05 |
-| DN | cur_lick | 11 | 60 | 24 | -0.002248 | 0.02172 | -0.1403 | 0.01953 | 0.08333 | -0.01185 | 0.7898 | 8.345e-07 | 1 | 8.345e-06 |
-| DN | cur_lick | 12 | 70 | 24 | -0.001287 | 0.0174 | -0.1222 | 0.02279 | 0.04167 | -0.01289 | 0.3029 | 5.329e-05 | 1 | 0.0002131 |
-| DN | cur_motionenergy | 0 | -50 | 24 | -0.02419 | 0.02852 | 0.00484 | 0.06138 | 0 | 0.005057 | 0.2522 | 0.7898 | 1 | 1 |
-| DN | cur_motionenergy | 1 | -40 | 24 | -0.006756 | 0.02971 | -0.01452 | 0.06075 | 0 | 0.001508 | 0.7257 | 0.5646 | 1 | 1 |
-| DN | cur_motionenergy | 2 | -30 | 24 | -0.0001169 | 0.02465 | -0.005099 | 0.05651 | 0 | -0.001688 | 0.8774 | 0.7469 | 1 | 1 |
-| DN | cur_motionenergy | 3 | -20 | 24 | 0.003453 | 0.01968 | -0.01169 | 0.05617 | 0 | -0.001235 | 0.9441 | 0.4223 | 1 | 1 |
-| DN | cur_motionenergy | 4 | -10 | 24 | 0.004227 | 0.0252 | -0.0633 | 0.05554 | 0.04167 | 0.01525 | 0.8774 | 0.1515 | 1 | 1 |
-| DN | cur_motionenergy | 5 | 0 | 24 | 0.02069 | 0.0219 | -0.1135 | 0.04861 | 0 | -0.01827 | 0.3748 | 0.01504 | 1 | 0.1956 |
-| DN | cur_motionenergy | 6 | 10 | 24 | 0.02339 | 0.02915 | -0.09621 | 0.05001 | 0.08333 | 0.01822 | 0.4908 | 0.05264 | 1 | 0.5264 |
-| DN | cur_motionenergy | 7 | 20 | 24 | -0.01157 | 0.02327 | -0.1342 | 0.05981 | 0.08333 | -0.0101 | 0.8553 | 0.01944 | 1 | 0.2333 |
-| DN | cur_motionenergy | 8 | 30 | 24 | -0.04949 | 0.02532 | -0.1249 | 0.06444 | 0.04167 | 0.01236 | 0.05264 | 0.03148 | 0.6317 | 0.3463 |
-| DN | cur_motionenergy | 9 | 40 | 24 | -0.06738 | 0.02517 | -0.03377 | 0.07381 | 0.08333 | 0.02795 | 0.01152 | 0.6033 | 0.1497 | 1 |
-| DN | cur_motionenergy | 10 | 50 | 24 | -0.04946 | 0.02569 | 0.006647 | 0.07039 | 0 | 0.01055 | 0.1011 | 0.8553 | 1 | 1 |
-| DN | cur_motionenergy | 11 | 60 | 24 | -0.03213 | 0.02723 | -0.03237 | 0.0616 | 0.04167 | 0.01021 | 0.3029 | 0.1875 | 1 | 1 |
-| DN | cur_motionenergy | 12 | 70 | 24 | -0.001917 | 0.02627 | -0.03523 | 0.06372 | 0 | 0.00117 | 0.9664 | 0.2643 | 1 | 1 |
-| DN | cur_pupil_xpos | 0 | -50 | 24 | -0.01921 | 0.02431 | 0.01855 | 0.06978 | 0.04167 | -0.03883 | 0.4732 | 0.9888 | 1 | 1 |
-| DN | cur_pupil_xpos | 1 | -40 | 24 | -0.01588 | 0.02696 | -0.003153 | 0.07283 | 0.08333 | 0.0022 | 0.684 | 0.7898 | 1 | 1 |
-| DN | cur_pupil_xpos | 2 | -30 | 24 | -0.01042 | 0.02501 | -0.01863 | 0.07754 | 0.08333 | -0.008099 | 0.8334 | 0.7257 | 1 | 1 |
-| DN | cur_pupil_xpos | 3 | -20 | 24 | -0.002658 | 0.02573 | -0.008306 | 0.07809 | 0.08333 | -0.004331 | 0.9441 | 0.9664 | 1 | 1 |
+| DN | cur_lick | 0 | -50 | 24 | 0.03868 | 0.01753 | -0.1328 | 0.0241 | 0.04167 | -0.04644 | 0.03665 | 0.0001271 | 0.4764 | 0.0003812 |
+| DN | cur_lick | 1 | -40 | 24 | 0.0153 | 0.02131 | -0.08937 | 0.02782 | 0.04167 | -0.01987 | 0.7469 | 0.002516 | 1 | 0.00465 |
+| DN | cur_lick | 2 | -30 | 20 | 0.006297 | 0.01971 | -0.1082 | 0.03049 | 0.05 | -0.002508 | 0.9563 | 0.002325 | 1 | 0.00465 |
+| DN | cur_lick | 3 | -20 | 24 | 0.02069 | 0.00943 | -0.1486 | 0.02099 | 0 | -0.00575 | 0.05264 | 5.126e-06 | 0.579 | 3.076e-05 |
+| DN | cur_lick | 4 | -10 | 24 | 0.02219 | 0.01624 | -0.1695 | 0.01959 | 0 | -0.01471 | 0.2643 | 1.192e-07 | 1 | 1.55e-06 |
+| DN | cur_lick | 5 | 0 | 24 | 0.033 | 0.01506 | -0.2112 | 0.02254 | 0 | -0.01844 | 0.03948 | 1.192e-07 | 0.4764 | 1.55e-06 |
+| DN | cur_lick | 6 | 10 | 24 | 0.02248 | 0.02113 | -0.2082 | 0.02413 | 0 | -0.04129 | 0.4908 | 2.384e-07 | 1 | 2.623e-06 |
+| DN | cur_lick | 7 | 20 | 24 | -0.01774 | 0.02086 | -0.213 | 0.03177 | 0.08333 | -0.005182 | 0.4223 | 6.557e-06 | 1 | 3.278e-05 |
+| DN | cur_lick | 8 | 30 | 24 | -0.01095 | 0.02229 | -0.2869 | 0.03934 | 0.04167 | -0.008074 | 0.7257 | 2.265e-06 | 1 | 1.812e-05 |
+| DN | cur_lick | 9 | 40 | 24 | -0.01066 | 0.01725 | -0.2551 | 0.03625 | 0 | -0.02353 | 0.2897 | 1.192e-06 | 1 | 1.073e-05 |
+| DN | cur_lick | 10 | 50 | 24 | -0.003303 | 0.01895 | -0.1642 | 0.0231 | 0.04167 | -0.0135 | 0.7469 | 2.98e-06 | 1 | 2.086e-05 |
+| DN | cur_lick | 11 | 60 | 24 | -0.00977 | 0.02121 | -0.1403 | 0.01953 | 0.04167 | -0.02208 | 0.8774 | 8.345e-07 | 1 | 8.345e-06 |
+| DN | cur_lick | 12 | 70 | 24 | -0.002689 | 0.01727 | -0.1222 | 0.02279 | 0.04167 | -0.006822 | 0.4908 | 5.329e-05 | 1 | 0.0002131 |
+| DN | cur_motionenergy | 0 | -50 | 24 | -0.02136 | 0.02849 | 0.00484 | 0.06138 | 0.04167 | -0.006589 | 0.3902 | 0.7898 | 1 | 1 |
+| DN | cur_motionenergy | 1 | -40 | 24 | -0.008723 | 0.02644 | -0.01452 | 0.06075 | 0.04167 | 0.009912 | 0.684 | 0.5646 | 1 | 1 |
+| DN | cur_motionenergy | 2 | -30 | 24 | -0.006534 | 0.02261 | -0.005099 | 0.05651 | 0 | -0.003157 | 0.7683 | 0.7469 | 1 | 1 |
+| DN | cur_motionenergy | 3 | -20 | 24 | -0.0002528 | 0.02006 | -0.01169 | 0.05617 | 0 | -0.002011 | 0.9441 | 0.4223 | 1 | 1 |
+| DN | cur_motionenergy | 4 | -10 | 24 | 0.0002129 | 0.02626 | -0.0633 | 0.05554 | 0 | 0.009585 | 1 | 0.1515 | 1 | 1 |
+| DN | cur_motionenergy | 5 | 0 | 24 | 0.01234 | 0.022 | -0.1135 | 0.04861 | 0.04167 | -0.01528 | 0.5088 | 0.01504 | 1 | 0.1956 |
+| DN | cur_motionenergy | 6 | 10 | 24 | 0.03119 | 0.03181 | -0.09621 | 0.05001 | 0.08333 | -0.0293 | 0.3902 | 0.05264 | 1 | 0.5264 |
+| DN | cur_motionenergy | 7 | 20 | 24 | -0.01665 | 0.0244 | -0.1342 | 0.05981 | 0.04167 | -0.003667 | 0.5838 | 0.01944 | 1 | 0.2333 |
+| DN | cur_motionenergy | 8 | 30 | 24 | -0.04592 | 0.02676 | -0.1249 | 0.06444 | 0.08333 | 0.008827 | 0.07873 | 0.03148 | 0.8855 | 0.3463 |
+| DN | cur_motionenergy | 9 | 40 | 24 | -0.06462 | 0.02773 | -0.03377 | 0.07381 | 0.1667 | 0.02019 | 0.03148 | 0.6033 | 0.4093 | 1 |
+| DN | cur_motionenergy | 10 | 50 | 24 | -0.04972 | 0.02378 | 0.006647 | 0.07039 | 0 | 0.025 | 0.07379 | 0.8553 | 0.8855 | 1 |
+| DN | cur_motionenergy | 11 | 60 | 24 | -0.03438 | 0.02637 | -0.03237 | 0.0616 | 0.04167 | 0.00379 | 0.3165 | 0.1875 | 1 | 1 |
+| DN | cur_motionenergy | 12 | 70 | 24 | -0.007348 | 0.02552 | -0.03523 | 0.06372 | 0 | -0.008413 | 0.9664 | 0.2643 | 1 | 1 |
+| DN | cur_pupil_xpos | 0 | -50 | 24 | -0.02906 | 0.02514 | 0.01855 | 0.06978 | 0.125 | -0.05799 | 0.2768 | 0.9888 | 1 | 1 |
+| DN | cur_pupil_xpos | 1 | -40 | 24 | -0.01826 | 0.02704 | -0.003153 | 0.07283 | 0.04167 | 0.009097 | 0.6431 | 0.7898 | 1 | 1 |
+| DN | cur_pupil_xpos | 2 | -30 | 24 | -0.003795 | 0.0237 | -0.01863 | 0.07754 | 0.08333 | -0.008916 | 0.6634 | 0.7257 | 1 | 1 |
+| DN | cur_pupil_xpos | 3 | -20 | 24 | -0.004564 | 0.02708 | -0.008306 | 0.07809 | 0.08333 | -0.004118 | 0.9441 | 0.9664 | 1 | 1 |
 
 *(showing first 30 of 156 rows -- see the linked CSV for the rest)*
 
@@ -610,6 +666,68 @@
 | DP | cur_pupil_area | cur_pupil_ypos | 124 | -0.7887 | 0.1986 | 0.04724 | -1.24 | -0.1722 | 0.9994 | 0.2337 | 1.985 | -1.137 | 1.552 | False |
 | DP | cur_pupil_area | lick_any | 124 | -0.3036 | 0.03579 | 0.6803 | -0.3849 | -0.1925 | 0.8977 | 0.1897 | 4.241 | -1.137 | 1.552 | False |
 
-*(showing first 15 of 30 columns; showing first 30 of 2414 rows -- see the linked CSV for the rest)*
+*(showing first 15 of 48 columns; showing first 30 of 2414 rows -- see the linked CSV for the rest)*
 
 [pupil_position_windows_per_unit__session.csv](../2_pipeline/1f_pupil_nonlinearity/out/pupil_position_windows_per_unit__session.csv)
+
+### Pupil tuning correlations  session
+
+| protocol | var_a | var_b | rho | sem | n_units |
+| --- | --- | --- | --- | --- | --- |
+| DN | pupil_area | lick | -0.1295 | 0.04681 | 26 |
+| DN | pupil_area | motionenergy | 0.03554 | 0.05695 | 26 |
+| DN | pupil_area | pos_rel | 0.007853 | 0.01949 | 26 |
+| DN | pupil_area | pupil_xpos | 0.0344 | 0.06565 | 25 |
+| DN | pupil_area | pupil_ypos | 0.113 | 0.05872 | 25 |
+| DN | pupil_area | runspeed | 0.2343 | 0.03846 | 26 |
+| DN | pupil_area | videoPC_0 | -0.04797 | 0.05692 | 26 |
+| DN | pupil_area | videoPC_1 | 0.01735 | 0.04258 | 26 |
+| DP | pupil_area | lick | 0.004762 | 0.1103 | 10 |
+| DP | pupil_area | motionenergy | 0.1799 | 0.1709 | 10 |
+| DP | pupil_area | pos_rel | -0.08941 | 0.09276 | 10 |
+| DP | pupil_area | pupil_xpos | 0.05566 | 0.1091 | 7 |
+| DP | pupil_area | pupil_ypos | 0.128 | 0.09763 | 7 |
+| DP | pupil_area | runspeed | 0.2442 | 0.165 | 10 |
+| DP | pupil_area | videoPC_0 | 0.1161 | 0.1722 | 10 |
+| DP | pupil_area | videoPC_1 | 0.1083 | 0.1288 | 10 |
+
+[pupil_tuning_correlations__session.csv](../2_pipeline/1f_pupil_nonlinearity/out/pupil_tuning_correlations__session.csv)
+
+### Pupil tuning curves  session
+
+| protocol | level | y | bin | scheme | pupil_area | ymean | sem | n_units | n |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DN | pre_stim | lick | 0 | quantile | -0.977 | 0.05073 | 0.00858 | 25 | 434 |
+| DN | pre_stim | lick | 1 | equal_width | -1.721 | 0.01756 | 0.00729 | 6 | 54 |
+| DN | pre_stim | lick | 1 | quantile | -0.6138 | 0.05484 | 0.00942 | 24 | 416 |
+| DN | pre_stim | lick | 2 | equal_width | -1.031 | 0.03963 | 0.005832 | 19 | 612 |
+| DN | pre_stim | lick | 2 | quantile | -0.33 | 0.04033 | 0.008224 | 24 | 420 |
+| DN | pre_stim | lick | 3 | equal_width | -0.336 | 0.04853 | 0.008858 | 24 | 1084 |
+| DN | pre_stim | lick | 3 | quantile | -0.08715 | 0.02474 | 0.006359 | 24 | 413 |
+| DN | pre_stim | lick | 4 | equal_width | 0.3372 | 0.02783 | 0.005535 | 25 | 1125 |
+| DN | pre_stim | lick | 4 | quantile | 0.1366 | 0.0305 | 0.006967 | 25 | 430 |
+| DN | pre_stim | lick | 5 | equal_width | 1.024 | 0.01357 | 0.0045 | 19 | 373 |
+| DN | pre_stim | lick | 5 | quantile | 0.322 | 0.02343 | 0.006953 | 24 | 416 |
+| DN | pre_stim | lick | 6 | equal_width | 1.757 | 0.003095 | 0.002369 | 7 | 67 |
+| DN | pre_stim | lick | 6 | quantile | 0.5485 | 0.03079 | 0.01021 | 24 | 420 |
+| DN | pre_stim | lick | 7 | equal_width | 2.406 | 0 | 0 | 1 | 6 |
+| DN | pre_stim | lick | 7 | quantile | 1.091 | 0.009735 | 0.002811 | 24 | 409 |
+| DN | pre_stim | lick_response | 0 | quantile | -0.977 | 0.5635 | 0.03907 | 25 | 434 |
+| DN | pre_stim | lick_response | 1 | equal_width | -1.721 | 0.5468 | 0.09264 | 6 | 54 |
+| DN | pre_stim | lick_response | 1 | quantile | -0.6138 | 0.5907 | 0.03489 | 24 | 416 |
+| DN | pre_stim | lick_response | 2 | equal_width | -1.031 | 0.617 | 0.04517 | 19 | 612 |
+| DN | pre_stim | lick_response | 2 | quantile | -0.33 | 0.5505 | 0.04118 | 24 | 420 |
+| DN | pre_stim | lick_response | 3 | equal_width | -0.336 | 0.5416 | 0.03597 | 24 | 1084 |
+| DN | pre_stim | lick_response | 3 | quantile | -0.08715 | 0.5767 | 0.03952 | 24 | 413 |
+| DN | pre_stim | lick_response | 4 | equal_width | 0.3372 | 0.4703 | 0.036 | 25 | 1125 |
+| DN | pre_stim | lick_response | 4 | quantile | 0.1366 | 0.5922 | 0.03582 | 25 | 430 |
+| DN | pre_stim | lick_response | 5 | equal_width | 1.024 | 0.4298 | 0.05653 | 19 | 373 |
+| DN | pre_stim | lick_response | 5 | quantile | 0.322 | 0.4732 | 0.03329 | 24 | 416 |
+| DN | pre_stim | lick_response | 6 | equal_width | 1.757 | 0.3432 | 0.03157 | 7 | 67 |
+| DN | pre_stim | lick_response | 6 | quantile | 0.5485 | 0.4235 | 0.05053 | 24 | 420 |
+| DN | pre_stim | lick_response | 7 | equal_width | 2.406 | 0.6667 | 0 | 1 | 6 |
+| DN | pre_stim | lick_response | 7 | quantile | 1.091 | 0.3716 | 0.03727 | 24 | 409 |
+
+*(showing first 30 of 1115 rows -- see the linked CSV for the rest)*
+
+[pupil_tuning_curves__session.csv](../2_pipeline/1f_pupil_nonlinearity/out/pupil_tuning_curves__session.csv)

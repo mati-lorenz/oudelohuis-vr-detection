@@ -1,6 +1,44 @@
 # 3a2_all_pairs_noise_correlations
 
-*Auto-generated from `2_pipeline/3a2_all_pairs_noise_correlations/out/` on 2026-11-10 17:48. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+*Auto-generated from `2_pipeline/3a2_all_pairs_noise_correlations/out/` on 2026-11-10 18:51. Re-run `make_progress_md.py` after the script's output changes -- don't hand-edit this file.*
+
+## Figures
+
+### Noise correlation by group
+
+![1_noise_correlation_by_group](../2_pipeline/3a2_all_pairs_noise_correlations/out/figures/choice/1_noise_correlation_by_group.png)
+
+### Noise correlation distribution
+
+![2_noise_correlation_distribution](../2_pipeline/3a2_all_pairs_noise_correlations/out/figures/choice/2_noise_correlation_distribution.png)
+
+### Compare targets noise corr
+
+![compare_targets_noise_corr](../2_pipeline/3a2_all_pairs_noise_correlations/out/figures/compare_targets_noise_corr.png)
+
+### Noise correlation by group
+
+![1_noise_correlation_by_group](../2_pipeline/3a2_all_pairs_noise_correlations/out/figures/pct_0-20_20-80_80-100/1_noise_correlation_by_group.png)
+
+### Noise correlation distribution
+
+![2_noise_correlation_distribution](../2_pipeline/3a2_all_pairs_noise_correlations/out/figures/pct_0-20_20-80_80-100/2_noise_correlation_distribution.png)
+
+### Noise correlation by group
+
+![1_noise_correlation_by_group](../2_pipeline/3a2_all_pairs_noise_correlations/out/figures/zero_to80_above80/1_noise_correlation_by_group.png)
+
+### Noise correlation distribution
+
+![2_noise_correlation_distribution](../2_pipeline/3a2_all_pairs_noise_correlations/out/figures/zero_to80_above80/2_noise_correlation_distribution.png)
+
+### Noise correlation by group
+
+![1_noise_correlation_by_group](../2_pipeline/3a2_all_pairs_noise_correlations/out/figures/zero_vs_nonzero/1_noise_correlation_by_group.png)
+
+### Noise correlation distribution
+
+![2_noise_correlation_distribution](../2_pipeline/3a2_all_pairs_noise_correlations/out/figures/zero_vs_nonzero/2_noise_correlation_distribution.png)
 
 ## Tables
 
@@ -19,12 +57,9 @@
 | AL_unl | AL_unl | pre_stim | choice | LPE11998_2024_04_23 | 51681 | 0.02321 | LPE11998 |
 | AL_unl | AL_unl | pre_stim | choice | LPE11998_2024_04_24 | 10878 | 0.0187 | LPE11998 |
 | AL_unl | AL_unl | pre_stim | choice | LPE11998_2024_04_25 | 9453 | 0.02736 | LPE11998 |
-| AL_unl | AL_unl | pre_stim | choice | LPE11998_2024_04_29 | 87571 | 0.01349 | LPE11998 |
-| AL_unl | AL_unl | pre_stim | choice | LPE11998_2024_05_01 | 25425 | 0.02675 | LPE11998 |
 | AL_unl | AL_unl | pre_stim | choice | LPE12013_2024_04_25 | 25651 | 0.006201 | LPE12013 |
 | AL_unl | AL_unl | pre_stim | choice | LPE12013_2024_04_26 | 48516 | 0.009555 | LPE12013 |
 | AL_unl | AL_unl | pre_stim | choice | LPE12013_2024_04_29 | 97461 | 0.004565 | LPE12013 |
-| AL_unl | AL_unl | pre_stim | choice | LPE12013_2024_04_30 | 107880 | 0.006103 | LPE12013 |
 | AL_unl | AL_unl | pre_stim | choice | LPE12385_2024_06_15 | 45451 | 0.01085 | LPE12385 |
 | AL_unl | AL_unl | pre_stim | choice | LPE12385_2024_06_16 | 6105 | 0.01545 | LPE12385 |
 | AL_unl | AL_unl | pre_stim | choice | LPE12385_2024_06_17 | 18915 | 0.01149 | LPE12385 |
@@ -38,8 +73,11 @@
 | AL_unl | AL_unl | pre_stim | pct_0-20_20-80_80-100 | LPE11997_2024_04_16 | 2775 | 0.03225 | LPE11997 |
 | AL_unl | AL_unl | pre_stim | pct_0-20_20-80_80-100 | LPE11997_2024_04_17 | 10585 | 0.01929 | LPE11997 |
 | AL_unl | AL_unl | pre_stim | pct_0-20_20-80_80-100 | LPE11997_2024_04_18 | 45 | 0.01153 | LPE11997 |
+| AL_unl | AL_unl | pre_stim | pct_0-20_20-80_80-100 | LPE11998_2024_04_23 | 51681 | 0.02169 | LPE11998 |
+| AL_unl | AL_unl | pre_stim | pct_0-20_20-80_80-100 | LPE11998_2024_04_24 | 10878 | 0.01843 | LPE11998 |
+| AL_unl | AL_unl | pre_stim | pct_0-20_20-80_80-100 | LPE11998_2024_04_25 | 9453 | 0.02766 | LPE11998 |
 
-*(showing first 30 of 5160 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 7704 rows -- see the linked CSV for the rest)*
 
 [noise_corr_by_group_pair__session.csv](../2_pipeline/3a2_all_pairs_noise_correlations/out/noise_corr_by_group_pair__session.csv)
 
@@ -78,6 +116,6 @@
 | LPE10884_2024_01_12 | LPE10884 | reward | pct_0-20_20-80_80-100 | AL_unl | RSP_unl | 20160 | 0.01534 | 0.09531 |
 | LPE10884_2024_01_12 | LPE10884 | reward | pct_0-20_20-80_80-100 | RSP_unl | RSP_unl | 1953 | 0.01982 | 0.1116 |
 
-*(showing first 30 of 5172 rows -- see the linked CSV for the rest)*
+*(showing first 30 of 7716 rows -- see the linked CSV for the rest)*
 
 [noise_corr_per_session.csv](../2_pipeline/3a2_all_pairs_noise_correlations/out/noise_corr_per_session.csv)

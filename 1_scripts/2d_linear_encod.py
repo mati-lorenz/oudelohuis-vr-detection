@@ -278,7 +278,7 @@ def roc_block(ses, activity, zpos_F, trials, masks, cell_ids, n_perm, n_perm_tmp
 
 def process_session(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
-    cells = set(new_cells)          # only the cells not yet in the ledger (session_jobs.run_sessions_units)
+    cells = set(new_cells)          # the requested cells (session_jobs.run_sessions_units)
     td = ses.trialdata
     if not cells or td is None or "engaged" not in td.columns:
         return None

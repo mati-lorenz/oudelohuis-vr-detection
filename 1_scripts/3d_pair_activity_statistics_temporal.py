@@ -12,9 +12,9 @@ Each window = the trial's mean activity over the frames of the engaged trial ins
 BINS: `fixed` = non-overlapping bins of BINSIZE cm; `sliding` = windows of WINDOW cm moved by STEP cm (neighbouring windows
 share data: the curve is smoother and less noisy, its points are not independent). A frame is used only if it lies in ITS OWN
 engaged trial's [tStart, tEnd].
-PAIRS: MAX_PAIRS_PER_GROUP = 150 per (session, area, label), sampled here from the 2a + 2b included cells (as 3g / 3h), no
+PAIRS: MAX_PAIRS_PER_GROUP = 200 per (session, area, label), sampled here from the 2a + 2b included cells (as 3g / 3h), no
 longer 3a's list of 8: the pairs therefore differ from 3a's.
-TARGETS: stim__<strategy> (zero_to80_above80, pct_0-20_20-80_80-100, zero_vs_nonzero), `choice`, and `all_levels` (every stimulus
+TARGETS: stim__pct_0-25_25-50_50-75_75-100 (the project's one stimulus binning, 4 lick-probability bins), `choice`, and `all_levels` (every stimulus
 value its own bin: the best-defined signal correlation, 6 points). signal_corr needs >= 3 target bins, it is empty for the
 2-bin targets (the correlation of 2 points is always +-1).
 
@@ -58,7 +58,7 @@ from infotheory.groups import group_key
 from infotheory.plotting import set_style, save_fig, clear_figures
 from infotheory.scope import add_scope_args, scope_from_args, scoped_dirs, unit_noun
 from infotheory.session_jobs import run_sessions
-from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, CHOICE_TARGET, target_signature,
+from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, SIMPLE_STRATEGIES, CHOICE_TARGET, target_signature,
                                      target_bin_names, describe_strategies)
 from infotheory import pair_temporal as ptt
 
@@ -70,7 +70,7 @@ BINNINGS = ["fixed", "sliding"]
 WINDOWS = {"pre_stim": (-30.0, -10.0), "stim": (0.0, 20.0), "reward": (25.0, 45.0)}   # 3a's windows (cm), shaded
 MIN_PAIRS_PER_UNIT = 5
 RANDOM_STATE = 0
-BINNING_STRATEGIES = list(DEFAULT_STRATEGIES) + ["all_levels"]
+BINNING_STRATEGIES = list(SIMPLE_STRATEGIES) + ["all_levels"]
 INCLUDE_CHOICE_TARGET = True
 JOBLIB_VERBOSE = 5
 METRICS = ["raw_corr", "noise_corr", "signal_corr"]      # raw first: its pair count defines n_pairs / n_units
@@ -84,7 +84,7 @@ parser.add_argument("--binnings", nargs="+", default=BINNINGS, choices=BINNINGS)
 parser.add_argument("--window", type=float, default=WINDOW, help="sliding window (cm)")
 parser.add_argument("--step", type=float, default=STEP, help="sliding step (cm)")
 args = parser.parse_args()
-MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
+MAX_PAIRS = args.max_pairs or cfg.MAX_PAIRS_PER_SESSION or MAX_PAIRS_PER_GROUP   # --max-pairs / project_config.MAX_PAIRS_PER_SESSION; here: pairs per (session, area, label); the constant above is the fallback
 scope = scope_from_args(args)
 AGG = scope.aggregate
 UNIT = unit_noun(AGG)
@@ -111,7 +111,7 @@ def process_session(ses, seed):
     cells = inp.cells_by_session.get(sid)
     if not cells or ses.celldata is None or ses.calciumdata is None or ses.behaviordata is None:
         return []
-    pairs = ptt.sample_group_pairs(ses, cells, MAX_PAIRS, "pairs3d", RANDOM_STATE)
+    pairs = ptt.sample_group_pairs(ses, cells, MAX_PAIRS, "pairs3d", RANDOM_STATE, group_of=inp.cell_group)
     if pairs is None:
         return []
     use = sorted(set(pairs["cell_i"]) | set(pairs["cell_j"]))
@@ -141,7 +141,7 @@ records = run_sessions(
     inp.session_ids, process_session, [PROTOCOL], paths.store, "temporal_corr",
     key_params=dict(s_pre=S_PRE, s_post=S_POST, binsize=BINSIZE, window=args.window, step=args.step, binnings=BINS_RUN,
                     max_pairs=MAX_PAIRS, targets=target_signature(TARGETS), min_trials=cfg.MIN_TRIALS_ANALYSIS,
-                    min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3d-v5", fits_mtime=int(inp.fits_path.stat().st_mtime)),
+                    min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3d-v6", fits_mtime=int(inp.fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
     cells_by_session=inp.cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
     verbose=JOBLIB_VERBOSE, extra_key_by_session=inp.stamps, flatten=True)

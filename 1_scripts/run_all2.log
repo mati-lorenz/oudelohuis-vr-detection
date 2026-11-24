@@ -1,0 +1,52 @@
+nohup: ignoring input
+== run_all: --n-jobs 5, pair cap 200, extra args: none  (Wed Nov 11 09:43:50 AM CET 2026)
+-- 3a 3a_pair_activity_statistics  started 09:43:50
+   ok   (8 min)
+-- 3b 3b_pair_information_breakdown  started 09:52:00
+   ok   (5 min)
+-- 3c 3c_pair_information_pid  started 09:57:08
+   ok   (7 min)
+-- 3d 3d_pair_activity_statistics_temporal  started 10:04:54
+   ok   (1 min)
+-- 3e 3e_pair_information_breakdown_temporal  started 10:06:14
+   FAILED (exit 1, 0 min) -- run_all_logs/3e_pair_information_breakdown_temporal.log
+   |     writer(f"[{self}]: {msg}\n")
+   |     ~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+   | OSError: [Errno 122] Disk quota exceeded
+-- 3f 3f_pair_information_pid_temporal  started 10:06:19
+   FAILED (exit 1, 0 min) -- run_all_logs/3f_pair_information_pid_temporal.log
+   |     writer(f"[{self}]: {msg}\n")
+   |     ~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+   | OSError: [Errno 122] Disk quota exceeded
+-- 3g 3g_pair_hit_miss_correlations  started 10:06:22
+   FAILED (exit 1, 0 min) -- run_all_logs/3g_pair_hit_miss_correlations.log
+   |     writer(f"[{self}]: {msg}\n")
+   |     ~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+   | OSError: [Errno 122] Disk quota exceeded
+-- 3h 3h_pair_correlations_strategies  started 10:06:26
+   FAILED (exit 1, 0 min) -- run_all_logs/3h_pair_correlations_strategies.log
+   |     writer(f"[{self}]: {msg}\n")
+   |     ~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+   | OSError: [Errno 122] Disk quota exceeded
+-- 3i 3i_pair_behavior_correlations  started 10:06:30
+   FAILED (exit 1, 0 min) -- run_all_logs/3i_pair_behavior_correlations.log
+   |     writer(f"[{self}]: {msg}\n")
+   |     ~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+   | OSError: [Errno 122] Disk quota exceeded
+-- 3j 3j_pair_behavior_information  started 10:06:33
+   FAILED (exit 1, 0 min) -- run_all_logs/3j_pair_behavior_information.log
+   |     writer(f"[{self}]: {msg}\n")
+   |     ~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+   | OSError: [Errno 122] Disk quota exceeded
+-- 3k 3k_pair_behavior_breakdown  started 10:06:37
+   FAILED (exit 1, 0 min) -- run_all_logs/3k_pair_behavior_breakdown.log
+   |     writer(f"[{self}]: {msg}\n")
+   |     ~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+   | OSError: [Errno 122] Disk quota exceeded
+-- 3l 3l_pair_behavior_pid  started 10:06:41
+   FAILED (exit 1, 0 min) -- run_all_logs/3l_pair_behavior_pid.log
+   |     writer(f"[{self}]: {msg}\n")
+   |     ~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+   | OSError: [Errno 122] Disk quota exceeded
+== done in 22 min
+== failed / skipped: 3e 3f 3g 3h 3i 3j 3k 3l

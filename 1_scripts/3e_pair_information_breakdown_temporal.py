@@ -9,7 +9,7 @@ at every position bin relative to stimulus onset instead of once per coarse wind
 BINS: `fixed` = non-overlapping bins of BINSIZE cm; `sliding` = windows of WINDOW cm moved by STEP cm (neighbouring windows
 share data: the curve is smoother and less noisy, its points are not independent). Each window = the trial's mean activity
 over the frames of the engaged trial inside the window (a frame is used only if it lies in ITS OWN trial's [tStart, tEnd]).
-PAIRS: MAX_PAIRS_PER_GROUP = 150 per (session, area, label), sampled here from the 2a + 2b included cells (as 3g / 3h), no
+PAIRS: MAX_PAIRS_PER_GROUP = 200 per (session, area, label), sampled here from the 2a + 2b included cells (as 3g / 3h), no
 longer 3a's list of 5-8: the pairs therefore differ from 3a-3c's (the window-based 3b uses 3a's small sample).
 COST: one full breakdown per (pair, window, target), about 3 ms with MI_SHUFFLES = 4: with ~900 pairs per session, 4 targets
 and 6 fixed + 25 sliding windows this is of the order of 10 minutes per session and worker. --binnings fixed / sliding
@@ -52,7 +52,7 @@ from infotheory.groups import group_key
 from infotheory.plotting import set_style, save_fig, clear_figures
 from infotheory.scope import add_scope_args, scope_from_args, scoped_dirs, unit_noun
 from infotheory.session_jobs import run_sessions
-from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, CHOICE_TARGET, target_signature,
+from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, SIMPLE_STRATEGIES, CHOICE_TARGET, target_signature,
                                      target_bin_names, describe_strategies)
 from infotheory import pair_temporal as ptt
 
@@ -65,7 +65,7 @@ R_BINS = cfg.RESPONSE_BINS
 MI_SHUFFLES = 4
 MIN_PAIRS_PER_UNIT = 5
 RANDOM_STATE = 0
-BINNING_STRATEGIES = list(DEFAULT_STRATEGIES)
+BINNING_STRATEGIES = list(SIMPLE_STRATEGIES)
 INCLUDE_CHOICE_TARGET = True
 JOBLIB_VERBOSE = 5
 TERMS = ["I_lin", "I_sigsim", "I_cor"]
@@ -81,7 +81,7 @@ parser.add_argument("--window", type=float, default=WINDOW, help="sliding window
 parser.add_argument("--step", type=float, default=STEP, help="sliding step (cm)")
 parser.add_argument("--mi-shuffles", type=int, default=MI_SHUFFLES)
 args = parser.parse_args()
-MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
+MAX_PAIRS = args.max_pairs or cfg.MAX_PAIRS_PER_SESSION or MAX_PAIRS_PER_GROUP   # --max-pairs / project_config.MAX_PAIRS_PER_SESSION; here: pairs per (session, area, label); the constant above is the fallback
 scope = scope_from_args(args)
 AGG = scope.aggregate
 UNIT = unit_noun(AGG)
@@ -108,7 +108,7 @@ def process_session(ses, seed):
     cells = inp.cells_by_session.get(sid)
     if not cells or ses.celldata is None or ses.calciumdata is None or ses.behaviordata is None:
         return []
-    pairs = ptt.sample_group_pairs(ses, cells, MAX_PAIRS, "pairs3e", RANDOM_STATE)
+    pairs = ptt.sample_group_pairs(ses, cells, MAX_PAIRS, "pairs3e", RANDOM_STATE, group_of=inp.cell_group)
     if pairs is None:
         return []
     use = sorted(set(pairs["cell_i"]) | set(pairs["cell_j"]))
@@ -142,7 +142,7 @@ records = run_sessions(
     key_params=dict(s_pre=S_PRE, s_post=S_POST, binsize=BINSIZE, window=args.window, step=args.step, binnings=BINS_RUN,
                     r_bins=R_BINS, mi_shuffles=args.mi_shuffles, max_pairs=MAX_PAIRS,
                     targets=target_signature(TARGETS), min_trials=cfg.MIN_TRIALS_ANALYSIS,
-                    min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3e-v8", fits_mtime=int(inp.fits_path.stat().st_mtime)),
+                    min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3e-v9", fits_mtime=int(inp.fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
     cells_by_session=inp.cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
     verbose=JOBLIB_VERBOSE, extra_key_by_session=inp.stamps, flatten=True)

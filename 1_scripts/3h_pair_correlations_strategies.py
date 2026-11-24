@@ -22,9 +22,9 @@ a bin, and with TWO kinds of bins:
                   points are NOT independent -- read the shape, not point-to-point differences). Window centre on the x axis.
 
 TARGETS (what the signal / noise correlation is conditioned on): each stimulus strategy of stim_binning.py
-(`zero_to80_above80`, `pct_0-20_20-80_80-100`, `zero_vs_nonzero`), `choice`, and `all_levels` = EVERY stimulus value (0, 20,
+(now only `pct_0-25_25-50_50-75_75-100`, 4 lick-probability bins), `choice`, and `all_levels` = EVERY stimulus value (0, 20,
 ..., 100) is its own bin. signal_corr needs >= 3 target bins (a correlation of 2 points is always +-1): it exists for the
-stimulus strategies with 3 bins and for all_levels (6 bins, the best-defined tuning similarity), and it is empty for the
+stimulus binning (4 bins) and for all_levels (6 bins, the best-defined tuning similarity), and it is empty for the
 2-bin targets.
 
 FILTERS (the project's, as 3a-3g): sessions = 1b-included (psychometric_fits.csv), restricted by --animals / --sessions;
@@ -80,7 +80,7 @@ from infotheory.neural_encoding import build_session_tables, load_cell_inclusion
 from infotheory.continuous import build_calcium_continuous
 from infotheory.psth import derive_onset_time
 from infotheory.unit_stats import stable_seed
-from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, CHOICE_TARGET, target_signature,
+from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, SIMPLE_STRATEGIES, CHOICE_TARGET, target_signature,
                                      target_bin_names, describe_strategies)
 from infotheory import pair_tables as pt
 from infotheory import position_info as pi
@@ -98,7 +98,7 @@ MAX_PAIRS_PER_GROUP = 200    # per (session, area, label)
 MIN_PAIRS_PER_UNIT = 5
 MIN_FRAMES_POOLED = 30       # frame_pooled: frames needed in the bin (after the trial rule)
 RANDOM_STATE = 0
-BINNING_STRATEGIES = list(DEFAULT_STRATEGIES) + ["all_levels"]
+BINNING_STRATEGIES = list(SIMPLE_STRATEGIES) + ["all_levels"]
 INCLUDE_CHOICE_TARGET = True
 JOBLIB_VERBOSE = 5
 METRICS = ["signal_corr", "noise_corr", "raw_corr"]
@@ -116,7 +116,7 @@ parser.add_argument("--time-bin", type=float, default=AXES_DEF["time"]["binsize"
 parser.add_argument("--time-window", type=float, default=AXES_DEF["time"]["window"], help="sliding window (s)")
 parser.add_argument("--time-step", type=float, default=AXES_DEF["time"]["step"], help="sliding step (s)")
 args = parser.parse_args()
-MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
+MAX_PAIRS = args.max_pairs or cfg.MAX_PAIRS_PER_SESSION or MAX_PAIRS_PER_GROUP   # --max-pairs / project_config.MAX_PAIRS_PER_SESSION; here: pairs per (session, area, label); the constant above is the fallback
 for ax_ in ("position", "time"):
     AXES_DEF[ax_]["binsize"] = getattr(args, f"{ax_}_bin")
     AXES_DEF[ax_]["window"] = getattr(args, f"{ax_}_window")
@@ -164,6 +164,7 @@ session_ids = [s for s in selected if s in included_all]
 if not session_ids:
     raise SystemExit("None of the selected sessions passed 1b_psychometric's inclusion criteria.")
 inclusion = load_cell_inclusion(cell_dist_out, activity_out)
+cell_group = dict(zip(inclusion["cell_id"], inclusion["group"]))      # 2a's groups (8 with deep PM): pairs are sampled within each
 cells_by_session = {sid: set(sub.loc[sub["include"], "cell_id"]) for sid, sub in inclusion.groupby("session_id")
                     if sid in session_ids}
 session_ids = [s for s in session_ids if cells_by_session.get(s)]
@@ -239,7 +240,7 @@ def process_session(ses, seed):
     if len(celldata) < 2:
         return []
     pairs = pt.sample_session_pairs(celldata, sid, np.random.default_rng(stable_seed(sid, "pairs3h", base=RANDOM_STATE)),
-                                    MAX_PAIRS)
+                                    MAX_PAIRS, group_of=cell_group)
     if pairs.empty:
         return []
     pairs = add_six_group_column(pairs, area_var="roi_name", label_var="labeled_grouped")
@@ -336,7 +337,7 @@ def process_session(ses, seed):
 records = run_sessions(
     session_ids, process_session, [PROTOCOL], paths.store, "strategy_corr",
     key_params=dict(axes={a: AXES_DEF[a] for a in AXES}, binnings=BINS_RUN, targets=target_signature(TARGETS),
-                    min_trials=cfg.MIN_TRIALS_ANALYSIS, min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3h-v4",
+                    min_trials=cfg.MIN_TRIALS_ANALYSIS, min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3h-v5",
                     frames=MIN_FRAMES_POOLED, max_pairs=MAX_PAIRS, fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
     cells_by_session=cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,

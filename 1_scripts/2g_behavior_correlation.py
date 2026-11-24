@@ -224,7 +224,7 @@ def residualize_by_position(X, rel, mask, bin_cm):
 
 def process_session(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
-    cell_ids = list(new_cells)          # only the cells not yet in the ledger (session_jobs.run_sessions_units)
+    cell_ids = list(new_cells)          # the requested cells (session_jobs.run_sessions_units)
     if (not cell_ids or ses.calciumdata is None or ses.ts_F is None or ses.trialdata is None
             or ses.behaviordata is None or "engaged" not in ses.trialdata.columns):
         return None

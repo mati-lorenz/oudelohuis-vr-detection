@@ -1,0 +1,82 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+22 sessions, 22619 included cells
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed:   55.2s
+  [LPE10884_2024_01_12] lag search done (383 cells, 17 lags)
+  [LPE11997_2024_04_10] lag search done (2083 cells, 17 lags)
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/externals/loky/process_executor.py:787: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed:  1.5min remaining:   20.6s
+  [LPE11622_2024_02_23] lag search done (1639 cells, 17 lags)
+  [LPE11997_2024_04_16] lag search done (845 cells, 17 lags)
+  [LPE11998_2024_04_24] lag search done (717 cells, 17 lags)
+  [LPE11998_2024_05_01] lag search done (525 cells, 17 lags)
+  [LPE12385_2024_06_17] lag search done (885 cells, 17 lags)
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed:  1.7min finished
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+
+1506914 (cell, predictor, lag) linear r² values
+
+Optimal lag per (predictor, group); positive = behavior BEFORE activity, negative = activity leads:
+group         V1_lab  V1_unl  PM_lab  PM_unl  AL_unl  RSP_unl  PMdeep_lab  PMdeep_unl
+predictor                                                                            
+lick           -1.25   -1.75   -0.75   -1.75   -1.00    -0.25       -0.25       -1.50
+motionenergy    0.25    0.25    0.00    0.00    0.00     0.00        0.00        0.25
+pupil_area     -0.25   -0.25    0.00   -0.50   -0.50    -0.25       -0.25       -0.25
+runspeed        0.25    0.25    0.25    0.25    0.25     0.25        0.25        0.25
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed: 13.5min
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed: 24.7min remaining:  5.5min
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed: 28.0min finished
+  [LPE11622_2024_02_20] lag search done (1554 cells, 17 lags)
+  [LPE11997_2024_04_18] lag search done (202 cells, 17 lags)
+  [LPE11998_2024_04_23] lag search done (840 cells, 17 lags)
+  [LPE12013_2024_04_26] lag search done (1014 cells, 17 lags)
+  [LPE12385_2024_06_15] lag search done (971 cells, 17 lags)
+  [LPE11622_2024_02_23] Granger, position MI, TE done
+  [LPE11997_2024_04_16] Granger, position MI, TE done
+  [LPE11998_2024_04_23] Granger, position MI, TE done
+  [LPE12013_2024_04_25] Granger, position MI, TE done
+  [LPE12385_2024_06_17] Granger, position MI, TE done
+
+88642 Granger tests. CAVEAT: the lag tested was chosen by maximising r² (post-selection inference), so fractions above 5% are inflated even for no real effect -- upper bounds.
+group         V1_lab  V1_unl  PM_lab  PM_unl  AL_unl  RSP_unl  PMdeep_lab  PMdeep_unl
+predictor                                                                            
+lick           0.184   0.151   0.162   0.191   0.162    0.179       0.239       0.186
+motionenergy   0.531   0.488   0.566   0.555   0.573    0.551       0.628       0.603
+pupil_area     0.531   0.487   0.479   0.563   0.520    0.617       0.644       0.644
+runspeed       0.735   0.733   0.725   0.712   0.739    0.728       0.804       0.784
+
+1302409 per-cell position_information values
+
+232818 per-cell position_transfer_entropy values
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2f_lag_information/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2f_lag_information/out/figures
+  [LPE11622_2024_02_22] lag search done (1712 cells, 17 lags)
+  [LPE11998_2024_04_25] lag search done (585 cells, 17 lags)
+  [LPE12013_2024_04_29] lag search done (853 cells, 17 lags)
+  [LPE12385_2024_06_26] lag search done (853 cells, 17 lags)
+  [LPE11622_2024_02_20] Granger, position MI, TE done
+  [LPE11997_2024_04_18] Granger, position MI, TE done
+  [LPE11998_2024_04_25] Granger, position MI, TE done
+  [LPE12013_2024_04_30] Granger, position MI, TE done
+  [LPE11622_2024_02_26] Granger, position MI, TE done
+  [LPE11997_2024_04_17] Granger, position MI, TE done
+  [LPE12013_2024_04_29] Granger, position MI, TE done
+  [LPE12385_2024_06_15] Granger, position MI, TE done
+  [LPE11622_2024_02_26] lag search done (2175 cells, 17 lags)
+  [LPE11997_2024_04_17] lag search done (1144 cells, 17 lags)
+  [LPE12013_2024_04_25] lag search done (818 cells, 17 lags)
+  [LPE12385_2024_06_16] lag search done (917 cells, 17 lags)
+  [LPE12385_2024_06_27] lag search done (661 cells, 17 lags)
+  [LPE11622_2024_02_22] Granger, position MI, TE done
+  [LPE11998_2024_04_24] Granger, position MI, TE done
+  [LPE11998_2024_05_01] Granger, position MI, TE done
+  [LPE12385_2024_06_16] Granger, position MI, TE done
+  [LPE12385_2024_06_27] Granger, position MI, TE done
+  [LPE12013_2024_04_30] lag search done (1243 cells, 17 lags)
+  [LPE10884_2024_01_12] Granger, position MI, TE done
+  [LPE11997_2024_04_10] Granger, position MI, TE done
+  [LPE12013_2024_04_26] Granger, position MI, TE done
+  [LPE12385_2024_06_26] Granger, position MI, TE done

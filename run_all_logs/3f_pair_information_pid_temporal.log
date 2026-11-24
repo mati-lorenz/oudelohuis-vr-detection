@@ -1,0 +1,24 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+Targets (stimulus binning strategies + choice):
+  pct_0-25_25-50_50-75_75-100: curve_pct, zero_separate=False, edges=[0.25, 0.5, 0.75] -> bins ['0-25%', '25-50%', '50-75%', '75-100%']
+  choice: lick vs no-lick
+22 sessions (cells: 2a + 2b inclusion; pairs sampled per session)
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+Traceback (most recent call last):
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/1_scripts/3f_pair_information_pid_temporal.py", line 142, in <module>
+    records = run_sessions(
+        inp.session_ids, process_session, [PROTOCOL], paths.store, "pid_temporal",
+    ...<5 lines>...
+        cells_by_session=inp.cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,
+        verbose=JOBLIB_VERBOSE, extra_key_by_session=inp.stamps, flatten=True)
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/1_scripts/utils/infotheory/session_jobs.py", line 71, in run_sessions
+    Parallel(n_jobs=n_jobs, backend="loky", verbose=verbose)(delayed(_one)(sid) for sid in todo)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/parallel.py", line 2056, in __call__
+    self._print(f"Using backend {backend_name} with {n_jobs} concurrent workers.")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/parallel.py", line 1583, in _print
+    writer(f"[{self}]: {msg}\n")
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 122] Disk quota exceeded

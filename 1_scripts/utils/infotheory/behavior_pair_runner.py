@@ -40,7 +40,7 @@ from .session_jobs import run_sessions
 from .behavior_pairs import BehaviorWindows, behavior_labels, BEHAVIOR_VARS, AXES_DEF, WINDOWS, BINNINGS
 
 PROTOCOL = "DN"
-MAX_PAIRS_PER_GROUP = 150
+MAX_PAIRS_PER_GROUP = 200
 MIN_PAIRS_PER_UNIT = 5
 RANDOM_STATE = 0
 PAIR_TAG = "pairs_behavior"
@@ -67,7 +67,7 @@ def run(script_file, *, stem, store_name, version, what, components, compare, yl
     if add_args:
         add_args(parser)
     args = parser.parse_args()
-    max_pairs = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
+    max_pairs = args.max_pairs or cfg.MAX_PAIRS_PER_SESSION or MAX_PAIRS_PER_GROUP   # --max-pairs / project_config.MAX_PAIRS_PER_SESSION; here: pairs per (session, area, label); the constant above is the fallback
     axes_def = {k: dict(v) for k, v in AXES_DEF.items()}
     for ax_ in axes_def:
         axes_def[ax_]["binsize"] = getattr(args, f"{ax_}_bin")
@@ -101,7 +101,7 @@ def run(script_file, *, stem, store_name, version, what, components, compare, yl
         cells = inp.cells_by_session.get(sid)
         if not cells or ses.celldata is None or ses.calciumdata is None or ses.behaviordata is None:
             return []
-        pairs = ptt.sample_group_pairs(ses, cells, max_pairs, PAIR_TAG, RANDOM_STATE)
+        pairs = ptt.sample_group_pairs(ses, cells, max_pairs, PAIR_TAG, RANDOM_STATE, group_of=inp.cell_group)
         if pairs is None:
             return []
         use = sorted(set(pairs["cell_i"]) | set(pairs["cell_j"]))
@@ -129,7 +129,7 @@ def run(script_file, *, stem, store_name, version, what, components, compare, yl
 
     key = dict(axes_def={a: axes_def[a] for a in axes}, axes=axes, binnings=binnings, behaviors=behaviors,
                r_bins=cfg.RESPONSE_BINS, max_pairs=max_pairs, min_trials=cfg.MIN_TRIALS_ANALYSIS,
-               min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, windows=WINDOWS, version=version,
+               min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, windows=WINDOWS, version=version, pair_sampling="groups8-v2",
                fits_mtime=int(inp.fits_path.stat().st_mtime))
     if key_extra:
         key.update(key_extra(args))

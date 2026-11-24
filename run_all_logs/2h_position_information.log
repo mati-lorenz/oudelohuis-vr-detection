@@ -1,0 +1,63 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+Stimulus binning strategies:
+  zero_to80_above80: curve_pct, zero_separate=True, edges=[0.8] -> bins ['0', '<=80%', '>80%']
+  pct_0-20_20-80_80-100: curve_pct, zero_separate=False, edges=[0.2, 0.8] -> bins ['0-20%', '20-80%', '80-100%']
+  zero_vs_nonzero: contrast, zero_separate=False, edges=[0.0] -> bins ['0', '>0']
+22 sessions, 22619 included cells
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed: 130.4min
+  [LPE10884_2024_01_12] 383 new cells, 28 bins, 171584 (cell, bin, variable, method) values
+  [LPE11997_2024_04_10] 2083 new cells, 28 bins, 933184 (cell, bin, variable, method) values
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/externals/loky/process_executor.py:787: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+  [LPE11998_2024_05_01] 525 new cells, 28 bins, 235200 (cell, bin, variable, method) values
+  [LPE12385_2024_06_15] 971 new cells, 28 bins, 435008 (cell, bin, variable, method) values
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed: 222.4min remaining: 49.4min
+  [LPE11622_2024_02_20] 1554 new cells, 28 bins, 696192 (cell, bin, variable, method) values
+  [LPE11997_2024_04_17] 1144 new cells, 28 bins, 512512 (cell, bin, variable, method) values
+  [LPE12013_2024_04_25] 818 new cells, 28 bins, 366464 (cell, bin, variable, method) values
+  [LPE12385_2024_06_16] 917 new cells, 28 bins, 308112 (cell, bin, variable, method) values
+  [LPE11622_2024_02_23] 1639 new cells, 28 bins, 734272 (cell, bin, variable, method) values
+  [LPE11997_2024_04_16] 845 new cells, 28 bins, 378560 (cell, bin, variable, method) values
+  [LPE11998_2024_04_25] 585 new cells, 28 bins, 262080 (cell, bin, variable, method) values
+  [LPE12013_2024_04_30] 1243 new cells, 28 bins, 556864 (cell, bin, variable, method) values
+  [LPE11622_2024_02_22] 1712 new cells, 28 bins, 766976 (cell, bin, variable, method) values
+  [LPE11997_2024_04_18] 202 new cells, 28 bins, 90496 (cell, bin, variable, method) values
+  [LPE11998_2024_04_23] 840 new cells, 28 bins, 376320 (cell, bin, variable, method) values
+  [LPE12013_2024_04_29] 853 new cells, 28 bins, 382144 (cell, bin, variable, method) values
+  [LPE12385_2024_06_17] 885 new cells, 28 bins, 396480 (cell, bin, variable, method) values
+  [LPE11622_2024_02_26] 2175 new cells, 28 bins, 974400 (cell, bin, variable, method) values
+  [LPE11998_2024_04_24] 717 new cells, 28 bins, 321216 (cell, bin, variable, method) values
+  [LPE12013_2024_04_26] 1014 new cells, 28 bins, 454272 (cell, bin, variable, method) values
+  [LPE12385_2024_06_26] 853 new cells, 28 bins, 382144 (cell, bin, variable, method) values
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed: 246.8min finished
+
+10030608 per-cell values; 22619 cells
+
+Informative cells (>= 2 consecutive bins p<0.05 in -40..40 cm). Expected false-tag rate under the null ~ 4.0% (n_bins=16). Observed fraction informative, all cells:
+method                       frame_pooled  trial_mean
+variable                                             
+stim__zero_to80_above80             0.144       0.409
+stim__pct_0-20_20-80_80-100         0.144       0.419
+stim__zero_vs_nonzero               0.097       0.176
+choice                              0.097       0.425
+runspeed                            0.124       0.760
+pupil_area                          0.059       0.099
+motionenergy                        0.053       0.274
+lick                                0.000       0.000
+
+Peak mean MI (bits) by method and variable, all cells:
+method                       frame_pooled  trial_mean
+variable                                             
+stim__zero_to80_above80            0.0093      0.0197
+stim__pct_0-20_20-80_80-100        0.0088      0.0198
+stim__zero_vs_nonzero              0.0044      0.0080
+choice                             0.0025      0.0171
+runspeed                           0.0031      0.0402
+pupil_area                         0.0014      0.0060
+motionenergy                       0.0014      0.0138
+lick                               0.0001      0.0033
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2h_position_information/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2h_position_information/out/figures
+  [LPE12385_2024_06_27] 661 new cells, 28 bins, 296128 (cell, bin, variable, method) values

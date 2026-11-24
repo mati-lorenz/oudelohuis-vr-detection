@@ -1,0 +1,101 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+Targets (stimulus binning strategies + choice):
+  pct_0-25_25-50_50-75_75-100: curve_pct, zero_separate=False, edges=[0.25, 0.5, 0.75] -> bins ['0-25%', '25-50%', '50-75%', '75-100%']
+  choice: lick vs no-lick
+WARNING: no pairs in 3a's list for ['LPE11495_2024_02_22', 'LPE11623_2024_04_02', 'LPE11997_2024_04_09', 'LPE11997_2024_04_19', 'LPE11998_2024_04_29'] (rerun 3a on the full dataset); skipped
+22 sessions, 27193 pairs (3a's list, pair_rank < 200)
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+  [LPE10884_2024_01_12] 2400 (window, target, pair) rows
+  [LPE11997_2024_04_10] 7200 (window, target, pair) rows
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/externals/loky/process_executor.py:787: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed:  3.6min
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed:  6.4min remaining:  1.4min
+  [LPE11997_2024_04_18] 5262 (window, target, pair) rows
+  [LPE11998_2024_04_25] 8214 (window, target, pair) rows
+  [LPE12013_2024_04_30] 8106 (window, target, pair) rows
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed:  7.4min finished
+  [LPE11622_2024_02_23] 9426 (window, target, pair) rows
+  [LPE11997_2024_04_16] 7668 (window, target, pair) rows
+  [LPE12013_2024_04_26] 8286 (window, target, pair) rows
+  [LPE12385_2024_06_17] 6714 (window, target, pair) rows
+
+163158 (session, window, target, pair) rows
+
+======== target: pct_0-25_25-50_50-75_75-100 [0-25% | 25-50% | 50-75% | 75-100%] ========
+Mean PID components by (window, group), mean over sessions:
+                     redundancy  unique1  unique2  synergy     I12
+window   group                                                    
+pre_stim AL_unl          0.0004   0.0175   0.0174   0.0333  0.0687
+         PM_lab         -0.0004   0.0093   0.0083   0.0139  0.0311
+         PM_unl          0.0003   0.0170   0.0166   0.0333  0.0671
+         PMdeep_lab      0.0006   0.0177   0.0187   0.0351  0.0720
+         PMdeep_unl      0.0003   0.0177   0.0177   0.0339  0.0696
+         RSP_unl         0.0002   0.0185   0.0178   0.0345  0.0710
+         V1_lab         -0.0000   0.0177   0.0175   0.0317  0.0669
+         V1_unl         -0.0000   0.0168   0.0173   0.0323  0.0664
+reward   AL_unl          0.0317   0.0388   0.0345   0.0685  0.1736
+         PM_lab          0.0435   0.0364   0.0330   0.0654  0.1783
+         PM_unl          0.0334   0.0428   0.0360   0.0682  0.1804
+         PMdeep_lab      0.0322   0.0407   0.0392   0.0690  0.1810
+         PMdeep_unl      0.0317   0.0394   0.0394   0.0683  0.1788
+         RSP_unl         0.0280   0.0358   0.0336   0.0674  0.1648
+         V1_lab          0.0329   0.0409   0.0344   0.0690  0.1771
+         V1_unl          0.0296   0.0338   0.0338   0.0672  0.1644
+stim     AL_unl          0.0072   0.0428   0.0351   0.0415  0.1267
+         PM_lab          0.0083   0.0373   0.0301   0.0238  0.0995
+         PM_unl          0.0182   0.0617   0.0514   0.0454  0.1767
+         PMdeep_lab      0.0183   0.0536   0.0588   0.0505  0.1812
+         PMdeep_unl      0.0166   0.0530   0.0512   0.0492  0.1700
+         RSP_unl         0.0096   0.0416   0.0332   0.0437  0.1281
+         V1_lab          0.0123   0.0517   0.0460   0.0468  0.1568
+         V1_unl          0.0110   0.0534   0.0418   0.0440  0.1502
+
+32659/81579 pairs have significant redundancy (p<0.05).
+
+======== target: choice [no lick | lick] ========
+Mean PID components by (window, group), mean over sessions:
+                     redundancy  unique1  unique2  synergy     I12
+window   group                                                    
+pre_stim AL_unl          0.0005   0.0062   0.0061   0.0113  0.0242
+         PM_lab          0.0001   0.0038   0.0028   0.0041  0.0109
+         PM_unl          0.0007   0.0062   0.0060   0.0118  0.0247
+         PMdeep_lab      0.0007   0.0062   0.0061   0.0124  0.0254
+         PMdeep_unl      0.0007   0.0062   0.0066   0.0120  0.0255
+         RSP_unl         0.0004   0.0066   0.0061   0.0118  0.0250
+         V1_lab          0.0003   0.0060   0.0064   0.0107  0.0234
+         V1_unl          0.0002   0.0060   0.0058   0.0112  0.0233
+reward   AL_unl          0.0575   0.0296   0.0264   0.0567  0.1701
+         PM_lab          0.0710   0.0240   0.0368   0.0628  0.1947
+         PM_unl          0.0607   0.0304   0.0277   0.0592  0.1779
+         PMdeep_lab      0.0542   0.0319   0.0310   0.0551  0.1721
+         PMdeep_unl      0.0530   0.0275   0.0304   0.0546  0.1654
+         RSP_unl         0.0505   0.0257   0.0253   0.0539  0.1554
+         V1_lab          0.0548   0.0298   0.0279   0.0559  0.1685
+         V1_unl          0.0535   0.0238   0.0257   0.0551  0.1581
+stim     AL_unl          0.0041   0.0146   0.0132   0.0157  0.0477
+         PM_lab          0.0034   0.0127   0.0128   0.0082  0.0371
+         PM_unl          0.0072   0.0175   0.0169   0.0179  0.0594
+         PMdeep_lab      0.0058   0.0168   0.0178   0.0168  0.0572
+         PMdeep_unl      0.0065   0.0162   0.0168   0.0179  0.0574
+         RSP_unl         0.0053   0.0136   0.0120   0.0166  0.0475
+         V1_lab          0.0047   0.0157   0.0154   0.0161  0.0520
+         V1_unl          0.0042   0.0162   0.0137   0.0158  0.0499
+
+34598/81579 pairs have significant redundancy (p<0.05).
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/3c_pair_information_pid/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/3c_pair_information_pid/out/figures
+  [LPE11622_2024_02_20] 7200 (window, target, pair) rows
+  [LPE11997_2024_04_17] 8286 (window, target, pair) rows
+  [LPE12013_2024_04_29] 7638 (window, target, pair) rows
+  [LPE12385_2024_06_26] 5682 (window, target, pair) rows
+  [LPE11622_2024_02_26] 9600 (window, target, pair) rows
+  [LPE11998_2024_04_23] 8400 (window, target, pair) rows
+  [LPE11998_2024_05_01] 6000 (window, target, pair) rows
+  [LPE12385_2024_06_15] 7920 (window, target, pair) rows
+  [LPE12385_2024_06_27] 5754 (window, target, pair) rows
+  [LPE11622_2024_02_22] 9600 (window, target, pair) rows
+  [LPE11998_2024_04_24] 8400 (window, target, pair) rows
+  [LPE12013_2024_04_25] 7668 (window, target, pair) rows
+  [LPE12385_2024_06_16] 7734 (window, target, pair) rows

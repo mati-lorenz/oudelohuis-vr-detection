@@ -102,7 +102,7 @@ Outputs
             tail_mi_by_group[__<aggregate>].csv
             between_area_mi_by_group_pair[__<aggregate>].csv, between_area_mi_by_area_pair[__<aggregate>].csv,
             between_area_mi_per_session.csv   (information between areas, see above)
-            figures/*.png                 1 MI by predictor, 2 fraction significant, 3 heatmap; 4-6 tail test; 9-11 between areas
+            figures/*.png                 1a/1b MI and 2a/2b fraction significant (rows = predictor ordered by mean MI, columns = pre_stim / stim / reward; a = per-trial, b = pooled frames), 3 heatmap; 4-6 tail test; 9-11 between areas
     out/selection/<tag>/...               the same for a restricted run
     store/  mi_session_<hash>.pkl         per-session caches
 """
@@ -127,7 +127,7 @@ from infotheory.plotting import set_style, save_fig, clear_figures
 from infotheory.scope import add_scope_args, scope_from_args, select_sessions, scoped_dirs, data_stamp, unit_noun
 from infotheory.session_jobs import run_sessions_units
 from infotheory.unit_stats import stable_seed
-from infotheory.unit_plots import group_panels, mouse_palette, unit_bars
+from infotheory.unit_plots import group_panels, group_grid, mouse_palette, unit_bars
 from infotheory.stim_binning import STIM_BINNING_STRATEGIES, SIMPLE_STRATEGIES, target_signature, describe_strategies
 from infotheory import cell_tables as ct
 from infotheory import engagement as eg
@@ -145,6 +145,7 @@ MIN_CELLS_PER_UNIT = 5                          # session / mouse aggregate: cel
 ALPHA = 0.05
 RANDOM_STATE = 0
 RUN_TAIL = True
+SORT_PREDICTORS = True                          # figures 1 / 2: rows ordered by mean information (strongest on top); False = the fixed order
 JOBLIB_VERBOSE = 5
 BETWEEN_STRATEGY = "pct_0-25_25-50_50-75_75-100"       # stimulus bins S of I(X;Y | S) between areas (first strategy if not available)
 BETWEEN_MIN_PAIRS = 10                          # session / mouse aggregate: pairs needed in a group pair for a unit's value
@@ -416,8 +417,8 @@ def between_pair_records(table, window, groups, new_pairs, session_id, seed):
     """MI (and MI given the stimulus) of the given cell PAIRS, engaged trials of `table`: one row per (pair, measure) with
     raw MI, bias-corrected MI (raw - mean of the permuted MIs), significance and the groups of the two cells. The permutations
     are drawn from a generator seeded by (session, window) BEFORE anything depends on the cells, so a pair gets the same null
-    whichever other pairs are computed in the same call (needed for the incremental ledger). Group-pair summaries
-    (sums, n pairs) are built from these rows when the results are read (see below)."""
+    whichever other pairs are computed in the same call. Group-pair summaries (sums, n pairs) are built from these rows
+    inside the worker (process_session): the per-pair rows themselves are never stored."""
     rng = np.random.default_rng(stable_seed(session_id, "between", window, base=seed))
     known = set(groups.index)
     pairs = [q for q in new_pairs if q[0] in known and q[1] in known and q[0] in table.columns and q[1] in table.columns]
@@ -539,7 +540,7 @@ def frame_mi_records(frames, window, cell_cols, session_id, seed):
 
 def process_session(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
-    cells = set(new_cells)                                     # cell-level parts: only cells not yet in the ledger
+    cells = set(new_cells)                                     # the requested cells (session_jobs.run_sessions_units)
     need = cells | {c for q in new_pairs for c in q}           # cells whose data the new pairs need
     td = ses.trialdata
     if not need or td is None or "engaged" not in td.columns:
@@ -581,9 +582,16 @@ def process_session(ses, seed, new_cells, new_pairs, req_cells):
             recs += mi_records(sub, cond, window, cell_cols, sid, seed)
             if RUN_GIVEN and cond == "engaged":
                 crecs += cmi_records(sub, window, cell_cols, sid, seed)
+    between = pd.DataFrame()           # group-pair summary of the between-area MI; the per-pair rows are NOT kept
+    if brecs:
+        bp = pd.concat(brecs, ignore_index=True)
+        between = (bp.groupby(["window", "measure", "group_a", "group_b"])
+                     .agg(n_pairs=("raw", "size"), sum_raw=("raw", "sum"), sum_corr=("corr", "sum"), n_sig=("sig", "sum")).reset_index())
+        between.insert(0, "animal_id", ses.animal_id)
+        between.insert(0, "session_id", sid)
+        del bp
     return dict(session_id=sid, animal_id=ses.animal_id, records=pd.DataFrame(recs), cmi=pd.DataFrame(crecs),
-                between_pairs=pd.concat(brecs, ignore_index=True) if brecs else pd.DataFrame(), between_checks=bchecks,
-                tail=tail, trials=td[["trialNumber", "engaged"]].copy())
+                between=between, between_checks=bchecks, tail=tail, trials=td[["trialNumber", "engaged"]].copy())
 
 
 results = run_sessions_units(
@@ -595,24 +603,16 @@ results = run_sessions_units(
                     fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
     cells_by_session=cells_by_session,
-    parts={"records": "cell", "cmi": "cell", **({"between_pairs": "pair"} if RUN_BETWEEN else {})},
+    parts={"records": "cell", "cmi": "cell", **({"between": "pair"} if RUN_BETWEEN else {})},
     extras={"between_checks": "extend"}, groups_by_cell=cell_group, max_cells=scope.max_cells, max_pairs=scope.max_pairs,
     base_seed=RANDOM_STATE, n_jobs=N_JOBS, recompute=args.recompute,
     verbose=JOBLIB_VERBOSE, extra_key_by_session=stamps)
 results = [r for r in results if r is not None]
 if not results:
     raise SystemExit("No session produced tables (no celldata / calciumdata / behaviordata?).")
-# group-pair summaries of the between-area MI, rebuilt from the per-pair rows of the REQUESTED pairs (ledger: results per pair)
 for r in results:
-    bp = r.get("between_pairs")
-    if bp is not None and len(bp):
-        g_ = (bp.groupby(["window", "measure", "group_a", "group_b"])
-                .agg(n_pairs=("raw", "size"), sum_raw=("raw", "sum"), sum_corr=("corr", "sum"), n_sig=("sig", "sum")).reset_index())
-        g_.insert(0, "animal_id", r["animal_id"])
-        g_.insert(0, "session_id", r["session_id"])
-    else:
-        g_ = pd.DataFrame()
-    r["between"] = g_
+    if r.get("between") is None:
+        r["between"] = pd.DataFrame()
     r.setdefault("between_checks", [])
 
 all_rec = pd.concat([r["records"] for r in results], ignore_index=True)
@@ -683,13 +683,41 @@ def predictor_panels(df, window, value, name, ylabel, title, hline=None, series_
 agg_note = {"pooled": "all cells pooled (no error bars)",
             "session": "bar = mean +- SEM over sessions, dots = sessions",
             "mouse": "bar = mean +- SEM over mice, dots = mice"}[AGG]
-for w in WINDOWS:
-    predictor_panels(mi_table, w, "mi_bits_corrected", f"1_mi_by_predictor_{w}", "MI (bits, bias-corrected)",
-                     f"Per-cell MI with each predictor -- {w} window ({PROTOCOL}); {agg_note}")
-    mi_table_sig = mi_table.assign(sig=mi_table["significant"].astype(float))
-    predictor_panels(mi_table_sig, w, "sig", f"2_frac_significant_{w}", f"fraction of cells p<{ALPHA}",
-                     f"Fraction of cells with significant MI -- {w} window; dashed = chance ({ALPHA}); {agg_note}",
-                     hline=ALPHA)
+# Figures 1 / 2: one row per predictor, one column per window (pre_stim / stim / reward), y shared along each row so the windows
+# can be compared directly. The bars inside a panel keep the fixed project group order and colours (so a group is always in the
+# same place and colour in every panel); what is ordered is the ROWS: strongest predictor (mean MI over groups, windows and
+# units) on top. The trial-window predictors and the pooled-frames ones (another estimator, 8 bins) are drawn in separate figures.
+mi_win = [w for w in WINDOWS if w in set(mi_table["window"])]
+win_titles = {w: f"{w}  [{WINDOWS[w][0]:g}, {WINDOWS[w][1]:g}] cm" for w in mi_win}
+
+
+def ordered_predictors(preds):
+    """`preds` sorted by mean MI (mean over windows, units and the project groups, equal weight per group), strongest first."""
+    preds = [p for p in preds if p in set(mi_table["predictor"])]
+    if not SORT_PREDICTORS or not preds:
+        return preds
+    m = (mi_table[mi_table["predictor"].isin(preds)].groupby(["predictor", "group"] + UNIT_KEYS)["mi_bits_corrected"].mean()
+         .groupby(["predictor", "group"]).mean().groupby("predictor").mean())
+    return list(m.sort_values(ascending=False).index) + [p for p in preds if p not in m.index]
+
+
+mi_table_sig = mi_table.assign(sig=mi_table["significant"].astype(float))
+for part, preds, what in (("a", PREDICTORS, "per-trial window means"), ("b", FRAME_PREDICTORS, "pooled frames")):
+    order_ = ordered_predictors(preds)
+    if not order_:
+        continue
+    suffix = "" if part == "a" else "_frames"
+    order_note = "rows ordered by mean MI" if SORT_PREDICTORS else "rows in fixed order"
+    group_grid(mi_table, "predictor", order_, "window", mi_win, "mi_bits_corrected", AGG, figdir,
+               f"1{part}_mi_by_predictor_and_window{suffix}",
+               f"Per-cell MI with each predictor ({what}) in the three windows -- {PROTOCOL}; {agg_note}; {order_note}; y shared along each row",
+               ylabel="MI (bits, bias-corrected)", mouse_colors=mouse_colors, min_cells_per_unit=MIN_CELLS_PER_UNIT,
+               col_titles=win_titles)
+    group_grid(mi_table_sig, "predictor", order_, "window", mi_win, "sig", AGG, figdir,
+               f"2{part}_frac_significant_by_predictor_and_window{suffix}",
+               f"Fraction of cells with significant MI ({what}) -- {PROTOCOL}; dashed = chance ({ALPHA}); {agg_note}; same row order as figure 1{part}",
+               ylabel=f"fraction of cells p<{ALPHA}", hline=ALPHA, mouse_colors=mouse_colors,
+               min_cells_per_unit=MIN_CELLS_PER_UNIT, col_titles=win_titles)
 
 piv = frac.unstack("window").reindex(index=PANEL_PREDICTORS, columns=[w for w in WINDOWS if w in set(mi_table["window"])])
 fig, ax = plt.subplots(figsize=(6, max(3, 0.5 * len(piv))))
@@ -836,7 +864,7 @@ if RUN_BETWEEN:
                                     color="white" if mats[w][a, b] < 0.6 * vmax else "black")
                 ax.set_title(f"{mlabel[m]} -- {w}", fontsize=8)
             fig.colorbar(im, ax=axes[i].tolist(), label="bits (bias-corrected)", shrink=0.8)
-        fig.suptitle(f"Information between areas: mean MI of cell pairs, diagonal = within area; S = stimulus bin [{BETWEEN_STRAT}]; "
+        fig.suptitle(f"Information between areas: mean MI of cell pairs, diagonal = within area; S = stimulus (4 lick-probability bins); "
                      f"{'all pairs pooled' if AGG == 'pooled' else f'mean over {UNITS}'}", y=1.02, fontsize=9)
         save_fig(fig, figdir, "9_between_area_mi_heatmap")
         plt.close(fig)
@@ -851,7 +879,7 @@ if RUN_BETWEEN:
                 ax.set_xticks(range(len(pair_order)))
                 ax.set_xticklabels([" x ".join(AREA_NAME.get(t, t) for t in p_.split(" x ")) for p_ in pair_order], rotation=45, ha="right", fontsize=7)
                 ax.set_title(mlabel[m], fontsize=9)
-            fig.suptitle(f"Information between areas, pairs of cells -- {w} window; S = stimulus bin [{BETWEEN_STRAT}]; "
+            fig.suptitle(f"Information between areas, pairs of cells -- {w} window; S = stimulus (4 lick-probability bins); "
                          f"{agg_note.replace('cells', 'pairs')}", y=1.03, fontsize=9)
             fig.tight_layout()
             save_fig(fig, figdir, f"10_between_area_mi_bars_{w}")
@@ -879,7 +907,7 @@ if RUN_BETWEEN:
                 ax.set_yticks(range(len(gnames))); ax.set_yticklabels(gnames, fontsize=7)
                 ax.set_title(f"{mlabel[m]} -- {w}", fontsize=8)
             fig.colorbar(im, ax=axes[i].tolist(), label="bits (bias-corrected)", shrink=0.8)
-        fig.suptitle(f"Information between the six groups (cell pairs; diagonal = within group); S = stimulus bin [{BETWEEN_STRAT}]", y=1.02, fontsize=9)
+        fig.suptitle(f"Information between the six groups (cell pairs; diagonal = within group); S = stimulus (4 lick-probability bins)", y=1.02, fontsize=9)
         save_fig(fig, figdir, "11_between_group_mi_heatmap")
         plt.close(fig)
     else:

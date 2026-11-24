@@ -1,0 +1,48 @@
+scope: all sessions, all cells; aggregate by session; n_jobs=1
+36/36 sessions cached; computing 0 (n_jobs=1, one session in RAM per worker)
+
+51996 cells across 32 DN sessions, 6 animals
+Recombinase filter: none (values present: {'non': 49522, 'cre': 1626, 'flp': 847})
+
+DEPTH CORRECTION applied (corrected = recorded - offset; project_config.DEPTH_OFFSET_CORRECTIONS_UM):
+         session_id  depth_offset_um  median_depth_recorded  median_depth  depth_z  depth_suspect
+LPE12013_2024_04_30            325.0                  565.0         240.0      1.1          False
+
+DEPTH-SUSPECT session(s) (flagged in depth_session_summary.csv; DEPTH_SUSPECT_POLICY='exclude': their cells are excluded from every depth-gated analysis):
+         session_id  median_depth  group_median_depth  depth_z  n_shallow  n_deep_pm  n_excluded
+LPE11998_2024_04_29         333.0               185.5     3.02          0          0        1183
+LPE11998_2024_04_30         333.0               185.5     3.02          0          0        1197
+
+Depth rule: shallow = depth < 300.0 um (all areas); deep PM = (300.0, 500.0) um; sessions flagged suspect: 2
+Cells per area / label and depth class (pooled over sessions):
+roi_name label  shallow  deep_pm  excluded
+      AL   unl     6035        0       999
+      PM   lab      247     1322        62
+      PM   unl     6878     8878       572
+     RSP   unl     6823        0       151
+      V1   lab      824        0        18
+      V1   unl    18128        0      1059
+Proximity filter (V1, unlabeled, within 50um of a labeled V1 cell, same session): 6417/19187 pass
+Proximity filter (PM, unlabeled, within 50um of a labeled PM cell, same session): 7197/16328 pass
+APPLY_PROXIMITY_FILTER=False, APPLY_DEPTH_FILTER=False (group figures always follow the depth rule): sections 4+ use 51996/51996 cells
+
+Cells per animal:
+animal_id
+LPE10884     (3, 3596)
+LPE11622    (6, 12606)
+LPE11997     (5, 7591)
+LPE11998     (7, 7789)
+LPE12013     (6, 9040)
+LPE12385    (5, 11374)
+
+WARNING: 2 (session, area) with an unexpected number of recording planes (expected {'V1': 3, 'PM': 3, 'AL': 1, 'RSP': 1}):
+         session_id roi_name  n_planes
+LPE11622_2024_02_20       PM         4
+LPE11622_2024_02_20       V1         4
+
+Depth outlier session(s) (median depth >2 SD from the group median of 186μm):
+session_id
+LPE11998_2024_04_29    333.0
+LPE11998_2024_04_30    333.0
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2a_cell_distribution/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2a_cell_distribution/out/figures

@@ -172,7 +172,7 @@ def adj_r2(design, y):
 def process_session(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
     cand = cand_by_session[sid]
-    cand = cand[cand["cell_id"].isin(set(new_cells))]      # only the cells not yet in the ledger (session_jobs.run_sessions_units)
+    cand = cand[cand["cell_id"].isin(set(new_cells))]      # the requested cells (session_jobs.run_sessions_units)
     tables = build_session_tables(ses, mu_sigma_lookup, WINDOWS, included_cell_ids=set(cand["cell_id"]))
     if not tables:
         return None

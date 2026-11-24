@@ -1,0 +1,110 @@
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+Targets (stimulus binning strategies + choice):
+  pct_0-25_25-50_50-75_75-100: curve_pct, zero_separate=False, edges=[0.25, 0.5, 0.75] -> bins ['0-25%', '25-50%', '50-75%', '75-100%']
+  choice: lick vs no-lick
+22 sessions, 22619 included cells
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+  [LPE10884_2024_01_12] 400 pairs, 2400 (window, target, pair) rows
+  [LPE11997_2024_04_10] 1200 pairs, 7200 (window, target, pair) rows
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/externals/loky/process_executor.py:787: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed:  4.1min
+  [LPE11622_2024_02_23] 1571 pairs, 9426 (window, target, pair) rows
+  [LPE11997_2024_04_16] 1278 pairs, 7668 (window, target, pair) rows
+  [LPE11998_2024_05_01] 1000 pairs, 6000 (window, target, pair) rows
+  [LPE12385_2024_06_15] 1320 pairs, 7920 (window, target, pair) rows
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed:  7.2min remaining:  1.6min
+  [LPE11997_2024_04_18] 877 pairs, 5262 (window, target, pair) rows
+  [LPE11998_2024_04_25] 1369 pairs, 8214 (window, target, pair) rows
+  [LPE12013_2024_04_30] 1351 pairs, 8106 (window, target, pair) rows
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed:  7.7min finished
+
+27193 pairs sampled; 163158 (session, window, target, pair) rows
+
+======== target: pct_0-25_25-50_50-75_75-100 [0-25% | 25-50% | 50-75% | 75-100%] ========
+Mean signal / noise / raw correlation by (window, group), mean over sessions:
+                     signal_corr  noise_corr  raw_corr
+window   group                                        
+pre_stim AL_unl            0.022       0.012     0.012
+         PM_lab           -0.015       0.009     0.009
+         PM_unl            0.019       0.018     0.018
+         PMdeep_lab        0.027       0.028     0.028
+         PMdeep_unl        0.025       0.016     0.017
+         RSP_unl           0.038       0.013     0.013
+         V1_lab            0.009       0.007     0.007
+         V1_unl           -0.006       0.014     0.014
+reward   AL_unl            0.020       0.019     0.019
+         PM_lab           -0.015       0.012     0.012
+         PM_unl            0.029       0.019     0.018
+         PMdeep_lab        0.010       0.032     0.032
+         PMdeep_unl        0.025       0.023     0.023
+         RSP_unl           0.027       0.021     0.022
+         V1_lab           -0.016       0.005    -0.000
+         V1_unl            0.036       0.014     0.014
+stim     AL_unl            0.030       0.017     0.016
+         PM_lab           -0.015       0.012     0.018
+         PM_unl            0.031       0.020     0.021
+         PMdeep_lab        0.015       0.028     0.026
+         PMdeep_unl        0.033       0.022     0.022
+         RSP_unl           0.004       0.018     0.018
+         V1_lab            0.025       0.013     0.013
+         V1_unl            0.026       0.021     0.023
+
+Fraction of pairs with p<0.05 per shuffle mode (global should be the largest, stim_choice the smallest):
+          global   stim  choice  stim_choice
+window                                      
+pre_stim   0.199  0.198   0.200        0.198
+reward     0.253  0.231   0.210        0.207
+stim       0.252  0.226   0.244        0.220
+
+======== target: choice [no lick | lick] ========
+Mean signal / noise / raw correlation by (window, group), mean over sessions:
+                     signal_corr  noise_corr  raw_corr
+window   group                                        
+pre_stim AL_unl            0.027       0.012     0.012
+         PM_lab            0.111       0.009     0.009
+         PM_unl           -0.011       0.018     0.018
+         PMdeep_lab        0.055       0.027     0.028
+         PMdeep_unl        0.044       0.016     0.017
+         RSP_unl           0.008       0.013     0.013
+         V1_lab            0.078       0.006     0.007
+         V1_unl            0.012       0.014     0.014
+reward   AL_unl            0.056       0.017     0.019
+         PM_lab           -0.072       0.012     0.012
+         PM_unl            0.021       0.017     0.018
+         PMdeep_lab       -0.010       0.030     0.032
+         PMdeep_unl       -0.011       0.023     0.023
+         RSP_unl           0.086       0.019     0.022
+         V1_lab           -0.036       0.007    -0.000
+         V1_unl            0.024       0.015     0.014
+stim     AL_unl            0.027       0.016     0.016
+         PM_lab           -0.069       0.016     0.018
+         PM_unl            0.063       0.021     0.021
+         PMdeep_lab        0.093       0.025     0.026
+         PMdeep_unl        0.010       0.022     0.022
+         RSP_unl          -0.013       0.018     0.018
+         V1_lab            0.063       0.013     0.013
+         V1_unl            0.039       0.022     0.023
+
+Fraction of pairs with p<0.05 per shuffle mode (global should be the largest, stim_choice the smallest):
+          global   stim  choice  stim_choice
+window                                      
+pre_stim   0.203  0.202   0.199        0.199
+reward     0.252  0.211   0.211        0.211
+stim       0.255  0.243   0.245        0.242
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/3a_pair_activity_statistics/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/3a_pair_activity_statistics/out/figures
+  [LPE11622_2024_02_22] 1600 pairs, 9600 (window, target, pair) rows
+  [LPE11998_2024_04_24] 1400 pairs, 8400 (window, target, pair) rows
+  [LPE12013_2024_04_26] 1381 pairs, 8286 (window, target, pair) rows
+  [LPE12385_2024_06_26] 947 pairs, 5682 (window, target, pair) rows
+  [LPE11622_2024_02_26] 1600 pairs, 9600 (window, target, pair) rows
+  [LPE11998_2024_04_23] 1400 pairs, 8400 (window, target, pair) rows
+  [LPE12013_2024_04_25] 1278 pairs, 7668 (window, target, pair) rows
+  [LPE12385_2024_06_16] 1289 pairs, 7734 (window, target, pair) rows
+  [LPE11622_2024_02_20] 1200 pairs, 7200 (window, target, pair) rows
+  [LPE11997_2024_04_17] 1381 pairs, 8286 (window, target, pair) rows
+  [LPE12013_2024_04_29] 1273 pairs, 7638 (window, target, pair) rows
+  [LPE12385_2024_06_17] 1119 pairs, 6714 (window, target, pair) rows
+  [LPE12385_2024_06_27] 959 pairs, 5754 (window, target, pair) rows

@@ -11,7 +11,7 @@ DEFINITIONS
                 not used). Window means as everywhere (WINDOWS: pre_stim as a control for a state difference that
                 exists before the stimulus, stim as the question).
     noise corr  correlation of the two cells' residuals after removing the mean of each (stimulus bin, outcome) group,
-                the stimulus bins being one `stim__<strategy>` binning (--strategy; default pct_0-20_20-80_80-100).
+                the stimulus bins being one `stim__<strategy>` binning (--strategy; default pct_0-25_25-50_50-75_75-100).
     conditioning  "stimulus" = the above; "stimulus+movement" = first regress each cell on running speed, pupil area and
                 motion energy (window means, linear, fitted on the pair's trials of the session; lick rate is NOT used
                 -- it IS the choice). Both conditionings use the same trials. Sessions without video: stimulus only.
@@ -81,8 +81,8 @@ from infotheory import pair_temporal as ptt
 
 PROTOCOL = "DN"
 WINDOWS = {"pre_stim": (-30.0, -10.0), "stim": (0.0, 20.0)}
-STRATEGY = "pct_0-20_20-80_80-100"
-MAX_PAIRS_PER_GROUP = 150   # per (session, area, label)
+STRATEGY = "pct_0-25_25-50_50-75_75-100"
+MAX_PAIRS_PER_GROUP = 200   # per (session, area, label)
 N_DRAWS = 20                # random trial-matching draws averaged per pair
 MIN_MATCHED = 8             # trials per class after matching
 CALIPER_UM = 20.0           # distance-matching tolerance
@@ -101,7 +101,7 @@ parser.add_argument("--strategy", default=STRATEGY, choices=sorted(STIM_BINNING_
 parser.add_argument("--draws", type=int, default=N_DRAWS)
 parser.add_argument("--caliper", type=float, default=CALIPER_UM, help="distance-matching tolerance (microns)")
 args = parser.parse_args()
-MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
+MAX_PAIRS = args.max_pairs or cfg.MAX_PAIRS_PER_SESSION or MAX_PAIRS_PER_GROUP   # --max-pairs / project_config.MAX_PAIRS_PER_SESSION; here: pairs per (session, area, label); the constant above is the fallback
 scope = scope_from_args(args)
 AGG = scope.aggregate
 UNIT = unit_noun(AGG)
@@ -137,6 +137,7 @@ if not session_ids:
     raise SystemExit("No selected session passed the inclusion criteria.")
 mouse_colors = mouse_palette(a for _, a, _ in all_triples)
 inclusion = load_cell_inclusion(cell_dist_out, activity_out)
+cell_group = dict(zip(inclusion["cell_id"], inclusion["group"]))      # 2a's groups (8 with deep PM): pairs are sampled within each
 cells_by_session = {sid: set(sub.loc[sub["include"], "cell_id"]) for sid, sub in inclusion.groupby("session_id")
                     if sid in session_ids}
 session_ids = [s for s in session_ids if cells_by_session.get(s)]
@@ -222,7 +223,7 @@ def process_session(ses, seed):
     if len(celldata) < 2:
         return []
     pairs = pt.sample_session_pairs(celldata, sid, np.random.default_rng(stable_seed(sid, "pairs3g", base=RANDOM_STATE)),
-                                    MAX_PAIRS)
+                                    MAX_PAIRS, group_of=cell_group)
     if pairs.empty:
         return []
     pairs["distance_um"] = pd_.pair_distances(celldata, pairs["cell_i"], pairs["cell_j"])
@@ -253,7 +254,7 @@ def process_session(ses, seed):
                     continue
                 res = hit_miss_noise_corr(x1[ok], x2[ok], stim[ok], hit[ok], rng, args.draws, MIN_MATCHED)
                 records.append(dict(session_id=sid, animal_id=ses.animal_id, window=window, conditioning=cond,
-                                    roi_name=r.roi_name, labeled_grouped=r.labeled_grouped, cell_i=r.cell_i,
+                                    roi_name=r.roi_name, labeled_grouped=r.labeled_grouped, depth_class=r.depth_class, cell_i=r.cell_i,
                                     cell_j=r.cell_j, pair_rank=r.pair_rank, distance_um=r.distance_um, **res))
     print(f"  [{sid}] {len(pairs)} pairs, {len(records)} (window, conditioning, pair) rows")
     return records
@@ -262,7 +263,7 @@ def process_session(ses, seed):
 records = run_sessions(
     session_ids, process_session, [PROTOCOL], paths.store, "hit_miss",
     key_params=dict(windows=WINDOWS, strategy=args.strategy, max_pairs=MAX_PAIRS, draws=args.draws,
-                    min_matched=MIN_MATCHED, movement=MOVEMENT_COLUMNS, version="3g-v1",
+                    min_matched=MIN_MATCHED, movement=MOVEMENT_COLUMNS, version="3g-v2",
                     min_trials=cfg.MIN_TRIALS_ANALYSIS, fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
     cells_by_session={s: cells_by_session[s] for s in session_ids}, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs,

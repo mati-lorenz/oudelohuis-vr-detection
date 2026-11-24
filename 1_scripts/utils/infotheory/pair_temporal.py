@@ -4,7 +4,7 @@ pair_temporal.py
 ================
 Shared by 3d (pair correlations over position), 3e (information breakdown over position) and 3f (PID over position):
 the position-resolved counterparts of 3a / 3b / 3c. The three temporal scripts use EXACTLY the pairs of 3a / 3b / 3c
-(3a's out/pair_list.csv, `--max-pairs` = first N per (session, area, label)), the same targets (`stim__<strategy>`,
+(3a's out/pair_list.csv, `--max-pairs` = first N per (session, group)), the same targets (`stim__<strategy>`,
 choice), the same trial rule (pair_trials) and the same response bins, so a temporal curve evaluated in the stimulus
 window can be compared with the window-based 3a-3c number (project rule 4).
 
@@ -133,14 +133,17 @@ GCODE = {k: i for i, k in enumerate(GROUP_KEYS)}
 NG = len(GROUP_KEYS)
 
 
-def sample_group_pairs(ses, cells, max_pairs: int, tag: str, base_seed: int = 0):
-    """`max_pairs` pairs per (area, label) of the session's INCLUDED cells (as 3g / 3h; not 3a's small list), with the
-    project group of each pair in `group`; None if there is no pair."""
+def sample_group_pairs(ses, cells, max_pairs: int, tag: str, base_seed: int = 0, group_of: dict | None = None):
+    """`max_pairs` pairs per PROJECT GROUP (8 groups, deep PM separate; pairs inside one group) of the session's INCLUDED cells
+    (as 3g / 3h; not 3a's small list), with the project group of each pair in `group`; None if there is no pair.
+    group_of = {cell_id: group key} (session_inputs(...).cell_group, 2a's classification); without it the groups are computed
+    from the celldata."""
     celldata = ses.celldata[ses.celldata["cell_id"].isin(cells)].reset_index(drop=True)
     if len(celldata) < 2:
         return None
     pairs = pt.sample_session_pairs(celldata, ses.session_id,
-                                    np.random.default_rng(stable_seed(ses.session_id, tag, base=base_seed)), max_pairs)
+                                    np.random.default_rng(stable_seed(ses.session_id, tag, base=base_seed)), max_pairs,
+                                    group_of=group_of)
     if pairs.empty:
         return None
     pairs = add_six_group_column(pairs, area_var="roi_name", label_var="labeled_grouped")
@@ -299,6 +302,7 @@ def session_inputs(paths, scope, protocol: str) -> SimpleNamespace:
     print(f"{len(session_ids)} sessions (cells: 2a + 2b inclusion; pairs sampled per session)")
     return SimpleNamespace(fits_path=fits_path, mu_sigma_lookup=fits.set_index("session_id")[["mu", "sigma"]].to_dict("index"),
                            session_ids=session_ids, cells_by_session=cells_by_session,
+                           cell_group=dict(zip(inc["cell_id"], inc["group"])),
                            stamps={s: data_stamp(*selected[s]) for s in session_ids})
 
 

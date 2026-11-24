@@ -1,0 +1,102 @@
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/1_scripts/2b_activity_statistics.py:580: DtypeWarning: Columns (0: ref_cell_id) have mixed types. Specify dtype option on import or set low_memory=False.
+  cd = pd.read_csv(cd_path)
+[Parallel(n_jobs=5)]: Using backend LokyBackend with 5 concurrent workers.
+scope: all sessions, all cells; aggregate by session; n_jobs=5
+36/36 sessions cached; computing 0 (n_jobs=5, one session in RAM per worker)
+
+51996 neurons across 32 DN sessions (no exclusions applied -- full population)
+
+Overall: 51939/51996 neurons would pass under the current QC_THRESHOLDS (informational only -- nothing is excluded by part 1)
+
+Worst 10 (session, area, label) groups by pass fraction:
+         session_id roi_name labeled  n_total  n_pass  frac_pass
+LPE12013_2024_04_23       V1     unl      441     432   0.979592
+LPE11997_2024_04_16       V1     unl      401     393   0.980050
+LPE11997_2024_04_10       V1     lab       54      53   0.981481
+LPE11997_2024_04_12       V1     unl      463     455   0.982721
+LPE11997_2024_04_16       AL     unl       76      75   0.986842
+LPE11997_2024_04_10       V1     unl     1049    1036   0.987607
+LPE11997_2024_04_17       AL     unl      147     146   0.993197
+LPE11997_2024_04_16      RSP     unl      215     214   0.995349
+LPE12013_2024_04_24       V1     unl      538     536   0.996283
+LPE10884_2024_01_12       V1     unl      302     301   0.996689
+
+Raster: 22 included DN sessions, 28456/51996 cells pass 2a + QC
+22/22 sessions cached; computing 0 (n_jobs=5, one session in RAM per worker)
+22619 raster cells in 22 sessions; saved profiles (22619, 28)
+
+Median reliability (odd vs even trial profile correlation) per group (all cells):
+group
+V1_lab        0.28
+V1_unl        0.29
+PM_lab        0.31
+PM_unl        0.31
+AL_unl        0.21
+RSP_unl       0.23
+PMdeep_lab    0.35
+PMdeep_unl    0.35
+
+Peak position, labelled vs unlabelled cells of the same area (cm; the p-value shuffles labels within sessions):
+area            subset  n_lab  n_unl  median_lab  median_unl  median_diff  p_perm_within_session  ks_stat  p_ks_cells_independent
+  V1         all cells    675   5369         7.5        12.5         -5.0                  0.229    0.025                   0.847
+  V1 reliable (r>=0.3)    325   2600        17.5        17.5          0.0                  1.000    0.040                   0.732
+  PM         all cells    187   2254         7.5         7.5          0.0                  1.000    0.051                   0.740
+  PM reliable (r>=0.3)     95   1145        12.5        12.5          0.0                  1.000    0.068                   0.781
+  PM: median(lab) - median(unl) per session: mean -1.8 cm over 7 sessions, Wilcoxon p = 1.000
+  V1: median(lab) - median(unl) per session: mean -4.6 cm over 19 sessions, Wilcoxon p = 0.106
+22/22 sessions cached; computing 0 (n_jobs=5, one session in RAM per worker)
+
+Outcome analysis: 22 sessions, 22619 cells; minimum 5 trials per outcome condition
+Trials per contrast category and outcome (all selected sessions):
+outcome          CR     FA     HIT   MISS
+category                                 
+difficult       NaN    NaN   150.0  499.0
+easy            NaN    NaN  1850.0  183.0
+intermediate    NaN    NaN  1108.0  929.0
+no stimulus   676.0  186.0     NaN    NaN
+
+Miss fraction (%) = 100 x mean response on misses / on hits (stim - pre_stim, contrast-matched), mean over sessions:
+group         V1_lab  V1_unl  PM_lab  PM_unl  AL_unl  RSP_unl  PMdeep_lab  PMdeep_unl
+category                                                                             
+difficult       63.0   102.0    58.0    90.0    59.0      5.0        66.0        86.0
+intermediate   126.0   101.0    98.0   107.0   106.0    -52.0        62.0       202.0
+easy            85.0   232.0   532.0    99.0   108.0   3098.0       -32.0       109.0
+
+Choice probability (AUROC; > 0.5 = more activity on the positive class: hit, or FA), mean over cells of each session, then over sessions:
+                                     auc    sig
+analysis                 window                
+FA_vs_CR                 pre_stim  0.500  0.056
+                         stim      0.499  0.062
+hit_vs_miss_all          pre_stim  0.497  0.071
+                         stim      0.497  0.091
+hit_vs_miss_intermediate pre_stim  0.497  0.054
+                         stim      0.499  0.078
+0/22 sessions cached; computing 22 (n_jobs=5, one session in RAM per worker)
+/u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/.venv/lib/python3.13/site-packages/joblib/externals/loky/process_executor.py:787: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+[Parallel(n_jobs=5)]: Done   8 tasks      | elapsed:  1.6min
+[Parallel(n_jobs=5)]: Done  18 out of  22 | elapsed:  2.6min remaining:   34.9s
+[Parallel(n_jobs=5)]: Done  22 out of  22 | elapsed:  3.0min finished
+
+Response distribution: 22619 cells (pre_stim window). Share of exactly-zero window means, and cells that get fewer than 3 response bins:
+     area   window  n_cells  frac_zero  median     q95  frac_cells_below_full
+       V1 pre_stim     6044      0.384   4.140  99.381                  0.533
+       V1     stim     6044      0.302   7.256 128.081                  0.373
+       V1   reward     6044      0.176   9.150  87.969                  0.004
+       PM pre_stim     2441      0.453   1.958 114.932                  0.813
+       PM     stim     2441      0.357   5.658 130.573                  0.607
+       PM   reward     2441      0.208   8.735 101.856                  0.004
+PM (deep) pre_stim     5020      0.382   4.367 114.013                  0.609
+PM (deep)     stim     5020      0.309   7.015 124.936                  0.402
+PM (deep)   reward     5020      0.178   8.992  99.375                  0.004
+       AL pre_stim     4416      0.358   4.553  92.571                  0.491
+       AL     stim     4416      0.294   6.289  98.904                  0.342
+       AL   reward     4416      0.187   7.460  84.543                  0.005
+      RSP pre_stim     4698      0.395   3.928  98.688                  0.617
+      RSP     stim     4698      0.324   6.143  97.094                  0.468
+      RSP   reward     4698      0.183   8.511  76.064                  0.001
+all cells pre_stim    22619      0.390   3.978 103.452                  0.589
+all cells     stim    22619      0.314   6.591 115.287                  0.418
+all cells   reward    22619      0.184   8.624  89.013                  0.004
+
+Wrote tables to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2b_activity_statistics/out, figures to /u/g/glorenz/Documents/Research/Code/oudelohuis-vr-detection/2_pipeline/2b_activity_statistics/out/figures

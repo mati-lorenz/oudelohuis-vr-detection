@@ -75,7 +75,7 @@ from infotheory.scope import add_scope_args, scope_from_args, select_sessions, s
 from infotheory.session_jobs import run_sessions
 from infotheory.unit_stats import stable_seed
 from infotheory.unit_plots import group_panels, mouse_palette
-from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, DEFAULT_STRATEGIES, CHOICE_TARGET, target_signature,
+from infotheory.stim_binning import (STIM_BINNING_STRATEGIES, SIMPLE_STRATEGIES, CHOICE_TARGET, target_signature,
                                      target_bin_names, describe_strategies)
 from infotheory import cell_tables as ct
 from infotheory import pair_tables as pt
@@ -88,7 +88,7 @@ N_SHUFFLES = 10             # per shuffle test (4 modes x pairs x windows x targ
 MIN_PAIRS_PER_UNIT = 3      # session / mouse aggregate: pairs needed in a group for a unit's value to be used
 ALPHA = 0.05
 RANDOM_STATE = 0
-BINNING_STRATEGIES = list(DEFAULT_STRATEGIES)   # stimulus targets (override with --strategies)
+BINNING_STRATEGIES = list(SIMPLE_STRATEGIES)   # stimulus targets (override with --strategies)
 INCLUDE_CHOICE_TARGET = True
 SHARE_Y = True              # the three windows of a group figure get the same y range
 JOBLIB_VERBOSE = 5
@@ -107,7 +107,7 @@ AGG_SUFFIX = "" if AGG == "pooled" else f"__{AGG}"
 STRATEGIES = args.strategies or BINNING_STRATEGIES
 TARGETS = STRATEGIES + ([CHOICE_TARGET] if INCLUDE_CHOICE_TARGET else [])
 N_SHUF = args.n_shuffles
-MAX_PAIRS = args.max_pairs or MAX_PAIRS_PER_GROUP   # --max-pairs comes from scope.py; here: pairs per (session, area, label)
+MAX_PAIRS = args.max_pairs or cfg.MAX_PAIRS_PER_SESSION or MAX_PAIRS_PER_GROUP   # --max-pairs / project_config.MAX_PAIRS_PER_SESSION; here: pairs per (session, area, label); the constant above is the fallback
 
 paths = get_pipeline_paths(__file__)
 table_dir, figdir = scoped_dirs(paths, scope)
@@ -138,6 +138,7 @@ if not session_ids:
     raise SystemExit("None of the selected sessions passed 1b_psychometric's inclusion criteria.")
 mouse_colors = mouse_palette(a for _, a, _ in all_triples)
 cell_inclusion = load_cell_inclusion(cell_dist_out, activity_out)
+cell_group = dict(zip(cell_inclusion["cell_id"], cell_inclusion["group"]))      # 2a's groups (8 with deep PM): pairs are sampled within each
 cells_by_session = {sid: sorted(sub.loc[sub["include"], "cell_id"]) for sid, sub in cell_inclusion.groupby("session_id")
                     if sid in session_ids}
 session_ids = [s for s in session_ids if cells_by_session.get(s)]
@@ -166,7 +167,7 @@ def process_session(ses, seed):
     if len(celldata) < 2:
         return None
     pairs = pt.sample_session_pairs(celldata, sid, np.random.default_rng(stable_seed(sid, "pairs", base=RANDOM_STATE)),
-                                    MAX_PAIRS)
+                                    MAX_PAIRS, group_of=cell_group)
     tables = build_session_tables(ses, mu_sigma_lookup, WINDOWS, included_cell_ids=cells)
     records = []
     for window, table in tables.items():
@@ -183,7 +184,7 @@ def process_session(ses, seed):
                 tuning_j = pd.Series(xj).groupby(sb).transform("mean").to_numpy()
                 bm_i, bm_j = pd.Series(xi).groupby(sb).mean(), pd.Series(xj).groupby(sb).mean()
                 row = dict(session_id=sid, animal_id=ses.animal_id, window=window, target=target,
-                           roi_name=r.roi_name, labeled_grouped=r.labeled_grouped, cell_i=r.cell_i, cell_j=r.cell_j,
+                           roi_name=r.roi_name, labeled_grouped=r.labeled_grouped, depth_class=r.depth_class, cell_i=r.cell_i, cell_j=r.cell_j,
                            pair_rank=r.pair_rank, n_trials=len(xi), n_bins=len(bm_i),
                            signal_corr=corr_fn(bm_i.to_numpy(), bm_j.to_numpy()),
                            noise_corr=corr_fn(xi - tuning_i, xj - tuning_j), raw_corr=corr_fn(xi, xj))
@@ -200,7 +201,7 @@ def process_session(ses, seed):
 results = run_sessions(
     session_ids, process_session, [PROTOCOL], paths.store, "pair_correlations",
     key_params=dict(windows=WINDOWS, max_pairs=MAX_PAIRS, n_shuffles=N_SHUF, targets=target_signature(TARGETS),
-                    min_trials=cfg.MIN_TRIALS_ANALYSIS, min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3a-v3",
+                    min_trials=cfg.MIN_TRIALS_ANALYSIS, min_per_bin=cfg.MIN_TRIALS_PER_TARGET_BIN, version="3a-v4",
                     fits_mtime=int(fits_path.stat().st_mtime)),
     load_kwargs=dict(load_behaviordata=True, load_videodata=True, load_celldata=True, load_calciumdata=True),
     cells_by_session=cells_by_session, base_seed=RANDOM_STATE, n_jobs=scope.n_jobs, recompute=args.recompute,

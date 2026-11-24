@@ -211,7 +211,7 @@ def r2_columns(A, ref):
 # 2. PASS A -- linear lag search (per session, cached)
 # --------------------------------------------------------------------- #
 def lag_session(ses, seed, new_cells, new_pairs, req_cells):
-    cells = list(new_cells)          # only the cells not yet in the ledger (session_jobs.run_sessions_units)
+    cells = list(new_cells)          # the requested cells (session_jobs.run_sessions_units)
     frame_table, _ = build_frame_table(ses, cells)
     if frame_table is None:
         return None
@@ -312,7 +312,7 @@ plt.close(fig)
 # --------------------------------------------------------------------- #
 def pass_b(ses, seed, new_cells, new_pairs, req_cells):
     sid = ses.session_id
-    cells = list(new_cells)          # only the cells not yet in the ledger (session_jobs.run_sessions_units)
+    cells = list(new_cells)          # the requested cells (session_jobs.run_sessions_units)
     frame_table, engaged_trials = build_frame_table(ses, cells)
     if frame_table is None or engaged_trials is None or engaged_trials.empty:
         return None
